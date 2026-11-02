@@ -114,6 +114,10 @@ body.modal-open .modal-sheet-dialog {
   pointer-events: auto !important;
 }
 
+body.modal-open nav {
+  display: none !important;
+}
+
 .liquid-glass-surface {
   border: 1px solid var(--border-color);
   background: var(--bg-elevated);

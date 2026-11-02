@@ -2,6 +2,7 @@ import { Search, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import CartSummaryBar from "../components/CartSummaryBar";
 import CheckoutSheet from "../components/CheckoutSheet";
+import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
 import PosProductCard from "../components/PosProductCard";
 import { useInventory } from "../context/InventoryContext";
 import { ProductCategory } from "../types/domain";
@@ -149,9 +150,11 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
               ))
             ) : filteredProducts.length === 0 ? (
               <div className="col-span-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-8 sm:p-10 text-center shadow-sm select-none animate-in fade-in duration-150">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#007aff]/10 text-[#007aff] dark:text-[#0a84ff] mb-3">
-                  <Search size={26} />
-                </div>
+                <LottiePlayer
+                  animationData={EMPTY_BOX_ANIMATION}
+                  className="w-32 h-32 mx-auto mb-2"
+                  loop={true}
+                />
                 <h4 className="text-base font-bold text-[var(--text-primary)]">
                   Sin productos disponibles
                 </h4>

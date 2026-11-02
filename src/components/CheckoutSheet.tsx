@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import AdminCompactButton from "./AdminCompactButton";
 import LottiePlayer, { EMPTY_BOX_ANIMATION } from "./LottiePlayer";
 import ModalSheet from "./ModalSheet";
@@ -30,6 +30,7 @@ export default function CheckoutSheet({ onClose, onStartClose }: CheckoutSheetPr
   const [payment, setPayment] = useState<PaymentMethod>("Efectivo");
   const [customTotalInput, setCustomTotalInput] = useState<string>("");
   const [customerName, setCustomerName] = useState("");
+  const submittingRef = useRef(false);
 
   const subtotal = useMemo(
     () => cart.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
@@ -40,9 +41,12 @@ export default function CheckoutSheet({ onClose, onStartClose }: CheckoutSheetPr
   const effectiveTotal = parsedCustom !== null ? Math.min(subtotal, parsedCustom) : subtotal;
 
   const handleSubmit = () => {
-    if (!cart.length) return;
+    if (!cart.length || submittingRef.current) return;
+    submittingRef.current = true;
     if (completeSale(payment, effectiveTotal, customerName)) {
       onClose();
+    } else {
+      submittingRef.current = false;
     }
   };
 

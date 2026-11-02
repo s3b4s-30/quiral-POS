@@ -1,16 +1,34 @@
-import { Search, X } from "lucide-react";
+import { AlertTriangle, Check, Pencil, Search, Trash2, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
+import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
+import ModalSheet from "../components/ModalSheet";
 import { useInventory } from "../context/InventoryContext";
-import { formatCOP, formatShortDate, getWarrantyStatus } from "../utils/formatters";
+import { PaymentMethod, Sale, SaleItem } from "../types/domain";
+import { formatCOP, formatShortDate, getWarrantyStatus, parseCOPInput } from "../utils/formatters";
+
+const PAYMENT_METHODS: PaymentMethod[] = ["Efectivo", "Nequi", "Bancolombia", "Tarjeta"];
 
 interface HistoryViewProps {
   onGoToPOS?: () => void;
 }
 
 export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps) {
-  const { sales, toggleItemWarranty, loading } = useInventory();
+  const { sales, toggleItemWarranty, updateSale, deleteSale, loading } = useInventory();
   const [openSaleId, setOpenSaleId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+
+  // Estado para Eliminar Venta (con Modal de Confirmación obligatorio)
+  const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
+  const [restoreStockOnDelete, setRestoreStockOnDelete] = useState<boolean>(true);
+
+  // Estado para Modificar Venta (con paso de Confirmación obligatorio)
+  const [editingSale, setEditingSale] = useState<Sale | null>(null);
+  const [editCustomerName, setEditCustomerName] = useState("");
+  const [editPaymentMethod, setEditPaymentMethod] = useState<PaymentMethod>("Efectivo");
+  const [editItems, setEditItems] = useState<SaleItem[]>([]);
+  const [editTotalInput, setEditTotalInput] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [confirmSaveEdit, setConfirmSaveEdit] = useState(false);
 
   const filteredSales = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -24,6 +42,98 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
       return matchCustomer || matchNumber || matchItem;
     });
   }, [sales, query]);
+
+  const openEditModal = (sale: Sale, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingSale(sale);
+    setEditCustomerName(sale.customerName);
+    setEditPaymentMethod(sale.paymentMethod);
+    setEditItems(sale.items.map((it) => ({ ...it })));
+    setEditTotalInput(String(sale.totalAmount));
+    setEditNote(sale.note ?? "");
+    setConfirmSaveEdit(false);
+  };
+
+  const closeEditModal = () => {
+    setEditingSale(null);
+    setConfirmSaveEdit(false);
+  };
+
+  const openDeleteModal = (sale: Sale, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRestoreStockOnDelete(true);
+    setSaleToDelete(sale);
+  };
+
+  const closeDeleteModal = () => {
+    setSaleToDelete(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!saleToDelete) return;
+    const deletedId = saleToDelete.id;
+    deleteSale(deletedId, restoreStockOnDelete);
+    if (openSaleId === deletedId) {
+      setOpenSaleId(null);
+    }
+    setSaleToDelete(null);
+  };
+
+  const updateEditItemQty = (itemId: string, delta: number) => {
+    setEditItems((prev) => {
+      const next = prev.map((it) =>
+        it.id === itemId ? { ...it, qty: Math.max(1, it.qty + delta) } : it
+      );
+      const newSubtotal = next.reduce((acc, it) => acc + it.qty * it.unitPrice, 0);
+      setEditTotalInput(String(newSubtotal));
+      return next;
+    });
+  };
+
+  const updateEditItemPrice = (itemId: string, newPrice: number) => {
+    setEditItems((prev) => {
+      const next = prev.map((it) =>
+        it.id === itemId ? { ...it, unitPrice: Math.max(0, Math.round(newPrice)) } : it
+      );
+      const newSubtotal = next.reduce((acc, it) => acc + it.qty * it.unitPrice, 0);
+      setEditTotalInput(String(newSubtotal));
+      return next;
+    });
+  };
+
+  const removeEditItem = (itemId: string) => {
+    if (editItems.length <= 1) return;
+    setEditItems((prev) => {
+      const next = prev.filter((it) => it.id !== itemId);
+      const newSubtotal = next.reduce((acc, it) => acc + it.qty * it.unitPrice, 0);
+      setEditTotalInput(String(newSubtotal));
+      return next;
+    });
+  };
+
+  const editSubtotal = useMemo(
+    () => editItems.reduce((sum, it) => sum + it.qty * it.unitPrice, 0),
+    [editItems]
+  );
+
+  const effectiveEditTotal = useMemo(() => {
+    const parsed = parseCOPInput(editTotalInput);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : editSubtotal;
+  }, [editTotalInput, editSubtotal]);
+
+  const handleConfirmSaveEdit = () => {
+    if (!editingSale) return;
+    const updated: Sale = {
+      ...editingSale,
+      customerName: editCustomerName.trim() || "Cliente General",
+      paymentMethod: editPaymentMethod,
+      totalAmount: effectiveEditTotal,
+      note: editNote.trim() ? editNote.trim() : undefined,
+      items: editItems,
+    };
+    updateSale(updated);
+    closeEditModal();
+  };
 
   return (
     <div id="history-scroll" className="quiral-scroll-container transition-colors duration-75">
@@ -74,9 +184,11 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
             ))
           ) : filteredSales.length === 0 ? (
             <div className="col-span-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-8 sm:p-10 text-center shadow-sm select-none animate-in fade-in duration-150">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#007aff]/10 text-[#007aff] dark:text-[#0a84ff] mb-3">
-                <Search size={26} />
-              </div>
+              <LottiePlayer
+                animationData={EMPTY_BOX_ANIMATION}
+                className="w-32 h-32 mx-auto mb-2"
+                loop={true}
+              />
               <h4 className="text-base font-bold text-[var(--text-primary)]">
                 {query ? "Sin coincidencias de venta" : "Historial vacío"}
               </h4>
@@ -105,7 +217,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                   onClick={() => setOpenSaleId(isOpen ? null : sale.id)}
                   className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3.5 shadow-sm transition-colors duration-75 cursor-pointer select-none active:scale-[0.99] hover:border-blue-500/40"
                 >
-                  {/* Fila principal: Número de venta + Cliente | Total a la derecha */}
+                  {/* Fila principal: Número de venta + Cliente | Total + Acciones rápidas */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0 pr-2">
                       <h3 className="line-clamp-1 text-[15px] font-bold text-[var(--text-primary)]">
@@ -116,12 +228,39 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                         · {sale.paymentMethod}
                         {sale.items.length > 0 && ` · ${sale.items.reduce((s, it) => s + it.qty, 0)} uds`}
                       </p>
+                      {sale.note && (
+                        <p className="mt-1 line-clamp-1 text-[11px] italic text-[var(--text-secondary)]">
+                          Nota: {sale.note}
+                        </p>
+                      )}
                     </div>
 
-                    <div className="shrink-0 text-right pl-2">
+                    <div className="shrink-0 text-right pl-2 flex flex-col items-end gap-1.5">
                       <span className="tabular-nums whitespace-nowrap text-sm sm:text-base md:text-lg font-extrabold text-[var(--text-primary)]">
                         {formatCOP(sale.totalAmount)}
                       </span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={(e) => openEditModal(sale, e)}
+                          aria-label={`Modificar venta #${sale.saleNumber}`}
+                          title="Modificar venta"
+                          className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#007aff]/25 bg-[#007aff]/10 px-2 text-[11px] font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform"
+                        >
+                          <Pencil size={12} />
+                          <span>Modificar</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => openDeleteModal(sale, e)}
+                          aria-label={`Eliminar venta #${sale.saleNumber}`}
+                          title="Eliminar venta"
+                          className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#ff3b30]/25 bg-[#ff3b30]/10 px-2 text-[11px] font-bold text-[#ff3b30] active:scale-95 transition-transform"
+                        >
+                          <Trash2 size={12} />
+                          <span>Eliminar</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -196,6 +335,278 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
           )}
         </section>
       </div>
+
+      {/* Modal Obligatorio de Confirmación para ELIMINAR Venta */}
+      {saleToDelete && (
+        <ModalSheet
+          title={`Eliminar Venta #${saleToDelete.saleNumber}`}
+          onClose={closeDeleteModal}
+          footer={
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={closeDeleteModal}
+                className="flex min-h-12 items-center justify-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] text-sm font-bold text-[var(--text-primary)] active:scale-[0.98] transition-transform"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="flex min-h-12 items-center justify-center gap-1.5 rounded-2xl bg-[#ff3b30] text-sm font-bold text-white shadow-lg active:scale-[0.98] transition-transform"
+              >
+                <Trash2 size={16} />
+                <span>Sí, eliminar</span>
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-4 py-2">
+            <div className="flex items-start gap-3 rounded-2xl border border-[#ff3b30]/30 bg-[#ff3b30]/10 p-3.5 text-[#ff3b30]">
+              <AlertTriangle size={22} className="shrink-0 mt-0.5" />
+              <div className="text-xs leading-relaxed">
+                <p className="font-bold text-sm">Acción destructiva permanente</p>
+                <p className="mt-0.5 opacity-90">
+                  Estás a punto de eliminar el registro de la venta{" "}
+                  <strong>#{saleToDelete.saleNumber}</strong> ({saleToDelete.customerName}) por{" "}
+                  <strong className="tabular-nums">{formatCOP(saleToDelete.totalAmount)}</strong>.
+                </p>
+              </div>
+            </div>
+
+            <label className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/60 p-3.5 cursor-pointer">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-[var(--text-primary)]">
+                  Restituir unidades al inventario
+                </p>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  Devuelve automáticamente el stock descontado en esta venta a sus lotes originales.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={restoreStockOnDelete}
+                onChange={(e) => setRestoreStockOnDelete(e.target.checked)}
+                className="h-5 w-5 accent-[#007aff] rounded cursor-pointer shrink-0"
+              />
+            </label>
+          </div>
+        </ModalSheet>
+      )}
+
+      {/* Modal para MODIFICAR Venta con Paso de Confirmación Obligatorio */}
+      {editingSale && (
+        <ModalSheet
+          title={
+            confirmSaveEdit
+              ? `Confirmar Cambios #${editingSale.saleNumber}`
+              : `Modificar Venta #${editingSale.saleNumber}`
+          }
+          onClose={closeEditModal}
+          footer={
+            confirmSaveEdit ? (
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setConfirmSaveEdit(false)}
+                  className="flex min-h-12 items-center justify-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] text-sm font-bold text-[var(--text-primary)] active:scale-[0.98] transition-transform"
+                >
+                  Volver a editar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmSaveEdit}
+                  className="flex min-h-12 items-center justify-center gap-1.5 rounded-2xl bg-[#30d158] text-sm font-bold text-white shadow-lg active:scale-[0.98] transition-transform"
+                >
+                  <Check size={16} />
+                  <span>Confirmar</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmSaveEdit(true)}
+                className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#007aff] text-base font-bold text-white shadow-lg active:scale-[0.98] transition-transform duration-75"
+              >
+                Revisar y guardar · {formatCOP(effectiveEditTotal)}
+              </button>
+            )
+          }
+        >
+          {confirmSaveEdit ? (
+            <div className="space-y-4 py-2 animate-in fade-in duration-150">
+              <div className="rounded-2xl border border-[#007aff]/30 bg-[#007aff]/10 p-4 space-y-2">
+                <p className="text-sm font-bold text-[#007aff] dark:text-[#0a84ff]">
+                  ¿Confirmas la actualización de la venta #{editingSale.saleNumber}?
+                </p>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  Los totales financieros y las diferencias de stock en inventario se ajustarán de forma inmediata.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/50 p-3.5 space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-[var(--text-secondary)]">Cliente:</span>
+                  <span className="font-bold text-[var(--text-primary)]">
+                    {editCustomerName.trim() || "Cliente General"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[var(--text-secondary)]">Método de pago:</span>
+                  <span className="font-bold text-[var(--text-primary)]">{editPaymentMethod}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[var(--text-secondary)]">Unidades totales:</span>
+                  <span className="tabular-nums font-bold text-[var(--text-primary)]">
+                    {editItems.reduce((acc, it) => acc + it.qty, 0)} uds
+                  </span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-[var(--border-color)] text-sm">
+                  <span className="font-semibold text-[var(--text-secondary)]">Nuevo Total:</span>
+                  <span className="tabular-nums font-extrabold text-[var(--text-primary)]">
+                    {formatCOP(effectiveEditTotal)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Cliente */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+                  Cliente
+                </label>
+                <input
+                  type="text"
+                  value={editCustomerName}
+                  onChange={(e) => setEditCustomerName(e.target.value)}
+                  placeholder="Cliente General"
+                  className="mt-1.5 w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/50 px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+                />
+              </div>
+
+              {/* Productos en la venta */}
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+                  Productos ({editItems.length})
+                </label>
+                {editItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/50 p-3 space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-bold text-[var(--text-primary)] flex-1 min-w-0 line-clamp-2">
+                        {item.productName}
+                      </p>
+                      <div className="flex items-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => updateEditItemQty(item.id, -1)}
+                          className="flex h-7 w-7 items-center justify-center text-sm font-bold text-[#007aff]"
+                        >
+                          −
+                        </button>
+                        <span className="tabular-nums min-w-6 text-center text-xs font-extrabold text-[var(--text-primary)]">
+                          {item.qty}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => updateEditItemQty(item.id, 1)}
+                          className="flex h-7 w-7 items-center justify-center text-sm font-bold text-[#007aff]"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1">
+                        <label className="block text-[11px] font-medium text-[var(--text-secondary)]">
+                          Precio unitario
+                        </label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={formatCOP(item.unitPrice)}
+                          onChange={(e) =>
+                            updateEditItemPrice(item.id, parseCOPInput(e.target.value))
+                          }
+                          className="tabular-nums mt-0.5 w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+                        />
+                      </div>
+                      {editItems.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeEditItem(item.id)}
+                          className="mt-4 text-xs font-semibold text-[#ff3b30] hover:underline px-2 py-1"
+                        >
+                          Quitar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Método de Pago */}
+              <div>
+                <label className="block mb-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+                  Método de pago
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {PAYMENT_METHODS.map((method) => {
+                    const active = editPaymentMethod === method;
+                    return (
+                      <button
+                        key={method}
+                        type="button"
+                        onClick={() => setEditPaymentMethod(method)}
+                        className={`min-h-10 rounded-xl border text-xs font-bold transition-colors ${
+                          active
+                            ? "border-[#007aff] bg-[#007aff] text-white shadow-sm"
+                            : "border-[var(--border-color)] bg-[var(--bg-primary)]/50 text-[var(--text-primary)]"
+                        }`}
+                      >
+                        {method}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Total cobrado y Nota */}
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+                    Total cobrado
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={formatCOP(effectiveEditTotal)}
+                    onChange={(e) => setEditTotalInput(String(parseCOPInput(e.target.value)))}
+                    className="tabular-nums mt-1.5 w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/50 px-4 py-2.5 text-base font-extrabold text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+                    Nota (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={editNote}
+                    onChange={(e) => setEditNote(e.target.value)}
+                    placeholder="Observación o ajuste de la venta..."
+                    className="mt-1.5 w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/50 px-4 py-2 text-xs font-medium text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </ModalSheet>
+      )}
     </div>
   );
 }

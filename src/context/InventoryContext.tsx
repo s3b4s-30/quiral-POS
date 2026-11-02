@@ -38,6 +38,8 @@ interface InventoryContextType {
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
   completeSale: (paymentMethod: PaymentMethod, total: number, customerName?: string) => boolean;
+  updateSale: (updatedSale: Sale) => void;
+  deleteSale: (saleId: string, restoreStock?: boolean) => void;
   createClosure: (data: Omit<Closure, "id" | "closedAt"> & { id?: string; closedAt?: string }) => void;
   toggleItemWarranty: (saleId: string, itemId: string, note?: string) => void;
   addSupplier: (data: Omit<Supplier, "id">) => Supplier;
@@ -63,6 +65,7 @@ interface InventoryContextType {
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
+
 const getStoredStoreProfile = (storeId: string): Partial<UserProfile> => {
   try {
     const raw = localStorage.getItem(`quiral_store_profile_${storeId}`);
@@ -83,6 +86,31 @@ const normalizedProduct = (p: Product): Product => ({
     stock: Math.max(0, Math.floor(b.stock)),
   })),
 });
+
+/** Deduplica ventas por ID y por número de venta, ordenando de más reciente a más antigua */
+function deduplicateSales(list: Sale[]): Sale[] {
+  const seenIds = new Set<string>();
+  const seenNumbers = new Set<number>();
+  const result: Sale[] = [];
+
+  for (const s of list) {
+    if (!s || !s.id) continue;
+    // Ignorar semillas artificiales masivas heredadas (demo-sale-1..118)
+    if (s.id.startsWith("demo-sale-")) continue;
+    if (seenIds.has(s.id)) continue;
+    if (typeof s.saleNumber === "number" && seenNumbers.has(s.saleNumber)) continue;
+
+    seenIds.add(s.id);
+    if (typeof s.saleNumber === "number") {
+      seenNumbers.add(s.saleNumber);
+    }
+    result.push(s);
+  }
+
+  return result.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
 
 export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const [storeId, setStoreId] = useState<string | null>(null);
@@ -107,6 +135,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   // Guardias y referencias de ciclo de vida (Anti-bucles y control de concurrencia)
   const syncInProgressRef = useRef(false);
+  const saleInFlightRef = useRef(false);
   const activeStoreRequestIdRef = useRef(0);
   const lastLoadedStoreIdRef = useRef<string | null>(null);
   const lastLoadedUserIdRef = useRef<string | null>(null);
@@ -116,18 +145,31 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     setError(message);
   }, []);
 
-  // Carga de datos de la tienda desde Supabase con respaldo local si es demo
+  // Carga de datos de la tienda desde Supabase con respaldo local aislado para demo
   const loadData = useCallback(async (activeStore: string, isDemo = false) => {
     const requestId = ++activeStoreRequestIdRef.current;
     setLoading(true);
 
     if (isDemo) {
       printSecurityWarning();
+      const demoData = generateDemoSeed();
       try {
-        await supabase.rpc("seed_demo_store", { p_store_id: activeStore });
-      } catch (err) {
-        console.warn("Aviso al sembrar demo en backend:", err);
+        const storedSalesRaw = localStorage.getItem(`quiral_demo_sales_${activeStore}`);
+        const storedSales = storedSalesRaw ? (JSON.parse(storedSalesRaw) as Sale[]) : [];
+        setSuppliers(demoData.suppliers);
+        setProducts(demoData.products);
+        setSales(deduplicateSales(storedSales));
+        setClosures(demoData.closures);
+      } catch {
+        setSuppliers(demoData.suppliers);
+        setProducts(demoData.products);
+        setSales([]);
+        setClosures([]);
       }
+      setError(null);
+      lastLoadedStoreIdRef.current = activeStore;
+      setLoading(false);
+      return;
     }
 
     try {
@@ -141,39 +183,34 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       if (requestId !== activeStoreRequestIdRef.current) return;
       const loadedSuppliers = supRes.data?.map((r) => r.data as Supplier) ?? [];
       const loadedProducts = prodRes.data?.map((r) => r.data as Product) ?? [];
-      const loadedSales = salesRes.data?.map((r) => r.data as Sale) ?? [];
-      const loadedClosures = closuresRes.data?.map((r) => r.data as Closure) ?? [];
+      const rawSales = salesRes.data?.map((r) => r.data as Sale) ?? [];
+      const rawClosures = closuresRes.data?.map((r) => r.data as Closure) ?? [];
 
-      if (isDemo && loadedProducts.length === 0) {
-        const demoData = generateDemoSeed();
-        setSuppliers(demoData.suppliers);
-        setProducts(demoData.products);
-        setSales(demoData.sales);
-        setClosures(demoData.closures);
-        lastLoadedStoreIdRef.current = activeStore;
-      } else {
-        setSuppliers(loadedSuppliers);
-        setProducts(loadedProducts);
-        setSales(loadedSales);
-        setClosures(loadedClosures);
+      // Si existen ventas semilla heredadas ("demo-sale-*") en la tienda de Supabase, purgarlas en background
+      const hasLegacySeededSales = rawSales.some((s) => s?.id?.startsWith("demo-sale-"));
+      if (hasLegacySeededSales) {
+        void supabase
+          .from("sales")
+          .delete()
+          .eq("store_id", activeStore)
+          .like("id", "demo-sale-%");
       }
+
+      const cleanSales = deduplicateSales(rawSales);
+      const cleanClosures = rawClosures.filter((c) => !c?.id?.startsWith("demo-cycle-"));
+
+      setSuppliers(loadedSuppliers);
+      setProducts(loadedProducts);
+      setSales(cleanSales);
+      setClosures(cleanClosures);
 
       setError(null);
       lastLoadedStoreIdRef.current = activeStore;
     } catch (fetchErr: unknown) {
       if (requestId !== activeStoreRequestIdRef.current) return;
       const errMsg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
-      console.warn("Fallo al conectar con Supabase, usando respaldo:", fetchErr);
-      if (isDemo) {
-        const demoData = generateDemoSeed();
-        setSuppliers(demoData.suppliers);
-        setProducts(demoData.products);
-        setSales(demoData.sales);
-        setClosures(demoData.closures);
-        lastLoadedStoreIdRef.current = activeStore;
-      } else {
-        report(`Error de conexión: ${errMsg || "Sin red"}`);
-      }
+      console.warn("Fallo al conectar con Supabase:", fetchErr);
+      report(`Error de conexión: ${errMsg || "Sin red"}`);
     } finally {
       if (requestId === activeStoreRequestIdRef.current) {
         setLoading(false);
@@ -184,7 +221,6 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   // Sincronización atómica e inmediata de sesión y perfil de tienda
   const syncUserSession = useCallback(
     async (providedSession?: Session | null) => {
-      // Control de concurrencia: evitar peticiones paralelas duplicadas si ya hay una sincronización en vuelo
       if (syncInProgressRef.current) return;
       syncInProgressRef.current = true;
 
@@ -224,7 +260,6 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           let membership = await getStoreMembership(session.user.id);
           if (!membership) {
-            // Reintento rápido por si hay un leve retraso en la inserción/propagación de RLS
             await new Promise((resolve) => setTimeout(resolve, 300));
             membership = await getStoreMembership(session.user.id);
           }
@@ -249,9 +284,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
             lastLoadedUserIdRef.current = profile.id;
             await loadData(membership.storeId, false);
           } else {
-            // Fallback usando user_metadata de auth.users si no se obtuvo fila en store_members
             const meta = session.user.user_metadata || {};
-            const fallbackStoreId = (meta.store_id as string) || DEMO_STORE_ID;
+            const fallbackStoreId = (meta.store_id as string) || session.user.id;
             const fallbackStoreName = (meta.store_name as string) || "Mi tienda";
             const fallbackUsername =
               (meta.username as string) || session.user.email?.split("@")[0] || "Usuario";
@@ -312,7 +346,6 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Prevenir recargas masivas e innecesarias de la base de datos ante refresco periódico de tokens JWT
       if (event === "TOKEN_REFRESHED") {
         if (
           session?.user &&
@@ -395,8 +428,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         (payload) => {
           if (payload.eventType === "INSERT") {
             const rowData = payload.new?.data as Sale;
-            if (rowData) {
-              setSales((prev) => [rowData, ...prev.filter((s) => s.id !== rowData.id)]);
+            if (rowData && !rowData.id?.startsWith("demo-sale-")) {
+              setSales((prev) => deduplicateSales([rowData, ...prev]));
             }
           } else if (payload.eventType === "UPDATE") {
             const rowData = payload.new?.data as Sale;
@@ -444,17 +477,38 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     };
   }, [storeId, isDemoUser]);
 
-  // Persistencia segura en Supabase
+  // Persistencia de ventas demo en localStorage
+  const persistDemoSales = useCallback(
+    (nextSales: Sale[]) => {
+      if (!storeId || !isDemoUser) return;
+      try {
+        localStorage.setItem(`quiral_demo_sales_${storeId}`, JSON.stringify(nextSales));
+      } catch {}
+    },
+    [storeId, isDemoUser]
+  );
+
+  // Persistencia segura en Supabase respetando columnas NOT NULL de cada tabla
   const persist = useCallback(
     async (table: string, entity: { id: string }) => {
-      if (!storeId) return;
-      if (isDemoUser) return;
-      const { error: err } = await supabase.from(table).upsert({
+      if (!storeId || isDemoUser) return;
+      const payload: Record<string, unknown> = {
         store_id: storeId,
         id: entity.id,
         data: entity,
         updated_at: new Date().toISOString(),
-      });
+      };
+
+      if (table === "sales") {
+        const s = entity as unknown as Sale;
+        payload.sale_number = s.saleNumber;
+        payload.created_at = s.createdAt;
+      } else if (table === "cycle_closings") {
+        const c = entity as unknown as Closure;
+        payload.closed_at = c.closedAt;
+      }
+
+      const { error: err } = await supabase.from(table).upsert(payload);
       if (err) throw err;
     },
     [storeId, isDemoUser]
@@ -685,79 +739,223 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = () => setCart([]);
 
-  // Ventas: Concurrencia y RPC Atómico
+  // Ventas: Concurrencia, Candado Anti-Duplicados y RPC Atómico
   const completeSale = (paymentMethod: PaymentMethod, total: number, customerName?: string) => {
-    const subtotal = cart.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-    if (!cart.length || !Number.isFinite(total) || total < 0 || total > subtotal) return false;
+    if (saleInFlightRef.current) return false;
+    const cartSnapshot = [...cart];
+    const subtotal = cartSnapshot.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    if (!cartSnapshot.length || !Number.isFinite(total) || total < 0 || total > subtotal) {
+      return false;
+    }
 
-    const nextNumber = (sales[0]?.saleNumber ?? 1000) + 1;
-    const saleItems: SaleItem[] = cart.map((item) => {
-      const product = products.find((p) => p.id === item.productId);
-      const batch = product?.batches.find((b) => b.id === item.batchId);
-      return {
-        id: makeId("item"),
-        productId: item.productId,
-        productName: product?.name ?? "Producto",
-        qty: item.quantity,
-        unitPrice: item.unitPrice,
-        unitCostSnapshot: batch?.cost ?? 0,
-        batchId: item.batchId,
-        warrantyDays: product?.warrantyDays ?? 30,
-        warrantyClaimed: false,
+    saleInFlightRef.current = true;
+    try {
+      const maxSaleNumber = sales.reduce(
+        (max, s) => Math.max(max, typeof s.saleNumber === "number" ? s.saleNumber : 1000),
+        1000
+      );
+      const nextNumber = maxSaleNumber + 1;
+
+      const saleItems: SaleItem[] = cartSnapshot.map((item) => {
+        const product = products.find((p) => p.id === item.productId);
+        const batch = product?.batches.find((b) => b.id === item.batchId);
+        return {
+          id: makeId("item"),
+          productId: item.productId,
+          productName: product?.name ?? "Producto",
+          qty: item.quantity,
+          unitPrice: item.unitPrice,
+          unitCostSnapshot: batch?.cost ?? 0,
+          batchId: item.batchId,
+          warrantyDays: product?.warrantyDays ?? 30,
+          warrantyClaimed: false,
+        };
+      });
+
+      const newSale: Sale = {
+        id: makeId("sale"),
+        saleNumber: nextNumber,
+        customerName: customerName?.trim() || "Cliente General",
+        paymentMethod,
+        totalAmount: Math.round(total),
+        createdAt: new Date().toISOString(),
+        items: saleItems,
       };
-    });
 
-    const newSale: Sale = {
-      id: makeId("sale"),
-      saleNumber: nextNumber,
-      customerName: customerName?.trim() || "Cliente General",
-      paymentMethod,
-      totalAmount: Math.round(total),
-      createdAt: new Date().toISOString(),
-      items: saleItems,
+      // Actualización optimista local deduplicada
+      setSales((prev) => {
+        const nextList = deduplicateSales([newSale, ...prev]);
+        persistDemoSales(nextList);
+        return nextList;
+      });
+
+      setProducts((prev) =>
+        prev.map((p) => {
+          const item = cartSnapshot.find((i) => i.productId === p.id);
+          if (!item) return p;
+          return {
+            ...p,
+            batches: p.batches.map((b) =>
+              b.id === item.batchId ? { ...b, stock: Math.max(0, b.stock - item.quantity) } : b
+            ),
+          };
+        })
+      );
+      setCart([]);
+
+      // Transacción atómica en Supabase si está conectado
+      if (storeId && !isDemoUser) {
+        void supabase
+          .rpc("complete_sale", {
+            target_store: storeId,
+            sale_id: newSale.id,
+            sale_number: newSale.saleNumber,
+            sale_created_at: newSale.createdAt,
+            sale_data: newSale,
+            lines: cartSnapshot,
+          })
+          .then(
+            ({ error: rpcErr }) => {
+              if (rpcErr) {
+                report(`Aviso de sincronización en venta: ${rpcErr.message}`);
+              }
+            },
+            (err: unknown) => {
+              const msg = err instanceof Error ? err.message : String(err);
+              report(`Fallo de red en venta: ${msg}`);
+            }
+          );
+      }
+
+      return true;
+    } finally {
+      setTimeout(() => {
+        saleInFlightRef.current = false;
+      }, 250);
+    }
+  };
+
+  // Modificar Venta existente (CRUD Historial) con reconciliación de inventario
+  const updateSale = (updatedSale: Sale) => {
+    const prevSale = sales.find((s) => s.id === updatedSale.id);
+    if (!prevSale) return;
+
+    const cleanSale: Sale = {
+      ...updatedSale,
+      customerName: updatedSale.customerName.trim() || "Cliente General",
+      totalAmount: Math.max(0, Math.round(updatedSale.totalAmount)),
+      items: updatedSale.items.map((it) => ({
+        ...it,
+        qty: Math.max(1, Math.floor(it.qty)),
+        unitPrice: Math.max(0, Math.round(it.unitPrice)),
+      })),
     };
 
-    // Actualización optimista local inmediata
-    setSales((prev) => [newSale, ...prev]);
+    // Reconciliar diferencias de stock si cambiaron las cantidades o los ítems
+    const stockAdjustments = new Map<string, number>(); // key: `${productId}::${batchId}` -> delta a sumar al stock
+    for (const oldItem of prevSale.items) {
+      const key = `${oldItem.productId}::${oldItem.batchId}`;
+      stockAdjustments.set(key, (stockAdjustments.get(key) ?? 0) + oldItem.qty);
+    }
+    for (const newItem of cleanSale.items) {
+      const key = `${newItem.productId}::${newItem.batchId}`;
+      stockAdjustments.set(key, (stockAdjustments.get(key) ?? 0) - newItem.qty);
+    }
+
+    const modifiedProducts: Product[] = [];
     setProducts((prev) =>
-      prev.map((p) => {
-        const item = cart.find((i) => i.productId === p.id);
-        if (!item) return p;
-        return {
-          ...p,
-          batches: p.batches.map((b) =>
-            b.id === item.batchId ? { ...b, stock: Math.max(0, b.stock - item.quantity) } : b
-          ),
-        };
+      prev.map((prod) => {
+        let changed = false;
+        const nextBatches = prod.batches.map((b) => {
+          const delta = stockAdjustments.get(`${prod.id}::${b.id}`) ?? 0;
+          if (delta !== 0) {
+            changed = true;
+            return { ...b, stock: Math.max(0, b.stock + delta) };
+          }
+          return b;
+        });
+        if (changed) {
+          const updatedProd = normalizedProduct({ ...prod, batches: nextBatches });
+          modifiedProducts.push(updatedProd);
+          return updatedProd;
+        }
+        return prod;
       })
     );
-    setCart([]);
 
-    // Transacción atómica en Supabase si está conectado
+    for (const mp of modifiedProducts) {
+      void persist("products", mp).catch((err: unknown) => {
+        report(err instanceof Error ? err.message : String(err));
+      });
+    }
+
+    setSales((prev) => {
+      const nextList = prev.map((s) => (s.id === cleanSale.id ? cleanSale : s));
+      persistDemoSales(nextList);
+      return nextList;
+    });
+
+    void persist("sales", cleanSale).catch((err: unknown) => {
+      report(err instanceof Error ? err.message : String(err));
+    });
+  };
+
+  // Eliminar Venta existente (CRUD Historial) con restitución opcional de stock
+  const deleteSale = (saleId: string, restoreStock = true) => {
+    const targetSale = sales.find((s) => s.id === saleId);
+    if (!targetSale) return;
+
+    if (restoreStock && targetSale.items.length > 0) {
+      const modifiedProducts: Product[] = [];
+      setProducts((prev) =>
+        prev.map((prod) => {
+          const matchingItems = targetSale.items.filter((it) => it.productId === prod.id);
+          if (matchingItems.length === 0) return prod;
+
+          const nextBatches = prod.batches.map((b) => ({ ...b }));
+          for (const item of matchingItems) {
+            const targetBatch =
+              nextBatches.find((b) => b.id === item.batchId) ?? nextBatches[0];
+            if (targetBatch) {
+              targetBatch.stock = Math.max(0, targetBatch.stock + item.qty);
+            }
+          }
+
+          const updatedProd = normalizedProduct({ ...prod, batches: nextBatches });
+          modifiedProducts.push(updatedProd);
+          return updatedProd;
+        })
+      );
+
+      for (const mp of modifiedProducts) {
+        void persist("products", mp).catch((err: unknown) => {
+          report(err instanceof Error ? err.message : String(err));
+        });
+      }
+    }
+
+    setSales((prev) => {
+      const nextList = prev.filter((s) => s.id !== saleId);
+      persistDemoSales(nextList);
+      return nextList;
+    });
+
     if (storeId && !isDemoUser) {
       void supabase
-        .rpc("complete_sale", {
-          target_store: storeId,
-          sale_id: newSale.id,
-          sale_number: newSale.saleNumber,
-          sale_created_at: newSale.createdAt,
-          sale_data: newSale,
-          lines: cart,
-        })
+        .from("sales")
+        .delete()
+        .eq("store_id", storeId)
+        .eq("id", saleId)
         .then(
-          ({ error: rpcErr }) => {
-            if (rpcErr) {
-              report(`Aviso de sincronización en venta: ${rpcErr.message}`);
-            }
+          ({ error: delErr }) => {
+            if (delErr) report(`Error al eliminar venta: ${delErr.message}`);
           },
           (err: unknown) => {
             const msg = err instanceof Error ? err.message : String(err);
-            report(`Fallo de red en venta: ${msg}`);
+            report(`Fallo al eliminar venta: ${msg}`);
           }
         );
     }
-
-    return true;
   };
 
   const toggleItemWarranty = (saleId: string, itemId: string, note?: string) => {
@@ -777,7 +975,11 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       ),
     };
 
-    setSales((prev) => prev.map((s) => (s.id === saleId ? updatedSale : s)));
+    setSales((prev) => {
+      const nextList = prev.map((s) => (s.id === saleId ? updatedSale : s));
+      persistDemoSales(nextList);
+      return nextList;
+    });
     void persist("sales", updatedSale).catch((err: unknown) => {
       report(err instanceof Error ? err.message : String(err));
     });
@@ -896,6 +1098,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         removeFromCart,
         clearCart,
         completeSale,
+        updateSale,
+        deleteSale,
         createClosure,
         toggleItemWarranty,
         addSupplier,
@@ -909,8 +1113,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         adjustMasterStock,
         addBatchToProduct,
         updateProductPrice,
-        purgeOutOfStock,
         updateStoreProfile,
+        purgeOutOfStock,
         signOut,
         refreshData,
       }}
@@ -921,9 +1125,9 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useInventory() {
-  const context = useContext(InventoryContext);
-  if (!context) {
-    throw new Error("useInventory must be used within an InventoryProvider");
+  const ctx = useContext(InventoryContext);
+  if (!ctx) {
+    throw new Error("useInventory debe utilizarse dentro de un InventoryProvider");
   }
-  return context;
+  return ctx;
 }

@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { PackageOpen } from "lucide-react";
 import lottie from "lottie-web/build/player/lottie_light";
 import { type AnimationItem } from "lottie-web";
 import emptyBoxJson from "../assets/empty-box.json";
@@ -25,12 +26,27 @@ export interface LottiePlayerProps {
 }
 
 /**
+ * Ícono de respaldo a prueba de fallos (Apple HIG Empty Box)
+ * Garantiza que jamás se renderice un bloque en blanco si Lottie falla o no dispone de datos.
+ */
+function DefaultFallbackIcon() {
+  return (
+    <div className="flex h-full w-full items-center justify-center">
+      <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl border border-[#007aff]/20 bg-[#007aff]/10 text-[#007aff] dark:border-[#0a84ff]/25 dark:bg-[#0a84ff]/15 dark:text-[#0a84ff] shadow-sm">
+        <PackageOpen size={40} strokeWidth={1.75} className="animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
+/**
  * LottiePlayer — Componente de infraestructura para microinteracciones y estados vacíos
  *
  * Características de rendimiento y diseño Apple HIG:
  * 1. Renderizado vectorial en SVG a 60 FPS sin saturar el hilo principal de React.
  * 2. Destrucción determinística de la instancia al desmontar para prevenir fugas de memoria en WebKit iOS.
  * 3. Aceleración por hardware mediante composición de capas GPU (transform: translateZ(0)).
+ * 4. Fallback vectorial automático a prueba de fallos: nunca renderiza un contenedor vacío/blanco.
  */
 export default function LottiePlayer({
   animationData,
@@ -45,10 +61,20 @@ export default function LottiePlayer({
 }: LottiePlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const animItemRef = useRef<AnimationItem | null>(null);
+  const [hasFailed, setHasFailed] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    if (!animationData && !path) return;
+    const host = containerRef.current;
+    if (!host) return;
+    if (!animationData && !path) {
+      setHasFailed(true);
+      return;
+    }
+
+    setHasFailed(false);
+    setIsReady(false);
+    host.innerHTML = "";
 
     try {
       const clonedData = animationData
@@ -56,26 +82,46 @@ export default function LottiePlayer({
         : undefined;
 
       const anim = lottie.loadAnimation({
-        container: containerRef.current,
+        container: host,
         renderer: "svg",
         loop,
         autoplay,
         animationData: clonedData,
         path,
         rendererSettings: {
-          progressiveLoad: true,
+          progressiveLoad: false,
           hideOnTransparent: true,
+          preserveAspectRatio: "xMidYMid meet",
         },
       });
 
       anim.setSpeed(speed);
       animItemRef.current = anim;
 
+      const verifySvgMounted = () => {
+        const svgEl = host.querySelector("svg");
+        if (!svgEl || svgEl.innerHTML.includes("NaN") || svgEl.childElementCount === 0) {
+          setHasFailed(true);
+        } else {
+          svgEl.style.width = "100%";
+          svgEl.style.height = "100%";
+          svgEl.style.display = "block";
+          setIsReady(true);
+        }
+      };
+
+      // Con animationData en memoria, DOMLoaded ocurre sincrónicamente
+      verifySvgMounted();
+      anim.addEventListener("DOMLoaded", verifySvgMounted);
+      anim.addEventListener("data_failed", () => setHasFailed(true));
+      anim.addEventListener("error", () => setHasFailed(true));
+
       if (onComplete) {
         anim.addEventListener("complete", onComplete);
       }
 
       return () => {
+        anim.removeEventListener("DOMLoaded", verifySvgMounted);
         if (onComplete) {
           anim.removeEventListener("complete", onComplete);
         }
@@ -83,25 +129,38 @@ export default function LottiePlayer({
         animItemRef.current = null;
       };
     } catch (err) {
-      console.warn("No se pudo inicializar la animación Lottie:", err);
+      console.warn("No se pudo inicializar la animación Lottie, activando fallback:", err);
+      setHasFailed(true);
     }
   }, [animationData, path, loop, autoplay, speed, onComplete]);
 
-  if (!animationData && !path && fallback) {
-    return <div className={className}>{fallback}</div>;
+  const showFallback = hasFailed || (!animationData && !path);
+
+  if (showFallback) {
+    return (
+      <div className={`select-none pointer-events-none flex items-center justify-center ${className}`} style={style}>
+        {fallback ?? <DefaultFallbackIcon />}
+      </div>
+    );
   }
 
   return (
     <div
-      ref={containerRef}
-      className={`select-none pointer-events-none ${className}`}
+      className={`relative select-none pointer-events-none flex items-center justify-center ${className}`}
       style={{
         transform: "translateZ(0)",
         WebkitTransform: "translateZ(0)",
         willChange: "transform",
         ...style,
       }}
-    />
+    >
+      {!isReady && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          {fallback ?? <DefaultFallbackIcon />}
+        </div>
+      )}
+      <div ref={containerRef} className="h-full w-full" />
+    </div>
   );
 }
 

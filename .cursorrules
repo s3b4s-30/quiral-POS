@@ -1,0 +1,25 @@
+# .cursorrules — Directiva de Inmunidad de UI y Gobernanza Determinista (Quiral POS)
+
+## 1. DIRECTIVA DE INMUNIDAD DE UI (NIVEL DE URGENCIA MÁXIMO — OBLIGATORIO)
+Todo agente autónomo, skill o asistente de IA que opere en este repositorio está sujeto a las siguientes prohibiciones deterministas sobre el layout base "edge-to-edge" para iPhone / iOS PWA:
+
+1. **PROHIBIDO alterar el layout base en `src/App.tsx`, `src/components/TopHeader.tsx`, `src/components/TopMenu.tsx`, `src/index.css` e `index.html`:**
+   - `TopHeader.tsx` y `.quiral-top-header` DEBEN conservar `fixed top-0 w-full z-50 backdrop-blur-md pt-[env(safe-area-inset-top)]` con `--quiral-header-offset: calc(env(safe-area-inset-top, 0px) + 3.5rem)` y altura interna `h-14 w-full`.
+   - `index.html` DEBE conservar `<meta name="apple-mobile-web-app-status-bar-style" content="default" />` y `viewport-fit=cover`. Nunca cambiar a `black-translucent`.
+   - El efecto translúcido `backdrop-filter: blur(12px)` con `color-mix(in srgb, var(--bg-primary) 85%, transparent)` en `.quiral-top-header` es INMUTABLE.
+
+2. **PROHIBIDO añadir `pt-16`, `pb-32`, `pb-44`, `mb-20` o `h-screen` en las vistas:**
+   - `.quiral-scroll-container` en `src/index.css` ya provee `padding-top: var(--quiral-header-offset)` y `padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5.5rem)`.
+   - Agregar `pt-16` o `pb-32` / `pb-44` en `InventoryView.tsx`, `PosView.tsx`, `HistoryView.tsx`, `SummaryView.tsx` o `App.tsx` genera espacios vacíos masivos y está estrictamente prohibido. Usa únicamente `pb-6` en los contenedores de grillas (y `pb-20 sm:pb-16` en `PosView.tsx` cuando `cartUnits > 0`).
+
+3. **RESILIENCIA DE LOTTIE Y EMPTY STATES:**
+   - `LottiePlayer.tsx` debe importar `emptyBoxJson` desde `../assets/empty-box.json` (`EMPTY_BOX_ANIMATION`) y mantener su componente de respaldo (`DefaultFallbackIcon`) para garantizar que nunca se renderice un bloque en blanco en `InventoryView.tsx`, `PosView.tsx`, `HistoryView.tsx` ni `CheckoutSheet.tsx`.
+   - `CheckoutSheet.tsx` debe interceptar `if (cart.length === 0)` antes del formulario de pago y mostrar el estado vacío con el botón "Volver al catálogo".
+
+4. **INTEGRIDAD DE VENTAS Y CRUD CON CONFIRMACIÓN OBLIGATORIA:**
+   - Prohibido sembrar ventas falsas masivas (`demo-sale-1..118` / serie 1000+) en `demoSeed.ts` o al cargar `InventoryContext.tsx`.
+   - `completeSale` debe mantener bloqueo sincrónico (`saleInFlightRef`) y deduplicación por `id` y `saleNumber`.
+   - Las acciones de "Modificar" (`updateSale`) y "Eliminar" (`deleteSale`) en `HistoryView.tsx` deben exigir siempre un Modal de Confirmación antes de aplicarse y reconciliar el stock de los lotes afectados.
+
+5. **VERIFICACIÓN DE BUILD:**
+   - Antes de finalizar cualquier cambio, ejecutar `npx tsc --noEmit` y `npm run build` verificando código de salida `0`.

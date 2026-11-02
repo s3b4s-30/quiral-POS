@@ -24,7 +24,7 @@ export function generateDemoSeed() {
   const productNames = [
     "iPhone 15 Pro Max 256GB", "iPhone 15 Pro 128GB", "iPhone 14 Pro Max 256GB", "iPhone 14 128GB",
     "iPhone 13 128GB", "iPhone 12 64GB", "iPhone 11 64GB", "Samsung Galaxy S24 Ultra",
-    "Cubo Cargador iPhone 20W Original", "Cubo Anker 30W GaN", "Cargador Doble USB-C 35W",
+    "Cubo iPhone 20W Original", "Cubo Anker 30W GaN", "Cargador Doble USB-C 35W",
     "Cable USB-C a Lightning MFi 1m", "Cable USB-C Trenzado 60W 2m", "Batería MagSafe Apple", "Cargador Inalámbrico MagSafe 15W",
     "AirPods Pro 2da Gen USB-C", "AirPods 3ra Gen", "EarPods Lightning", "EarPods USB-C",
     "AirTag Individual", "Pack x4 AirTags", "Apple Pencil USB-C",
@@ -101,129 +101,9 @@ export function generateDemoSeed() {
     };
   });
 
-  const customerNames = [
-    "Santiago Restrepo", "Cliente General", "Ana Morales", "Carlos Gómez", "Laura Pérez",
-    "Andrés Rodríguez", "Valentina Ríos", "Mateo Henao", "Camila Ortiz", "Felipe Castro",
-    "Sofía Jaramillo", "Daniela Ospina", "Alejandro Quintero", "Mariana Londoño", "Sebastián Mejía"
-  ];
-
+  // Sin ventas ni cierres semilla pre-generados para evitar duplicados o registros artificiales (1000+)
   const sales: Sale[] = [];
-  const baseStart = new Date("2026-07-01T10:00:00-05:00").getTime();
-  const recentStart = new Date("2026-10-21T09:15:00-05:00").getTime();
-
-  for (let i = 1; i <= 118; i++) {
-    const isRecent = i >= 96; // 23 ventas en el Ciclo Actual reciente
-    const saleTimestamp = isRecent
-      ? recentStart + (i - 96) * 3.5 * 3600000 + (i % 5) * 17 * 60000
-      : baseStart + (i - 1) * 28 * 3600000 + (i % 7) * 23 * 60000;
-
-    const saleDate = new Date(saleTimestamp).toISOString();
-    const pIdx = ((i - 1) % productNames.length);
-    const sIdx = ((i - 1) % customerNames.length);
-    const product = products[pIdx];
-
-    const isWarranty = [9, 21, 35, 48, 62, 77, 89, 102, 110, 115].includes(i);
-    const warrantyNote = isWarranty
-      ? i % 3 === 0
-        ? "Falla en conector de carga verificado en taller."
-        : i % 3 === 1
-        ? "Defecto de audio en auricular izquierdo."
-        : "Botón lateral con respuesta intermitente."
-      : undefined;
-
-    const qty = 1 + (i % 2);
-    const unitPrice = pIdx < 8 ? 2100000 : 55000 + (pIdx % 8) * 15000;
-    const unitCostSnapshot = pIdx < 8 ? 1550000 : 32000 + (pIdx % 8) * 9000;
-
-    sales.push({
-      id: `demo-sale-${i}`,
-      saleNumber: 1000 + i,
-      customerName: customerNames[sIdx],
-      note: i % 7 === 0 ? "Descuento cliente frecuente aplicado." : undefined,
-      paymentMethod: i % 3 === 0 ? "Nequi" : i % 3 === 1 ? "Efectivo" : "Bancolombia",
-      totalAmount: qty * unitPrice,
-      createdAt: saleDate,
-      items: [
-        {
-          id: `demo-item-${i}-1`,
-          productId: product.id,
-          productName: product.name,
-          qty,
-          unitPrice,
-          unitCostSnapshot,
-          batchId: `demo-batch-${pIdx + 1}-a`,
-          warrantyDays: product.warrantyDays,
-          warrantyClaimed: isWarranty,
-          warrantyClaimNote: warrantyNote,
-        },
-      ],
-    });
-  }
-
-  // Ordenar ventas descendente por fecha
-  sales.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-  const closureLabels = [
-    "1 de jul. – 15 de jul. 2026", "16 de jul. – 31 de jul. 2026",
-    "1 de ago. – 15 de ago. 2026", "16 de ago. – 31 de ago. 2026",
-    "1 de sep. – 15 de sep. 2026", "16 de sep. – 30 de sep. 2026",
-    "1 de oct. – 10 de oct. 2026", "11 de oct. – 20 de oct. 2026"
-  ];
-
-  const closureDates = [
-    "2026-07-15T20:00:00-05:00", "2026-07-31T20:00:00-05:00",
-    "2026-08-15T20:00:00-05:00", "2026-08-31T20:00:00-05:00",
-    "2026-09-15T20:00:00-05:00", "2026-09-30T20:00:00-05:00",
-    "2026-10-10T20:00:00-05:00", "2026-10-20T20:00:00-05:00"
-  ];
-
-  const closures: Closure[] = closureLabels.map((periodLabel, idx) => {
-    const i = idx + 1;
-    const closedAt = closureDates[idx];
-    const totalSold = 2400000 + i * 210000;
-    const netProfit = 980000 + i * 95000;
-
-    return {
-      id: `demo-cycle-${i}`,
-      periodLabel,
-      closedAt,
-      totalSold,
-      netProfit,
-      recoveredInvestment: 1420000 + i * 115000,
-      remainingStockInvestment: 4850000 + i * 40000,
-      expectedCash: totalSold,
-      realCashReported: totalSold - (i % 3) * 10000,
-      differenceNote: i % 2 === 0 ? "Arqueo exacto sin descuadre reportado." : "Diferencia menor de $10.000 por cambio en efectivo.",
-      topSellers: [
-        {
-          id: products[((i - 1) % 15)].id,
-          name: products[((i - 1) % 15)].name,
-          qty: 10 + i,
-          revenue: 650000 + i * 25000,
-          profit: 280000 + i * 14000,
-        },
-        {
-          id: products[((i + 3) % 15)].id,
-          name: products[((i + 3) % 15)].name,
-          qty: 7 + i,
-          revenue: 480000 + i * 18000,
-          profit: 190000 + i * 11000,
-        },
-      ],
-      topReturned: i % 2 === 0 ? [
-        {
-          id: products[8].id,
-          name: products[8].name,
-          qty: 1,
-          notes: ["Cambio inmediato de cable por garantía."],
-        }
-      ] : [],
-    };
-  });
-
-  // Ordenar cierres descendente por fecha
-  closures.sort((a, b) => new Date(b.closedAt).getTime() - new Date(a.closedAt).getTime());
+  const closures: Closure[] = [];
 
   return { suppliers, products, sales, closures };
 }
-
