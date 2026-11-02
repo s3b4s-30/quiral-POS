@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { getStoreMembership, printSecurityWarning, signOutUser } from "../lib/authService";
-import { DEMO_STORE_ID, generateDemoSeed } from "../lib/demoSeed";
+import { DEMO_STORE_ID, ensureFreshDemoStorage, generateDemoSeed } from "../lib/demoSeed";
 import { supabase } from "../lib/supabase";
 import { Batch, CartItem, CatalogConfig, CategoryConfig, Closure, PaymentMethod, Product, ProductCategory, Sale, SaleItem, Supplier, UserProfile } from "../types/domain";
 import {
@@ -98,8 +98,9 @@ const getStoredStoreProfile = (storeId: string): Partial<UserProfile> => {
 };
 
 const getStoredCatalogConfig = (targetStoreId: string): CatalogConfig => {
+  ensureFreshDemoStorage();
   try {
-    const raw = localStorage.getItem(`quiral_catalog_config_v2_${targetStoreId}`);
+    const raw = localStorage.getItem(`quiral_catalog_config_v3_${targetStoreId}`);
     if (raw) {
       return mergeWithDefaultCatalogConfig(JSON.parse(raw) as Partial<CatalogConfig>);
     }
@@ -188,10 +189,11 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
     if (isDemo) {
       printSecurityWarning();
+      ensureFreshDemoStorage();
       const demoData = generateDemoSeed();
       try {
-        const storedSalesRaw = localStorage.getItem(`quiral_demo_sales_${activeStore}`);
-        const storedSales = storedSalesRaw ? (JSON.parse(storedSalesRaw) as Sale[]) : [];
+        const storedSalesRaw = localStorage.getItem(`quiral_demo_sales_v3_${activeStore}`);
+        const storedSales = storedSalesRaw ? (JSON.parse(storedSalesRaw) as Sale[]) : demoData.sales;
         setSuppliers(demoData.suppliers);
         setProducts(demoData.products);
         setSales(deduplicateSales(storedSales));
@@ -520,7 +522,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     (nextSales: Sale[]) => {
       if (!storeId || !isDemoUser) return;
       try {
-        localStorage.setItem(`quiral_demo_sales_${storeId}`, JSON.stringify(nextSales));
+        localStorage.setItem(`quiral_demo_sales_v3_${storeId}`, JSON.stringify(nextSales));
       } catch {}
     },
     [storeId, isDemoUser]
@@ -765,7 +767,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       const activeStore = storeId || DEMO_STORE_ID;
       try {
         localStorage.setItem(
-          `quiral_catalog_config_v2_${activeStore}`,
+          `quiral_catalog_config_v3_${activeStore}`,
           JSON.stringify(nextConfig)
         );
       } catch (err) {

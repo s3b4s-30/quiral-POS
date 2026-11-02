@@ -44,12 +44,18 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     await expect(page.getByText("Fija e inamovible al inicio de la barra")).toBeVisible();
     await expect(page.getByText("Valores Predeterminados Fijos (Respaldo)")).toBeVisible();
 
-    // Eliminar una categoría predeterminada ("Power Banks / Baterías portatiles", que tiene 0 productos) de la barra activa
+    // Eliminar una categoría predeterminada ("Power Banks / Baterías portatiles") de la barra activa
     const deleteDefaultCatBtn = page.locator(
       'button[aria-label="Eliminar categoría Power Banks / Baterías portatiles"]'
     );
     await expect(deleteDefaultCatBtn).toBeVisible();
     await deleteDefaultCatBtn.click();
+
+    // Si tiene productos en la simulación de 1 mes, confirmar el movimiento a General / Otros
+    const orphanConfirmBtn = page.locator('[data-testid="confirm-orphan-category-delete"]');
+    if (await orphanConfirmBtn.isVisible()) {
+      await orphanConfirmBtn.click();
+    }
 
     // Debe trasladarse a la sección inferior de Respaldo como botón interactivo de recuperación (+)
     const restoreDefaultCatBtn = page.locator(

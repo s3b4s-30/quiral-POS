@@ -732,7 +732,7 @@ export default function NewProductModal({
       <ModalSheet
         onClose={handleClose}
         onStartClose={onStartClose}
-        title="Nuevo producto"
+        title={isAddingCategory ? "Nueva categoría" : "Nuevo producto"}
         footer={
           isAddingCategory ? (
             <button
@@ -784,7 +784,7 @@ export default function NewProductModal({
                   aria-label="Volver a nuevo producto"
                   className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] dark:text-zinc-200 active:scale-95 transition-transform"
                 >
-                  <ArrowLeft size={14} />
+                  <ArrowLeft size={14} strokeWidth={2.5} className="shrink-0" />
                   <span>Volver</span>
                 </button>
 
@@ -796,7 +796,7 @@ export default function NewProductModal({
                   aria-label="Abrir banco maestro de atributos"
                   className="inline-flex items-center gap-1.5 rounded-xl border border-[#007aff]/30 bg-[#007aff]/10 px-3 py-1.5 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform"
                 >
-                  <Sliders size={13} />
+                  <Sliders size={13} strokeWidth={2.5} className="shrink-0" />
                   <span>Editar banco</span>
                 </button>
               </div>
@@ -1105,9 +1105,9 @@ export default function NewProductModal({
                       setAttrModalConfig({ open: true, tab: "attribute-options" })
                     }
                     aria-label="Abrir banco maestro de atributos"
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
                   >
-                    <Sliders size={12} />
+                    <Sliders size={13} strokeWidth={2.5} className="shrink-0" />
                     <span>Editar banco</span>
                   </button>
                 </div>
