@@ -60,6 +60,8 @@ interface InventoryContextType {
     storeLogoUrl?: string;
   }) => Promise<void>;
   purgeOutOfStock: () => number;
+  deleteMultipleProducts: (productIds: string[]) => Promise<number>;
+  clearAllProducts: () => Promise<number>;
   signOut: () => Promise<void>;
   refreshData: () => Promise<void>;
 }
@@ -675,6 +677,51 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
     return removed.length;
   };
+  const deleteMultipleProducts = async (productIds: string[]): Promise<number> => {
+    if (!productIds || productIds.length === 0) return 0;
+    const idsSet = new Set(productIds);
+    setProducts((prev) => prev.filter((p) => !idsSet.has(p.id)));
+    setCart((prev) => prev.filter((item) => !idsSet.has(item.productId)));
+
+    if (storeId && !isDemoUser) {
+      try {
+        const { error: delErr } = await supabase
+          .from("products")
+          .delete()
+          .eq("store_id", storeId)
+          .in("id", productIds);
+        if (delErr) {
+          report(`Error al eliminar productos seleccionados: ${delErr.message}`);
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        report(`Fallo al eliminar productos seleccionados: ${msg}`);
+      }
+    }
+    return productIds.length;
+  };
+
+  const clearAllProducts = async (): Promise<number> => {
+    const totalCount = products.length;
+    setProducts([]);
+    setCart([]);
+
+    if (storeId && !isDemoUser) {
+      try {
+        const { error: delErr } = await supabase
+          .from("products")
+          .delete()
+          .eq("store_id", storeId);
+        if (delErr) {
+          report(`Error al vaciar catálogo en Supabase: ${delErr.message}`);
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        report(`Fallo al vaciar catálogo: ${msg}`);
+      }
+    }
+    return totalCount;
+  };
 
   // Carrito de compras
   const addToCart = (productId: string) => {
@@ -1115,6 +1162,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         updateProductPrice,
         updateStoreProfile,
         purgeOutOfStock,
+        deleteMultipleProducts,
+        clearAllProducts,
         signOut,
         refreshData,
       }}
