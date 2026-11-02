@@ -1,5 +1,5 @@
-import { Check, Plus, Sliders, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { Check, Plus, Sliders, Sparkles, Tag, X } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import AttributeConfigModal from "./AttributeConfigModal";
 import ModalSheet from "./ModalSheet";
 import { useInventory } from "../context/InventoryContext";
@@ -27,10 +27,13 @@ export default function NewProductModal({
     addProduct,
     catalogConfig,
     addCategory,
+    updateCategoryAttributes,
     addAttributeOption,
   } = useInventory();
 
-  const [category, setCategory] = useState<ProductCategory>("Cargadores y Cables");
+  const [category, setCategory] = useState<ProductCategory>(
+    catalogConfig.categoryOrder[0] || "Cargadores y Cables"
+  );
 
   // Listas vivas desde el Banco Maestro de Atributos
   const chargerSubtypes = catalogConfig.attributes.chargerSubtypes?.options ?? [
@@ -84,7 +87,7 @@ export default function NewProductModal({
     "MagSafe",
   ];
 
-  // Estados para las 3 familias clásicas (preservando compatibilidad determinista)
+  // Estados para las familias clásicas y atributos sincronizados
   const [chargerSubtype, setChargerSubtype] = useState(chargerSubtypes[0] || "Cubo");
   const [chargerBrand, setChargerBrand] = useState(chargerBrands[0] || "iPhone");
   const [chargerPower, setChargerPower] = useState(chargerPowers[0] || "20W");
@@ -104,7 +107,7 @@ export default function NewProductModal({
     audioConnections[0] || "USB-C"
   );
 
-  // Estado dinámico para atributos de cualquier categoría modular (Power Banks, Relojes, SSD, etc.)
+  // Estado dinámico para atributos de cualquier categoría modular
   const [dynamicSelections, setDynamicSelections] = useState<Record<string, string>>(
     {}
   );
@@ -113,7 +116,7 @@ export default function NewProductModal({
   const [addingAttrKey, setAddingAttrKey] = useState<string | null>(null);
   const [newAttrOptionText, setNewAttrOptionText] = useState("");
 
-  // Estado para creación rápida (+) de una nueva categoría al vuelo
+  // Estado para creación rápida (+) de una nueva categoría al vuelo con secuencia estricta de atributos
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryAttrKeys, setNewCategoryAttrKeys] = useState<string[]>([
@@ -121,12 +124,19 @@ export default function NewProductModal({
     "capacities",
     "ports",
   ]);
+  const hasCustomAttrOrderRef = useRef(false);
+
+  // Estado para configurar el orden de atributos de la categoría activa directamente
+  const [isConfiguringCategoryAttrs, setIsConfiguringCategoryAttrs] = useState(false);
 
   // Modal de Banco Maestro de Atributos
   const [isAttrModalOpen, setIsAttrModalOpen] = useState(false);
 
-  // Campos del formulario comercial
+  // Campos del formulario comercial y Control de Nomenclatura Dinámica
   const [name, setName] = useState("");
+  const [manualBaseName, setManualBaseName] = useState("");
+  const [includeAttributesInName, setIncludeAttributesInName] = useState(true);
+
   const [priceInput, setPriceInput] = useState("");
   const [costInput, setCostInput] = useState("");
   const [stockInput, setStockInput] = useState("1");
@@ -143,7 +153,7 @@ export default function NewProductModal({
   const marginPercent =
     currentCost > 0 ? Math.round((unitProfit / currentCost) * 100) : 0;
 
-  // Categoría activa en la configuración modular
+  // Categoría activa en la configuración modular (respeta el orden exacto de attributeKeys)
   const activeCategoryConfig = catalogConfig.categories.find((c) =>
     isSameCatalogText(c.name, category)
   );
@@ -165,19 +175,115 @@ export default function NewProductModal({
   }, [category, activeAttributeKeys, catalogConfig.attributes]);
 
   // Sugerir automáticamente bloques de atributos al escribir el nombre de una nueva categoría
+  // solo si el usuario no ha personalizado manualmente el orden de selección
   useEffect(() => {
-    if (newCategoryName.trim().length >= 3) {
+    if (newCategoryName.trim().length >= 3 && !hasCustomAttrOrderRef.current) {
       setNewCategoryAttrKeys(inferAttributeKeysForCategory(newCategoryName));
     }
   }, [newCategoryName]);
 
+  // Helper para obtener el valor actualmente seleccionado de cualquier clave de atributo
+  const getSelectedValueForAttribute = (attrKey: string): string => {
+    if (category === "Cargadores y Cables") {
+      if (attrKey === "chargerSubtypes") return chargerSubtype;
+      if (attrKey === "brands") return chargerBrand;
+      if (attrKey === "powers") return chargerPower;
+      if (attrKey === "cableFinishes") return cableFinish;
+    }
+    if (category === "Forros / Fundas") {
+      if (attrKey === "caseMaterials") return caseMaterial;
+      if (attrKey === "caseModels") return caseModel;
+    }
+    if (category === "Audio / AirPods") {
+      if (attrKey === "audioModels") return audioModel;
+      if (attrKey === "connections") return audioConnection;
+    }
+    const opts = catalogConfig.attributes[attrKey]?.options ?? [];
+    return dynamicSelections[attrKey] || opts[0] || "";
+  };
+
+  // Helper para actualizar el valor seleccionado de cualquier clave de atributo
+  const setSelectedValueForAttribute = (attrKey: string, val: string) => {
+    if (attrKey === "chargerSubtypes") setChargerSubtype(val);
+    if (attrKey === "brands" && category === "Cargadores y Cables") setChargerBrand(val);
+    if (attrKey === "powers" && category === "Cargadores y Cables") setChargerPower(val);
+    if (attrKey === "cableFinishes" && category === "Cargadores y Cables")
+      setCableFinish(val);
+    if (attrKey === "caseMaterials" && category === "Forros / Fundas")
+      setCaseMaterial(val);
+    if (attrKey === "caseModels" && category === "Forros / Fundas") setCaseModel(val);
+    if (attrKey === "audioModels" && category === "Audio / AirPods") setAudioModel(val);
+    if (attrKey === "connections" && category === "Audio / AirPods")
+      setAudioConnection(val);
+
+    setDynamicSelections((prev) => ({ ...prev, [attrKey]: val }));
+  };
+
+  // Construir sufijo/nombre técnico de atributos según la categoría y el orden de activeAttributeKeys
+  const buildTechnicalAttributesDescriptor = (): string => {
+    if (category === "Cargadores y Cables") {
+      if (chargerSubtype === "Cubo") {
+        return `Cubo ${chargerBrand} ${chargerPower}`;
+      }
+      if (chargerSubtype === "Cable") {
+        return `Cable ${chargerBrand} (${cableFinish})`;
+      }
+      if (chargerSubtype === "Cargador Completo") {
+        return `Cargador Completo ${chargerBrand} ${chargerPower} (${cableFinish})`;
+      }
+      return `${chargerSubtype} ${chargerBrand} ${chargerPower}`;
+    }
+    if (category === "Forros / Fundas") {
+      return `Forro ${caseMaterial} (${caseModel})`;
+    }
+    if (category === "Audio / AirPods") {
+      return `${audioModel} (${audioConnection})`;
+    }
+    const selectedValues = activeAttributeKeys
+      .map((k) => getSelectedValueForAttribute(k))
+      .filter(Boolean);
+    if (isSameCatalogText(category, "Power Banks / Baterías")) {
+      const brandVal = dynamicSelections.brands || "";
+      const capVal = dynamicSelections.capacities || "";
+      const portVal = dynamicSelections.ports || "";
+      return `Power Bank ${brandVal} ${capVal}${portVal ? ` (${portVal})` : ""}`.trim();
+    }
+    return [category, ...selectedValues].join(" ").trim();
+  };
+
+  // Construir cadena compacta de atributos seleccionados para concatenar a un nombre manual
+  const buildCompactAttributesSuffix = (): string => {
+    const parts: string[] = [];
+    for (const key of activeAttributeKeys) {
+      if (
+        category === "Cargadores y Cables" &&
+        key === "powers" &&
+        chargerSubtype === "Cable"
+      ) {
+        continue;
+      }
+      if (
+        category === "Cargadores y Cables" &&
+        key === "cableFinishes" &&
+        chargerSubtype === "Cubo"
+      ) {
+        continue;
+      }
+      const val = getSelectedValueForAttribute(key);
+      if (val) parts.push(val);
+    }
+    return parts.join(" ");
+  };
+
   const resetForm = () => {
     setName("");
+    setManualBaseName("");
+    setIncludeAttributesInName(true);
     setPriceInput("");
     setCostInput("");
     setStockInput("1");
     setWarrantyDays("15");
-    setCategory("Cargadores y Cables");
+    setCategory(catalogConfig.categoryOrder[0] || "Cargadores y Cables");
     setChargerSubtype(chargerSubtypes[0] || "Cubo");
     setChargerBrand(chargerBrands[0] || "iPhone");
     setChargerPower(chargerPowers[0] || "20W");
@@ -185,6 +291,8 @@ export default function NewProductModal({
     setAddingAttrKey(null);
     setNewAttrOptionText("");
     setIsAddingCategory(false);
+    setIsConfiguringCategoryAttrs(false);
+    hasCustomAttrOrderRef.current = false;
     setError(null);
   };
 
@@ -193,36 +301,24 @@ export default function NewProductModal({
     onClose();
   };
 
-  // Autogenerar nombre comercial cuando cambia la categoría o los chips seleccionados
+  // Sincronizar el nombre comercial cuando está activo el Control de Nomenclatura Dinámica
   useEffect(() => {
-    let generated = "";
-    if (category === "Cargadores y Cables") {
-      if (chargerSubtype === "Cubo") {
-        generated = `Cubo ${chargerBrand} ${chargerPower}`;
-      } else if (chargerSubtype === "Cable") {
-        generated = `Cable ${chargerBrand} (${cableFinish})`;
-      } else {
-        generated = `Cargador Completo ${chargerBrand} ${chargerPower} (${cableFinish})`;
-      }
-    } else if (category === "Forros / Fundas") {
-      generated = `Forro ${caseMaterial} (${caseModel})`;
-    } else if (category === "Audio / AirPods") {
-      generated = `${audioModel} (${audioConnection})`;
+    if (!includeAttributesInName) return;
+
+    const generated = buildTechnicalAttributesDescriptor();
+    if (!manualBaseName.trim()) {
+      setName(generated);
     } else {
-      const selectedValues = activeAttributeKeys
-        .map((k) => dynamicSelections[k])
-        .filter(Boolean);
-      if (isSameCatalogText(category, "Power Banks / Baterías")) {
-        const brandVal = dynamicSelections.brands || "";
-        const capVal = dynamicSelections.capacities || "";
-        const portVal = dynamicSelections.ports || "";
-        generated = `Power Bank ${brandVal} ${capVal}${portVal ? ` (${portVal})` : ""}`.trim();
-      } else {
-        generated = [category, ...selectedValues].join(" ").trim();
-      }
+      const base = manualBaseName.trim();
+      const suffix = buildCompactAttributesSuffix();
+      const words = suffix
+        .split(/\s+/)
+        .filter((w) => w && !base.toLowerCase().includes(w.toLowerCase()));
+      setName(words.length > 0 ? `${base} ${words.join(" ")}` : base);
     }
-    setName(generated);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    includeAttributesInName,
     category,
     chargerSubtype,
     chargerBrand,
@@ -235,6 +331,32 @@ export default function NewProductModal({
     activeAttributeKeys,
     dynamicSelections,
   ]);
+
+  // Alternar el switch de incluir subtipo/atributos en el nombre
+  const handleToggleIncludeAttributesInName = () => {
+    const nextState = !includeAttributesInName;
+    setIncludeAttributesInName(nextState);
+
+    if (nextState) {
+      // Al activarlo, si había un nombre manual escrito, lo concatenamos con los atributos clave
+      const base = manualBaseName.trim();
+      if (base) {
+        const suffix = buildCompactAttributesSuffix();
+        const words = suffix
+          .split(/\s+/)
+          .filter((w) => w && !base.toLowerCase().includes(w.toLowerCase()));
+        setName(words.length > 0 ? `${base} ${words.join(" ")}` : base);
+      } else {
+        setName(buildTechnicalAttributesDescriptor());
+      }
+    } else {
+      // Al desactivarlo, si había un nombre base manual se restaura solo el nombre manual;
+      // si era el nombre autogenerado, se deja libre con el prefijo base limpio para edición manual
+      if (manualBaseName.trim()) {
+        setName(manualBaseName.trim());
+      }
+    }
+  };
 
   // Asegurar que haya un proveedor seleccionado por defecto
   useEffect(() => {
@@ -252,52 +374,46 @@ export default function NewProductModal({
     }
     const saved = addAttributeOption(attrKey, clean);
     if (saved) {
-      if (attrKey === "brands" && category === "Cargadores y Cables") {
-        setChargerBrand(saved);
-      } else if (attrKey === "powers" && category === "Cargadores y Cables") {
-        setChargerPower(saved);
-      } else if (attrKey === "cableFinishes" && category === "Cargadores y Cables") {
-        setCableFinish(saved);
-      } else if (attrKey === "caseMaterials" && category === "Forros / Fundas") {
-        setCaseMaterial(saved);
-      } else if (attrKey === "caseModels" && category === "Forros / Fundas") {
-        setCaseModel(saved);
-      } else if (attrKey === "audioModels" && category === "Audio / AirPods") {
-        setAudioModel(saved);
-      } else if (attrKey === "connections" && category === "Audio / AirPods") {
-        setAudioConnection(saved);
-      } else {
-        setDynamicSelections((prev) => ({ ...prev, [attrKey]: saved }));
-      }
+      setSelectedValueForAttribute(attrKey, saved);
     }
     setNewAttrOptionText("");
     setAddingAttrKey(null);
   };
 
-  // Crear nueva familia/categoría al vuelo (+)
+  // Crear nueva familia/categoría al vuelo (+) respetando el orden exacto de atributos seleccionados
   const handleCreateQuickCategory = () => {
     const clean = normalizeCatalogText(newCategoryName);
     if (!clean || clean.toLowerCase() === "todos") return;
     const keys =
       newCategoryAttrKeys.length > 0
-        ? newCategoryAttrKeys
+        ? [...newCategoryAttrKeys]
         : inferAttributeKeysForCategory(clean);
     const created = addCategory(clean, keys);
     if (created) {
       setCategory(created.name);
       setNewCategoryName("");
       setIsAddingCategory(false);
+      hasCustomAttrOrderRef.current = false;
     }
   };
 
+  // Seleccionar/deseleccionar atributo en estricto orden de clic (Task 3)
   const toggleNewCategoryAttrKey = (key: string) => {
+    hasCustomAttrOrderRef.current = true;
     setNewCategoryAttrKeys((prev) =>
-      prev.includes(key)
-        ? prev.length > 1
-          ? prev.filter((k) => k !== key)
-          : prev
-        : [...prev, key]
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
     );
+  };
+
+  // Alternar atributo en la categoría activa respetando la secuencia exacta de selección
+  const toggleActiveCategoryAttrKey = (key: string) => {
+    const exists = activeAttributeKeys.includes(key);
+    const nextKeys = exists
+      ? activeAttributeKeys.length > 1
+        ? activeAttributeKeys.filter((k) => k !== key)
+        : activeAttributeKeys
+      : [...activeAttributeKeys, key];
+    updateCategoryAttributes(category, nextKeys);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -327,7 +443,7 @@ export default function NewProductModal({
       } else if (chargerSubtype === "Cable") {
         subtitle = `Cable · ${chargerBrand} · ${cableFinish}`;
       } else {
-        subtitle = `Cargador Completo · ${chargerBrand}`;
+        subtitle = `${chargerSubtype} · ${chargerBrand}`;
       }
     } else if (category === "Forros / Fundas") {
       subtitle = `Forro · ${caseModel}`;
@@ -335,7 +451,7 @@ export default function NewProductModal({
       subtitle = `Audio · ${audioConnection}`;
     } else {
       const vals = activeAttributeKeys
-        .map((k) => dynamicSelections[k])
+        .map((k) => getSelectedValueForAttribute(k))
         .filter(Boolean);
       subtitle = vals.length > 0 ? vals.join(" · ") : category;
     }
@@ -379,7 +495,7 @@ export default function NewProductModal({
                 setNewAttrOptionText("");
               }
             }}
-            placeholder={`Nuevo (${attrLabel})`}
+            placeholder={`Nuevo valor para ${attrLabel}`}
             aria-label={`Escribir nuevo valor para ${attrLabel}`}
             autoFocus
             className="w-28 bg-transparent text-xs font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none"
@@ -423,6 +539,73 @@ export default function NewProductModal({
     );
   };
 
+  // Etiqueta visible para cada bloque de atributo (preservando etiquetas clásicas de regresión visual)
+  const getDisplayHeadingForAttribute = (attrKey: string, defaultLabel: string): string => {
+    if (category === "Cargadores y Cables" && attrKey === "powers") {
+      return "Potencia:";
+    }
+    if (category === "Forros / Fundas" && attrKey === "caseModels") {
+      return "Modelos:";
+    }
+    if (category === "Audio / AirPods" && attrKey === "connections") {
+      return "Conexión:";
+    }
+    return `${defaultLabel}:`;
+  };
+
+  // Renderizado dinámico de cualquier bloque de atributo siguiendo el orden exacto de activeAttributeKeys
+  const renderAttributeBlock = (attrKey: string) => {
+    const attrDef = catalogConfig.attributes[attrKey];
+    if (!attrDef) return null;
+
+    // Reglas reactivas de subtipos para Cargadores y Cables
+    if (category === "Cargadores y Cables") {
+      const hasSubtypeBlock = activeAttributeKeys.includes("chargerSubtypes");
+      if (
+        hasSubtypeBlock &&
+        attrKey === "powers" &&
+        chargerSubtype === "Cable"
+      ) {
+        return null;
+      }
+      if (
+        hasSubtypeBlock &&
+        attrKey === "cableFinishes" &&
+        chargerSubtype === "Cubo"
+      ) {
+        return null;
+      }
+    }
+
+    const selectedVal = getSelectedValueForAttribute(attrKey);
+    const headingText = getDisplayHeadingForAttribute(attrKey, attrDef.label);
+
+    return (
+      <div key={attrKey} data-attribute-key={attrKey}>
+        <p className="mb-1.5 text-[11px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
+          {headingText}
+        </p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {attrDef.options.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => setSelectedValueForAttribute(attrKey, opt)}
+              className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-colors duration-75 ${
+                selectedVal === opt
+                  ? "bg-[#007aff] text-white font-semibold shadow-sm"
+                  : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200"
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
+          {attrKey !== "chargerSubtypes" && renderInlineAddOption(attrKey, attrDef.label)}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <ModalSheet
@@ -454,7 +637,11 @@ export default function NewProductModal({
               </span>
               <button
                 type="button"
-                onClick={() => setIsAddingCategory((prev) => !prev)}
+                data-testid="add-new-category-inline-btn"
+                onClick={() => {
+                  setIsAddingCategory((prev) => !prev);
+                  hasCustomAttrOrderRef.current = false;
+                }}
                 aria-label="Crear nueva categoría"
                 className="inline-flex items-center gap-1 rounded-xl border border-[#007aff]/30 bg-[#007aff]/10 px-2.5 py-1 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform"
               >
@@ -463,12 +650,13 @@ export default function NewProductModal({
               </button>
             </div>
 
-            {/* Panel inline para crear una categoría al vuelo con atributos adaptativos */}
+            {/* Panel inline para crear una categoría al vuelo con orden de atributos por secuencia de clic */}
             {isAddingCategory && (
               <div className="rounded-2xl border border-[#007aff]/35 bg-[#007aff]/5 dark:bg-zinc-900 p-3 space-y-2.5 animate-in fade-in duration-150">
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
+                    data-testid="new-category-name-input"
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
                     onKeyDown={(e) => {
@@ -483,6 +671,7 @@ export default function NewProductModal({
                   />
                   <button
                     type="button"
+                    data-testid="confirm-create-category-btn"
                     onClick={handleCreateQuickCategory}
                     disabled={!newCategoryName.trim()}
                     aria-label="Confirmar creación de categoría"
@@ -493,29 +682,48 @@ export default function NewProductModal({
                 </div>
 
                 <div>
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
-                    Atributos técnicos asociados:
-                  </p>
-                  <div className="flex flex-wrap gap-1">
-                    {Object.values(catalogConfig.attributes)
-                      .filter((a) => a.key !== "chargerSubtypes")
-                      .map((attr) => {
-                        const selected = newCategoryAttrKeys.includes(attr.key);
-                        return (
-                          <button
-                            key={attr.key}
-                            type="button"
-                            onClick={() => toggleNewCategoryAttrKey(attr.key)}
-                            className={`rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors ${
-                              selected
-                                ? "bg-[#007aff] text-white"
-                                : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-950 text-[var(--text-secondary)] dark:text-zinc-400"
-                            }`}
-                          >
-                            {attr.label}
-                          </button>
-                        );
-                      })}
+                  <div className="mb-1 flex items-center justify-between">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
+                      Atributos técnicos asociados (toca en el orden deseado):
+                    </p>
+                    {newCategoryAttrKeys.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          hasCustomAttrOrderRef.current = true;
+                          setNewCategoryAttrKeys([]);
+                        }}
+                        aria-label="Reiniciar orden de atributos"
+                        className="text-[10px] font-bold text-[#ff3b30] hover:underline"
+                      >
+                        Reiniciar orden
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.values(catalogConfig.attributes).map((attr) => {
+                      const orderIdx = newCategoryAttrKeys.indexOf(attr.key);
+                      const selected = orderIdx !== -1;
+                      return (
+                        <button
+                          key={attr.key}
+                          type="button"
+                          onClick={() => toggleNewCategoryAttrKey(attr.key)}
+                          className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors ${
+                            selected
+                              ? "bg-[#007aff] text-white shadow-sm"
+                              : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-950 text-[var(--text-secondary)] dark:text-zinc-400"
+                          }`}
+                        >
+                          {selected && (
+                            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/25 text-[10px] font-extrabold">
+                              {orderIdx + 1}
+                            </span>
+                          )}
+                          <span>{attr.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -542,280 +750,136 @@ export default function NewProductModal({
             </div>
           </div>
 
-          {/* Opciones y Especificaciones Dinámicas según Categoría */}
+          {/* Opciones y Especificaciones Dinámicas según el Orden Exacto de Atributos */}
           <div className="rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/40 dark:bg-zinc-900/50 p-3.5 space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
                 Especificaciones
               </p>
-              <button
-                type="button"
-                onClick={() => setIsAttrModalOpen(true)}
-                aria-label="Abrir banco maestro de atributos"
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
-              >
-                <Sliders size={12} />
-                <span>Editar banco</span>
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsConfiguringCategoryAttrs((prev) => !prev)}
+                  aria-label="Ordenar atributos de esta categoría"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--text-secondary)] dark:text-zinc-300 hover:text-[#007aff] dark:hover:text-[#0a84ff]"
+                >
+                  <Tag size={11} />
+                  <span>Orden de atributos</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAttrModalOpen(true)}
+                  aria-label="Abrir banco maestro de atributos"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
+                >
+                  <Sliders size={12} />
+                  <span>Editar banco</span>
+                </button>
+              </div>
             </div>
 
-            {category === "Cargadores y Cables" && (
-              <>
-                <div>
-                  <p className="mb-1.5 text-[11px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                    Subtipo:
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {chargerSubtypes.map((sub) => (
+            {/* Configurador en vivo del orden exacto de atributos para la categoría actual */}
+            {isConfiguringCategoryAttrs && (
+              <div className="rounded-xl border border-[#007aff]/30 bg-[#007aff]/5 dark:bg-zinc-950 p-2.5 space-y-1.5 animate-in fade-in duration-100">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
+                  Secuencia de atributos para «{category}» (toca para ordenar):
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.values(catalogConfig.attributes).map((attr) => {
+                    const idx = activeAttributeKeys.indexOf(attr.key);
+                    const isSelected = idx !== -1;
+                    return (
                       <button
-                        key={sub}
+                        key={attr.key}
                         type="button"
-                        onClick={() => setChargerSubtype(sub)}
-                        className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-colors duration-75 ${
-                          chargerSubtype === sub
-                            ? "bg-[#007aff] text-white font-semibold shadow-sm"
-                            : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200"
+                        onClick={() => toggleActiveCategoryAttrKey(attr.key)}
+                        className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors ${
+                          isSelected
+                            ? "bg-[#007aff] text-white shadow-sm"
+                            : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-secondary)] dark:text-zinc-400"
                         }`}
                       >
-                        {sub}
+                        {isSelected && (
+                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/25 text-[10px] font-extrabold">
+                            {idx + 1}
+                          </span>
+                        )}
+                        <span>{attr.label}</span>
                       </button>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-
-                <div>
-                  <p className="mb-1.5 text-[11px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                    Marca:
-                  </p>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {chargerBrands.map((brand) => (
-                      <button
-                        key={brand}
-                        type="button"
-                        onClick={() => setChargerBrand(brand)}
-                        className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-colors duration-75 ${
-                          chargerBrand === brand
-                            ? "bg-[#007aff] text-white font-semibold shadow-sm"
-                            : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200"
-                        }`}
-                      >
-                        {brand}
-                      </button>
-                    ))}
-                    {renderInlineAddOption("brands", "Marca")}
-                  </div>
-                </div>
-
-                {/* Potencia: Visible para Cubo y Cargador Completo */}
-                {(chargerSubtype === "Cubo" ||
-                  chargerSubtype === "Cargador Completo") && (
-                  <div>
-                    <p className="mb-1.5 text-[11px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                      Potencia:
-                    </p>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {chargerPowers.map((pow) => (
-                        <button
-                          key={pow}
-                          type="button"
-                          onClick={() => setChargerPower(pow)}
-                          className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-colors duration-75 ${
-                            chargerPower === pow
-                              ? "bg-[#007aff] text-white font-semibold shadow-sm"
-                              : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200"
-                          }`}
-                        >
-                          {pow}
-                        </button>
-                      ))}
-                      {renderInlineAddOption("powers", "Potencia (W)")}
-                    </div>
-                  </div>
-                )}
-
-                {/* Acabado: Visible para Cable y Cargador Completo */}
-                {(chargerSubtype === "Cable" ||
-                  chargerSubtype === "Cargador Completo") && (
-                  <div>
-                    <p className="mb-1.5 text-[11px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                      Acabado del cable:
-                    </p>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {cableFinishes.map((finish) => (
-                        <button
-                          key={finish}
-                          type="button"
-                          onClick={() => setCableFinish(finish)}
-                          className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-colors duration-75 ${
-                            cableFinish === finish
-                              ? "bg-[#007aff] text-white font-semibold shadow-sm"
-                              : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200"
-                          }`}
-                        >
-                          {finish}
-                        </button>
-                      ))}
-                      {renderInlineAddOption("cableFinishes", "Acabado del cable")}
-                    </div>
-                  </div>
-                )}
-              </>
+              </div>
             )}
 
-            {category === "Forros / Fundas" && (
-              <>
-                <div>
-                  <p className="mb-1.5 text-[11px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                    Material:
-                  </p>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {caseMaterials.map((mat) => (
-                      <button
-                        key={mat}
-                        type="button"
-                        onClick={() => setCaseMaterial(mat)}
-                        className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-colors duration-75 ${
-                          caseMaterial === mat
-                            ? "bg-[#007aff] text-white font-semibold shadow-sm"
-                            : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200"
-                        }`}
-                      >
-                        {mat}
-                      </button>
-                    ))}
-                    {renderInlineAddOption("caseMaterials", "Material")}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="mb-1.5 text-[11px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                    Modelos:
-                  </p>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {caseModels.map((mod) => (
-                      <button
-                        key={mod}
-                        type="button"
-                        onClick={() => setCaseModel(mod)}
-                        className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-colors duration-75 ${
-                          caseModel === mod
-                            ? "bg-[#007aff] text-white font-semibold shadow-sm"
-                            : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200"
-                        }`}
-                      >
-                        {mod}
-                      </button>
-                    ))}
-                    {renderInlineAddOption("caseModels", "Modelo Compatible")}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {category === "Audio / AirPods" && (
-              <>
-                <div>
-                  <p className="mb-1.5 text-[11px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                    Modelo:
-                  </p>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {audioModels.map((mod) => (
-                      <button
-                        key={mod}
-                        type="button"
-                        onClick={() => setAudioModel(mod)}
-                        className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-colors duration-75 ${
-                          audioModel === mod
-                            ? "bg-[#007aff] text-white font-semibold shadow-sm"
-                            : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200"
-                        }`}
-                      >
-                        {mod}
-                      </button>
-                    ))}
-                    {renderInlineAddOption("audioModels", "Modelo")}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="mb-1.5 text-[11px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                    Conexión:
-                  </p>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {audioConnections.map((con) => (
-                      <button
-                        key={con}
-                        type="button"
-                        onClick={() => setAudioConnection(con)}
-                        className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-colors duration-75 ${
-                          audioConnection === con
-                            ? "bg-[#007aff] text-white font-semibold shadow-sm"
-                            : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200"
-                        }`}
-                      >
-                        {con}
-                      </button>
-                    ))}
-                    {renderInlineAddOption("connections", "Tipo de Conexión")}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Renderizado adaptativo para cualquier otra categoría (Power Banks, Relojes, SSD, etc.) */}
-            {category !== "Cargadores y Cables" &&
-              category !== "Forros / Fundas" &&
-              category !== "Audio / AirPods" &&
-              activeAttributeKeys.map((attrKey) => {
-                const attrDef = catalogConfig.attributes[attrKey];
-                if (!attrDef) return null;
-                const selectedVal =
-                  dynamicSelections[attrKey] || attrDef.options[0] || "";
-
-                return (
-                  <div key={attrKey}>
-                    <p className="mb-1.5 text-[11px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                      {attrDef.label}:
-                    </p>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {attrDef.options.map((opt) => (
-                        <button
-                          key={opt}
-                          type="button"
-                          onClick={() =>
-                            setDynamicSelections((prev) => ({
-                              ...prev,
-                              [attrKey]: opt,
-                            }))
-                          }
-                          className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-colors duration-75 ${
-                            selectedVal === opt
-                              ? "bg-[#007aff] text-white font-semibold shadow-sm"
-                              : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200"
-                          }`}
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                      {renderInlineAddOption(attrKey, attrDef.label)}
-                    </div>
-                  </div>
-                );
-              })}
+            {/* Renderizado estricto según el orden de activeAttributeKeys */}
+            {activeAttributeKeys.map((attrKey) => renderAttributeBlock(attrKey))}
           </div>
 
-          {/* Nombre autocompletado / editable */}
-          <div>
-            <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-              Nombre comercial del producto *
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ej. Cubo iPhone 20W"
-              className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
-            />
+          {/* Nombre comercial del producto + Control de Nomenclatura Dinámica (Task 5) */}
+          <div className="space-y-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
+                Nombre comercial del producto *
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setName(val);
+                  if (!includeAttributesInName) {
+                    setManualBaseName(val);
+                  }
+                }}
+                placeholder="Ej. Cubo iPhone 20W"
+                className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
+              />
+            </div>
+
+            {/* Switch de Control de Nomenclatura Dinámica justo debajo del nombre */}
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-900/70 px-3 py-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Sparkles
+                  size={15}
+                  className={
+                    includeAttributesInName
+                      ? "text-[#007aff] shrink-0"
+                      : "text-[var(--text-secondary)] dark:text-zinc-500 shrink-0"
+                  }
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-bold text-[var(--text-primary)] dark:text-zinc-200">
+                    Incluir subtipo y atributos en el nombre
+                  </p>
+                  <p className="truncate text-[10px] text-[var(--text-secondary)] dark:text-zinc-400">
+                    {includeAttributesInName
+                      ? `Concatenación activa (${buildCompactAttributesSuffix() || category})`
+                      : "Modo manual: solo se mostrará el nombre que escribas"}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                role="switch"
+                aria-checked={includeAttributesInName}
+                aria-label="Incluir atributos en el nombre del producto"
+                data-testid="auto-append-attributes-toggle"
+                onClick={handleToggleIncludeAttributesInName}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-150 ${
+                  includeAttributesInName
+                    ? "bg-[#30d158]"
+                    : "bg-black/20 dark:bg-zinc-700"
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-150 ${
+                    includeAttributesInName ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
 
           {/* Precios (Costo a la izquierda, Venta a la derecha con tabIndex y validación visual) */}
@@ -919,42 +983,30 @@ export default function NewProductModal({
               <button
                 type="button"
                 onClick={onOpenSuppliers}
-                className="text-xs font-semibold text-[#007aff] hover:underline dark:text-[#0a84ff]"
+                className="inline-flex items-center gap-1 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
               >
-                + Gestionar proveedores
+                <Plus size={13} />
+                <span>Gestionar proveedores</span>
               </button>
             </div>
 
             {suppliers.length === 0 ? (
-              <div className="rounded-xl border border-[#ff9500]/30 bg-[#ff9500]/10 p-3 text-xs text-[#ff9500]">
-                Debes registrar al menos un proveedor antes de crear productos.
-              </div>
+              <p className="rounded-xl border border-[#ff9500]/40 bg-[#ff9500]/10 p-3 text-xs text-[#ff9500]">
+                No hay proveedores registrados. Crea al menos uno para guardar este
+                producto.
+              </p>
             ) : (
-              <div className="relative">
-                <select
-                  value={selectedSupplierId}
-                  onChange={(e) => setSelectedSupplierId(e.target.value)}
-                  className="w-full appearance-none rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
-                >
-                  {suppliers.map((sup) => (
-                    <option key={sup.id} value={sup.id}>
-                      {sup.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute right-3 top-3 flex items-center gap-1.5">
-                  {suppliers.find((s) => s.id === selectedSupplierId) && (
-                    <span
-                      className="h-3.5 w-3.5 rounded-full shadow-sm"
-                      style={{
-                        backgroundColor: suppliers.find(
-                          (s) => s.id === selectedSupplierId
-                        )?.color,
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
+              <select
+                value={selectedSupplierId}
+                onChange={(e) => setSelectedSupplierId(e.target.value)}
+                className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-medium text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
+              >
+                {suppliers.map((sup) => (
+                  <option key={sup.id} value={sup.id}>
+                    {sup.name}
+                  </option>
+                ))}
+              </select>
             )}
           </div>
         </form>

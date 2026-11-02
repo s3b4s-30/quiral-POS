@@ -13,7 +13,7 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     });
   });
 
-  test("1. Gestión y Reordenamiento de Categorías (Estilo WhatsApp & iOS) con botón Check y respaldo de fábrica", async ({
+  test("1. Gestión, reordenamiento, eliminación de categorías predeterminadas a Respaldo y recuperación en un toque", async ({
     page,
   }) => {
     await page.goto("/");
@@ -44,6 +44,24 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     await expect(page.getByText("Fija e inamovible al inicio de la barra")).toBeVisible();
     await expect(page.getByText("Valores Predeterminados Fijos (Respaldo)")).toBeVisible();
 
+    // Eliminar una categoría predeterminada ("Power Banks / Baterías", que tiene 0 productos) de la barra activa
+    const deleteDefaultCatBtn = page.locator(
+      'button[aria-label="Eliminar categoría Power Banks / Baterías"]'
+    );
+    await expect(deleteDefaultCatBtn).toBeVisible();
+    await deleteDefaultCatBtn.click();
+
+    // Debe trasladarse a la sección inferior de Respaldo como botón interactivo de recuperación (+)
+    const restoreDefaultCatBtn = page.locator(
+      'button[aria-label="Recuperar categoría Power Banks / Baterías"]'
+    );
+    await expect(restoreDefaultCatBtn).toBeVisible();
+
+    // Recuperarla a la barra principal con un solo toque
+    await restoreDefaultCatBtn.click();
+    await expect(restoreDefaultCatBtn).not.toBeVisible();
+    await expect(deleteDefaultCatBtn).toBeVisible();
+
     // Mover la primera categoría hacia abajo y confirmar con Check (✓)
     const moveDownBtn = page.locator('button[aria-label="Bajar categoría Cargadores y Cables"]');
     await expect(moveDownBtn).toBeVisible();
@@ -53,7 +71,7 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     await expect(modalHeading).not.toBeVisible();
   });
 
-  test("2. Creación de nueva familia (+), atributos dinámicos adaptativos (Power Banks), banco libre y protección de categorías huérfanas", async ({
+  test("2. Creación de familia con orden estricto de atributos por secuencia de clic, switch de nomenclatura dinámica y protección de huérfanos", async ({
     page,
   }) => {
     await page.goto("/");
@@ -89,16 +107,25 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
 
     const newCapacityInput = page.locator('input[aria-label="Escribir nuevo valor para Capacidad (mAh)"]');
     await expect(newCapacityInput).toBeVisible();
-    await newCapacityInput.fill("  25000mAh  "); // Probar normalización de espacios
+    await newCapacityInput.fill("  35000mAh  "); // Probar normalización de espacios
     await newCapacityInput.press("Enter");
 
     // El nuevo valor normalizado debe aparecer seleccionado como píldora
-    await expect(page.getByRole("button", { name: "25000mAh", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "35000mAh", exact: true })).toBeVisible();
 
-    // Crear una nueva categoría personalizada (+ Nueva familia): "Relojes Inteligentes"
+    // Crear una nueva categoría personalizada (+ Nueva familia) con ORDEN ESTRICTO de selección de atributos:
+    // 1° Potencia (W), 2° Marca
     const newFamilyBtn = page.locator('button[aria-label="Crear nueva categoría"]');
     await expect(newFamilyBtn).toBeVisible();
     await newFamilyBtn.click();
+
+    const resetAttrOrderBtn = page.locator('button[aria-label="Reiniciar orden de atributos"]');
+    await expect(resetAttrOrderBtn).toBeVisible();
+    await resetAttrOrderBtn.click();
+
+    // Seleccionar primero "Potencia (W)" (#1) y segundo "Marca" (#2)
+    await page.getByRole("button", { name: "Potencia (W)", exact: true }).click();
+    await page.getByRole("button", { name: "Marca", exact: true }).click();
 
     const newCategoryInput = page.locator('input[aria-label="Nombre de la nueva familia de productos"]');
     await expect(newCategoryInput).toBeVisible();
@@ -107,14 +134,31 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     const confirmCreateCatBtn = page.locator('button[aria-label="Confirmar creación de categoría"]');
     await confirmCreateCatBtn.click();
 
-    // Verificar que la categoría "Relojes Inteligentes" fue creada y seleccionada en el formulario
-    await expect(
-      page.locator("#new-product-form").getByRole("button", { name: "Relojes Inteligentes", exact: true })
-    ).toBeVisible();
+    // Verificar que los bloques de atributos se renderizan en el orden exacto de clic: [powers, brands]
+    const attrBlocks = page.locator("#new-product-form [data-attribute-key]");
+    await expect(attrBlocks.nth(0)).toHaveAttribute("data-attribute-key", "powers");
+    await expect(attrBlocks.nth(1)).toHaveAttribute("data-attribute-key", "brands");
 
-    // Guardar un producto dentro de "Relojes Inteligentes" para probar la protección de categorías huérfanas
+    // Probar el Switch de Control de Nomenclatura Dinámica justo debajo del nombre
+    const autoNameToggle = page.locator('[data-testid="auto-append-attributes-toggle"]');
+    await expect(autoNameToggle).toBeVisible();
+    await expect(autoNameToggle).toHaveAttribute("aria-checked", "true");
+
+    // Desactivar concatenación automática y escribir nombre manual limpio
+    await autoNameToggle.click();
+    await expect(autoNameToggle).toHaveAttribute("aria-checked", "false");
+
     const nameInput = page.locator('input[placeholder="Ej. Cubo iPhone 20W"]');
     await nameInput.fill("Apple Watch Series 9");
+
+    // Cambiar un atributo con el switch apagado NO debe sobrescribir el nombre manual
+    await page.locator('[data-attribute-key="brands"]').getByRole("button", { name: "Anker", exact: true }).click();
+    await expect(nameInput).toHaveValue("Apple Watch Series 9");
+
+    // Volver a activar el switch concatena automáticamente los atributos seleccionados al nombre manual
+    await autoNameToggle.click();
+    await expect(autoNameToggle).toHaveAttribute("aria-checked", "true");
+    await expect(nameInput).toHaveValue(/Apple Watch Series 9.*Anker/);
 
     // Segundo campo con placeholder "$0" es Precio de venta *
     const priceInput = page.locator('input[placeholder="$0"]').nth(1);
@@ -124,7 +168,7 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     await saveProductBtn.click();
 
     // Verificar que el producto fue creado en el inventario
-    await expect(page.getByText("Apple Watch Series 9")).toBeVisible();
+    await expect(page.getByText(/Apple Watch Series 9/)).toBeVisible();
 
     // Abrir "Organizar Categorías" e intentar eliminar "Relojes Inteligentes" (que tiene 1 producto activo)
     const organizeCatBtn = page.locator('button[aria-label="Organizar categorías"]');
@@ -151,8 +195,8 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     // Cerrar el modal con el botón Check (✓)
     await page.locator('button[aria-label="Guardar orden de categorías"]').click();
 
-    // El producto "Apple Watch Series 9" debe seguir existiendo en el inventario bajo "General / Otros"
+    // El producto debe seguir existiendo en el inventario bajo "General / Otros"
     await page.locator("#inventory-scroll").getByRole("button", { name: "Todos", exact: true }).click();
-    await expect(page.getByText("Apple Watch Series 9")).toBeVisible();
+    await expect(page.getByText(/Apple Watch Series 9/)).toBeVisible();
   });
 });

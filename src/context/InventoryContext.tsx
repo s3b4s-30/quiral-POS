@@ -1,4 +1,4 @@
-﻿import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { getStoreMembership, printSecurityWarning, signOutUser } from "../lib/authService";
 import { DEMO_STORE_ID, generateDemoSeed } from "../lib/demoSeed";
@@ -797,14 +797,6 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      for (const cat of prev.categories) {
-        const lower = cat.name.toLowerCase();
-        if (!seen.has(lower)) {
-          seen.add(lower);
-          cleanOrder.push(cat.name);
-        }
-      }
-
       const next: CatalogConfig = {
         ...prev,
         categoryOrder: cleanOrder,
@@ -821,14 +813,37 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     const existing = catalogConfig.categories.find((c) =>
       isSameCatalogText(c.name, cleanName)
     );
-    if (existing) {
-      return existing;
-    }
 
     const keys =
       attributeKeys && attributeKeys.length > 0
-        ? attributeKeys
-        : inferAttributeKeysForCategory(cleanName);
+        ? [...attributeKeys]
+        : existing?.attributeKeys ?? inferAttributeKeysForCategory(cleanName);
+
+    if (existing) {
+      const updatedExisting: CategoryConfig = {
+        ...existing,
+        attributeKeys: keys,
+      };
+      const isInOrder = catalogConfig.categoryOrder.some((c) =>
+        isSameCatalogText(c, existing.name)
+      );
+      const nextOrder = isInOrder
+        ? [...catalogConfig.categoryOrder]
+        : [...catalogConfig.categoryOrder, existing.name];
+
+      const nextCategories = catalogConfig.categories.map((c) =>
+        isSameCatalogText(c.name, existing.name) ? updatedExisting : c
+      );
+
+      const nextConfig: CatalogConfig = {
+        ...catalogConfig,
+        categoryOrder: nextOrder,
+        categories: nextCategories,
+      };
+      setCatalogConfig(nextConfig);
+      persistCatalogConfig(nextConfig);
+      return updatedExisting;
+    }
 
     const newCat: CategoryConfig = {
       name: cleanName,
@@ -840,7 +855,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
     const nextConfig: CatalogConfig = {
       ...catalogConfig,
-      categoryOrder: [cleanName, ...catalogConfig.categoryOrder],
+      categoryOrder: [...catalogConfig.categoryOrder, cleanName],
       categories: [...catalogConfig.categories, newCat],
     };
 
@@ -856,7 +871,6 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     const isFactory = FACTORY_BASE_CATEGORIES.some((b) =>
       isSameCatalogText(b, categoryName)
     );
-    if (isFactory) return 0;
 
     const affectedProducts = products.filter((p) =>
       isSameCatalogText(p.category, categoryName)
@@ -882,9 +896,11 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
 
     setCatalogConfig((prev) => {
-      const nextCategories = prev.categories.filter(
-        (c) => !isSameCatalogText(c.name, categoryName)
-      );
+      // Si es categoría base de fábrica, se conserva su definición en `categories` (Respaldo) y solo sale de `categoryOrder`
+      const nextCategories = isFactory
+        ? [...prev.categories]
+        : prev.categories.filter((c) => !isSameCatalogText(c.name, categoryName));
+
       const nextOrder = prev.categoryOrder.filter(
         (c) => !isSameCatalogText(c, categoryName)
       );

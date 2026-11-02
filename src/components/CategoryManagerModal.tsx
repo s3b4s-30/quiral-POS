@@ -9,7 +9,7 @@ import {
   RotateCcw,
   Sliders,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import AttributeConfigModal from "./AttributeConfigModal";
 import ModalSheet from "./ModalSheet";
 import { useInventory } from "../context/InventoryContext";
@@ -33,6 +33,7 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
     updateCategoryOrder,
     addCategory,
     deleteCategory,
+    updateCategoryAttributes,
     resetCatalogConfigToDefault,
   } = useInventory();
 
@@ -43,6 +44,18 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+  // Estado para arrastre táctil directo por deslizamiento (iOS / móvil)
+  const [touchDragIndex, setTouchDragIndex] = useState<number | null>(null);
+  const touchDragIndexRef = useRef<number | null>(null);
+  const longPressRowTimerRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number>(0);
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Categoría cuyo orden de atributos se está configurando en vivo
+  const [editingAttrCategory, setEditingAttrCategory] = useState<ProductCategory | null>(
+    null
+  );
+
   // Estado para alerta de protección contra categorías huérfanas (Riesgo 1)
   const [categoryPendingDelete, setCategoryPendingDelete] = useState<{
     name: ProductCategory;
@@ -50,22 +63,6 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
   } | null>(null);
 
   const [isAttributeModalOpen, setIsAttributeModalOpen] = useState(false);
-
-  // Sincronizar draftOrder si se agregan o eliminan categorías en catalogConfig
-  useEffect(() => {
-    setDraftOrder((prev) => {
-      const validSet = new Set(
-        catalogConfig.categories.map((c) => c.name.toLowerCase())
-      );
-      const filtered = prev.filter((name) => validSet.has(name.toLowerCase()));
-      for (const cat of catalogConfig.categories) {
-        if (!filtered.some((n) => isSameCatalogText(n, cat.name))) {
-          filtered.unshift(cat.name);
-        }
-      }
-      return filtered;
-    });
-  }, [catalogConfig.categories]);
 
   // Mapa de cantidad de productos activos por categoría
   const productCountByCategory = (catName: ProductCategory): number => {
@@ -88,10 +85,11 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
     });
   };
 
-  // Drag & Drop reordenamiento por índice
+  // Reordenamiento directo entre dos índices
   const handleDropAt = (fromIdx: number, toIdx: number) => {
     if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0) return;
     setDraftOrder((prev) => {
+      if (fromIdx >= prev.length || toIdx >= prev.length) return prev;
       const next = [...prev];
       const [moved] = next.splice(fromIdx, 1);
       next.splice(toIdx, 0, moved);
@@ -99,7 +97,87 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
     });
   };
 
-  // Crear nueva categoría desde el modal de organización
+  // Limpiar temporizador de long-press en fila
+  const clearRowLongPressTimer = () => {
+    if (longPressRowTimerRef.current !== null) {
+      window.clearTimeout(longPressRowTimerRef.current);
+      longPressRowTimerRef.current = null;
+    }
+  };
+
+  // Iniciar arrastre táctil inmediato desde el asa de 3 líneas
+  const handleHandleTouchStart = (idx: number, clientY: number) => {
+    clearRowLongPressTimer();
+    touchStartYRef.current = clientY;
+    touchDragIndexRef.current = idx;
+    setTouchDragIndex(idx);
+  };
+
+  // Iniciar long-press en cualquier parte de la fila para activar deslizamiento táctil
+  const handleRowTouchStart = (idx: number, clientY: number) => {
+    clearRowLongPressTimer();
+    touchStartYRef.current = clientY;
+    longPressRowTimerRef.current = window.setTimeout(() => {
+      touchDragIndexRef.current = idx;
+      setTouchDragIndex(idx);
+      longPressRowTimerRef.current = null;
+    }, 220);
+  };
+
+  // Procesar deslizamiento vertical del dedo sobre la lista para reordenar en tiempo real
+  const handleTouchMovePoint = (clientX: number, clientY: number, e?: React.TouchEvent) => {
+    const activeIdx = touchDragIndexRef.current;
+    if (activeIdx === null) {
+      // Si el usuario movió el dedo antes de cumplirse el long-press, cancelar timer para permitir scroll normal
+      if (Math.abs(clientY - touchStartYRef.current) > 10) {
+        clearRowLongPressTimer();
+      }
+      return;
+    }
+
+    if (e && e.cancelable) {
+      e.preventDefault();
+    }
+
+    // Buscar sobre qué fila se encuentra el dedo por coordenadas o por hit-testing
+    let targetIdx: number | null = null;
+    const elUnderFinger = document.elementFromPoint(clientX, clientY);
+    const rowEl = elUnderFinger?.closest("[data-category-index]") as HTMLElement | null;
+    if (rowEl && rowEl.dataset.categoryIndex !== undefined) {
+      const parsed = parseInt(rowEl.dataset.categoryIndex, 10);
+      if (!Number.isNaN(parsed)) {
+        targetIdx = parsed;
+      }
+    } else if (listContainerRef.current) {
+      const rows = Array.from(
+        listContainerRef.current.querySelectorAll<HTMLElement>("[data-category-index]")
+      );
+      for (const r of rows) {
+        const rect = r.getBoundingClientRect();
+        if (clientY >= rect.top && clientY <= rect.bottom) {
+          const parsed = parseInt(r.dataset.categoryIndex || "", 10);
+          if (!Number.isNaN(parsed)) {
+            targetIdx = parsed;
+            break;
+          }
+        }
+      }
+    }
+
+    if (targetIdx !== null && targetIdx !== activeIdx) {
+      handleDropAt(activeIdx, targetIdx);
+      touchDragIndexRef.current = targetIdx;
+      setTouchDragIndex(targetIdx);
+    }
+  };
+
+  const handleTouchEndOrCancel = () => {
+    clearRowLongPressTimer();
+    touchDragIndexRef.current = null;
+    setTouchDragIndex(null);
+  };
+
+  // Crear nueva categoría desde el modal de organización (respeta jerarquía añadiéndose al final)
   const handleCreateCategory = (e: React.FormEvent) => {
     e.preventDefault();
     const clean = normalizeCatalogText(newCategoryName);
@@ -109,15 +187,14 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
     if (created) {
       setDraftOrder((prev) => {
         if (prev.some((c) => isSameCatalogText(c, created.name))) return prev;
-        return [created.name, ...prev];
+        return [...prev, created.name];
       });
       setNewCategoryName("");
     }
   };
 
-  // Intento de eliminación de categoría personalizada
+  // Eliminación de cualquier categoría (personalizada o predeterminada) de la barra activa
   const handleRequestDeleteCategory = async (catName: ProductCategory) => {
-    if (isFactoryCategory(catName)) return;
     const count = productCountByCategory(catName);
     if (count > 0) {
       // Activar protección obligatoria contra productos huérfanos
@@ -140,6 +217,35 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
       return filtered;
     });
     setCategoryPendingDelete(null);
+  };
+
+  // Restaurar con un solo toque una categoría predeterminada eliminada desde la sección de Respaldo
+  const handleRestoreDefaultCategory = (baseCat: ProductCategory) => {
+    addCategory(baseCat, inferAttributeKeysForCategory(baseCat));
+    setDraftOrder((prev) => {
+      if (prev.some((c) => isSameCatalogText(c, baseCat))) return prev;
+      return [...prev, baseCat];
+    });
+  };
+
+  // Alternar atributo en una categoría respetando el orden exacto de clic/selección
+  const handleToggleCategoryAttributeOrder = (
+    catName: ProductCategory,
+    attrKey: string
+  ) => {
+    const catConfig = catalogConfig.categories.find((c) =>
+      isSameCatalogText(c.name, catName)
+    );
+    const currentKeys =
+      catConfig?.attributeKeys ?? inferAttributeKeysForCategory(catName);
+    const exists = currentKeys.includes(attrKey);
+    const nextKeys = exists
+      ? currentKeys.length > 1
+        ? currentKeys.filter((k) => k !== attrKey)
+        : currentKeys
+      : [...currentKeys, attrKey];
+
+    updateCategoryAttributes(catName, nextKeys);
   };
 
   // Guardar el orden actual y cerrar instantáneamente (Check ✓ en cabecera)
@@ -187,6 +293,7 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
             <div
               role="alertdialog"
               aria-label="Alerta de categoría con productos activos"
+              data-testid="orphan-category-alert"
               className="rounded-2xl border border-[#ff9500]/50 bg-[#ff9500]/10 dark:bg-[#ff9500]/15 p-4 space-y-3 animate-in fade-in duration-150"
             >
               <div className="flex items-start gap-2.5 text-[#ff9500]">
@@ -222,6 +329,7 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
                 </button>
                 <button
                   type="button"
+                  data-testid="confirm-orphan-category-delete"
                   onClick={handleConfirmOrphanMoveAndDelete}
                   className="flex min-h-10 items-center justify-center rounded-xl bg-[#ff3b30] px-2.5 text-xs font-bold text-white shadow-sm active:scale-95 transition-transform"
                 >
@@ -256,7 +364,7 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
           <div className="space-y-1.5">
             <div className="flex items-center justify-between px-1">
               <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
-                Prioridad en Barra de Filtros
+                Prioridad en Barra de Filtros (Desliza para ordenar)
               </span>
               <button
                 type="button"
@@ -288,24 +396,44 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
               </span>
             </div>
 
-            {/* Lista Interactiva Reordenable (Estilo WhatsApp / iOS) */}
-            <div className="max-h-[38vh] overflow-y-auto space-y-2 pr-0.5">
+            {/* Lista Interactiva Reordenable por Deslizamiento Táctil Directo y Drag & Drop */}
+            <div
+              ref={listContainerRef}
+              data-testid="category-manager-list"
+              onTouchMove={(e) => {
+                const touch = e.touches[0];
+                if (touch) {
+                  handleTouchMovePoint(touch.clientX, touch.clientY, e);
+                }
+              }}
+              onTouchEnd={handleTouchEndOrCancel}
+              onTouchCancel={handleTouchEndOrCancel}
+              className="max-h-[38vh] overflow-y-auto space-y-2 pr-0.5"
+            >
               {draftOrder.map((catName, idx) => {
                 const isFactory = isFactoryCategory(catName);
                 const prodCount = productCountByCategory(catName);
                 const catConfig = catalogConfig.categories.find((c) =>
                   isSameCatalogText(c.name, catName)
                 );
-                const attrLabels = (catConfig?.attributeKeys || [])
-                  .map((k) => catalogConfig.attributes[k]?.label)
+                const currentAttrKeys =
+                  catConfig?.attributeKeys ?? inferAttributeKeysForCategory(catName);
+                const attrLabels = currentAttrKeys
+                  .map((k, i) => `${i + 1}. ${catalogConfig.attributes[k]?.label || k}`)
                   .filter(Boolean)
                   .join(" · ");
 
                 const isDraggedOver = dragOverIndex === idx && draggedIndex !== idx;
+                const isTouchDragging = touchDragIndex === idx;
+                const isEditingAttrs =
+                  editingAttrCategory !== null &&
+                  isSameCatalogText(editingAttrCategory, catName);
 
                 return (
                   <div
                     key={catName}
+                    data-category-index={idx}
+                    data-testid={`category-row-${idx}`}
                     draggable
                     onDragStart={() => setDraggedIndex(idx)}
                     onDragOver={(e) => {
@@ -324,93 +452,144 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
                       setDraggedIndex(null);
                       setDragOverIndex(null);
                     }}
-                    data-testid={`category-row-${idx}`}
-                    className={`flex items-center justify-between gap-2.5 rounded-2xl border px-3 py-2.5 transition-all select-none ${
-                      isDraggedOver
-                        ? "border-[#007aff] bg-[#007aff]/10 scale-[1.01]"
+                    onTouchStart={(e) => {
+                      const touch = e.touches[0];
+                      if (touch) {
+                        handleRowTouchStart(idx, touch.clientY);
+                      }
+                    }}
+                    className={`rounded-2xl border px-3 py-2.5 transition-all select-none ${
+                      isTouchDragging || isDraggedOver
+                        ? "border-[#007aff] bg-[#007aff]/15 dark:bg-[#007aff]/20 scale-[1.01] shadow-md z-10"
                         : "border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900/90"
                     }`}
                   >
-                    {/* Lado Izquierdo: Botón rojo (-) para eliminar personalizadas, o indicador de base */}
-                    <div className="shrink-0">
-                      {!isFactory ? (
+                    <div className="flex items-center justify-between gap-2.5">
+                      {/* Lado Izquierdo: Botón rojo (-) para quitar cualquier categoría (predeterminada o personalizada) */}
+                      <div className="shrink-0">
                         <button
                           type="button"
                           onClick={() => handleRequestDeleteCategory(catName)}
                           aria-label={`Eliminar categoría ${catName}`}
-                          title={`Eliminar ${catName}`}
+                          title={
+                            isFactory
+                              ? `Quitar ${catName} de la barra activa (pasa a Respaldo)`
+                              : `Eliminar ${catName}`
+                          }
                           className="flex h-7 w-7 items-center justify-center rounded-full bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30] hover:text-white active:scale-90 transition-all"
                         >
                           <Minus size={15} strokeWidth={2.75} />
                         </button>
-                      ) : (
-                        <span
-                          title="Categoría base de fábrica (protegida)"
-                          className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 dark:bg-zinc-800 text-[var(--text-secondary)] dark:text-zinc-400"
+                      </div>
+
+                      {/* Centro: Nombre de la categoría + Metadatos y Orden de Atributos */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <p className="truncate text-xs sm:text-sm font-bold text-[var(--text-primary)] dark:text-zinc-100">
+                            {catName}
+                          </p>
+                          <span className="shrink-0 rounded-full bg-black/5 dark:bg-zinc-800 px-2 py-0.5 text-[10px] font-semibold text-[var(--text-secondary)] dark:text-zinc-400 tabular-nums">
+                            {prodCount} prod.
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEditingAttrCategory(isEditingAttrs ? null : catName)
+                          }
+                          aria-label={`Ordenar atributos de ${catName}`}
+                          className="mt-0.5 block max-w-full truncate text-left text-[10px] font-medium text-[var(--text-secondary)] dark:text-zinc-400 hover:text-[#007aff] dark:hover:text-[#0a84ff]"
                         >
-                          <Lock size={13} />
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Centro: Nombre de la categoría + Metadatos */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <p className="truncate text-xs sm:text-sm font-bold text-[var(--text-primary)] dark:text-zinc-100">
-                          {catName}
-                        </p>
-                        <span className="shrink-0 rounded-full bg-black/5 dark:bg-zinc-800 px-2 py-0.5 text-[10px] font-semibold text-[var(--text-secondary)] dark:text-zinc-400 tabular-nums">
-                          {prodCount} prod.
-                        </span>
+                          {attrLabels ? `Orden: ${attrLabels}` : "Configurar atributos"}
+                        </button>
                       </div>
-                      {attrLabels && (
-                        <p className="truncate text-[10px] font-medium text-[var(--text-secondary)] dark:text-zinc-400 mt-0.5">
-                          Atributos: {attrLabels}
-                        </p>
-                      )}
-                    </div>
 
-                    {/* Lado Derecho: Controles de prioridad + Asa de arrastre de 3 líneas horizontales anchas */}
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        disabled={idx === 0}
-                        onClick={() => moveCategory(idx, -1)}
-                        aria-label={`Subir categoría ${catName}`}
-                        title="Subir prioridad"
-                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-800/70 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25 active:scale-90 transition-transform"
-                      >
-                        <ArrowUp size={13} />
-                      </button>
-                      <button
-                        type="button"
-                        disabled={idx === draftOrder.length - 1}
-                        onClick={() => moveCategory(idx, 1)}
-                        aria-label={`Bajar categoría ${catName}`}
-                        title="Bajar prioridad"
-                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-800/70 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25 active:scale-90 transition-transform"
-                      >
-                        <ArrowDown size={13} />
-                      </button>
+                      {/* Lado Derecho: Controles rápidos + Asa de arrastre táctil directo de 3 líneas horizontales */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => moveCategory(idx, -1)}
+                          aria-label={`Subir categoría ${catName}`}
+                          title="Subir prioridad"
+                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-800/70 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25 active:scale-90 transition-transform"
+                        >
+                          <ArrowUp size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={idx === draftOrder.length - 1}
+                          onClick={() => moveCategory(idx, 1)}
+                          aria-label={`Bajar categoría ${catName}`}
+                          title="Bajar prioridad"
+                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-800/70 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25 active:scale-90 transition-transform"
+                        >
+                          <ArrowDown size={13} />
+                        </button>
 
-                      {/* Asa de arrastre: 3 líneas horizontales anchas estilo iOS / WhatsApp */}
-                      <div
-                        aria-label={`Asa de arrastre ${catName}`}
-                        title="Mantén presionado y arrastra para reordenar"
-                        className="flex h-8 w-8 cursor-grab active:cursor-grabbing flex-col items-center justify-center gap-[3.5px] rounded-lg px-1.5 text-[var(--text-secondary)] dark:text-zinc-400 hover:text-[var(--text-primary)]"
-                      >
-                        <span className="block h-[2px] w-5 rounded-full bg-current" />
-                        <span className="block h-[2px] w-5 rounded-full bg-current" />
-                        <span className="block h-[2px] w-5 rounded-full bg-current" />
+                        {/* Asa de arrastre: 3 líneas horizontales anchas con soporte táctil directo */}
+                        <div
+                          aria-label={`Asa de arrastre ${catName}`}
+                          title="Mantén presionado y desliza hacia arriba o abajo para reordenar"
+                          onTouchStart={(e) => {
+                            e.stopPropagation();
+                            const touch = e.touches[0];
+                            if (touch) {
+                              handleHandleTouchStart(idx, touch.clientY);
+                            }
+                          }}
+                          style={{ touchAction: "none" }}
+                          className="flex h-8 w-8 cursor-grab active:cursor-grabbing flex-col items-center justify-center gap-[3.5px] rounded-lg px-1.5 text-[var(--text-secondary)] dark:text-zinc-400 hover:text-[var(--text-primary)]"
+                        >
+                          <span className="block h-[2px] w-5 rounded-full bg-current" />
+                          <span className="block h-[2px] w-5 rounded-full bg-current" />
+                          <span className="block h-[2px] w-5 rounded-full bg-current" />
+                        </div>
                       </div>
                     </div>
+
+                    {/* Panel desplegable para reordenar los atributos de esta categoría según secuencia de clic */}
+                    {isEditingAttrs && (
+                      <div className="mt-2.5 border-t border-[var(--border-color)] dark:border-zinc-800 pt-2.5 space-y-1.5 animate-in fade-in duration-100">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
+                          Toca los atributos en el orden exacto en que deseas verlos:
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {Object.values(catalogConfig.attributes).map((attr) => {
+                            const orderIdx = currentAttrKeys.indexOf(attr.key);
+                            const isSelected = orderIdx !== -1;
+                            return (
+                              <button
+                                key={attr.key}
+                                type="button"
+                                onClick={() =>
+                                  handleToggleCategoryAttributeOrder(catName, attr.key)
+                                }
+                                className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors ${
+                                  isSelected
+                                    ? "bg-[#007aff] text-white shadow-sm"
+                                    : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)] dark:bg-zinc-950 text-[var(--text-secondary)] dark:text-zinc-400"
+                                }`}
+                              >
+                                {isSelected && (
+                                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/25 text-[10px] font-extrabold">
+                                    {orderIdx + 1}
+                                  </span>
+                                )}
+                                <span>{attr.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Sección Inferior Fija: Valores Predeterminados de Fábrica (Respaldo Seguro) */}
+          {/* Sección Inferior Fija: Valores Predeterminados (Respaldo Interactivos) */}
           <div className="rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-900/50 p-3.5 space-y-2.5">
             <div className="flex items-center justify-between gap-2">
               <div>
@@ -418,7 +597,7 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
                   Valores Predeterminados Fijos (Respaldo)
                 </p>
                 <p className="text-[11px] text-[var(--text-secondary)] dark:text-zinc-400 mt-0.5">
-                  Categorías base de fábrica protegidas e inalterables.
+                  Toca cualquier categoría en respaldo para volver a agregarla a la barra.
                 </p>
               </div>
               <button
@@ -433,15 +612,36 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
             </div>
 
             <div className="flex flex-wrap gap-1.5">
-              {FACTORY_BASE_CATEGORIES.map((baseCat) => (
-                <span
-                  key={baseCat}
-                  className="inline-flex items-center gap-1 rounded-full border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)] dark:text-zinc-300"
-                >
-                  <Lock size={10} className="opacity-70" />
-                  <span>{baseCat}</span>
-                </span>
-              ))}
+              {FACTORY_BASE_CATEGORIES.map((baseCat) => {
+                const isActiveInBar = draftOrder.some((c) =>
+                  isSameCatalogText(c, baseCat)
+                );
+                if (!isActiveInBar) {
+                  return (
+                    <button
+                      key={baseCat}
+                      type="button"
+                      onClick={() => handleRestoreDefaultCategory(baseCat)}
+                      aria-label={`Recuperar categoría ${baseCat}`}
+                      title={`Volver a agregar ${baseCat} a la barra activa`}
+                      className="inline-flex items-center gap-1 rounded-full border border-[#007aff]/50 bg-[#007aff]/15 px-2.5 py-1 text-[11px] font-bold text-[#007aff] dark:text-[#0a84ff] hover:bg-[#007aff] hover:text-white active:scale-95 transition-all"
+                    >
+                      <Plus size={12} strokeWidth={2.5} />
+                      <span>{baseCat}</span>
+                    </button>
+                  );
+                }
+
+                return (
+                  <span
+                    key={baseCat}
+                    className="inline-flex items-center gap-1 rounded-full border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)] dark:text-zinc-400 opacity-75"
+                  >
+                    <Check size={10} className="text-[#30d158]" />
+                    <span>{baseCat}</span>
+                  </span>
+                );
+              })}
             </div>
           </div>
         </div>

@@ -1,7 +1,8 @@
 import { AttributeDefinition, CatalogConfig, CategoryConfig, ProductCategory } from "../types/domain";
 
 /**
- * Categorías base de fábrica que siempre actúan como respaldo inalterable.
+ * Categorías base de fábrica que actúan como respaldo predeterminado.
+ * Pueden quitarse de la barra activa y restaurarse con un solo toque desde la sección de Respaldo.
  */
 export const FACTORY_BASE_CATEGORIES: ProductCategory[] = [
   "Cargadores y Cables",
@@ -52,28 +53,28 @@ export function inferAttributeKeysForCategory(categoryName: string): string[] {
   if (/cargador|cable|cubo|adaptador/.test(lower)) {
     return ["chargerSubtypes", "brands", "powers", "cableFinishes"];
   }
-  if (/forro|funda|case|estuche|protector/.test(lower)) {
-    return ["caseMaterials", "caseModels"];
+  if (/forro|funda|case|estuche|protector|vidrio|mica/.test(lower)) {
+    return ["caseMaterials", "caseModels", "colors"];
   }
-  if (/audio|airpod|auricular|audifono|audífono|parlante|bocina/.test(lower)) {
-    return ["audioModels", "connections"];
+  if (/audio|airpod|auricular|audifono|audífono|parlante|bocina|microfono|micrófono/.test(lower)) {
+    return ["audioModels", "connections", "brands"];
   }
-  if (/bateria|batería|power\s*bank|portatil|portátil/.test(lower)) {
-    return ["brands", "capacities", "ports"];
+  if (/bateria|batería|power\s*bank|portatil|portátil|magsafe/.test(lower)) {
+    return ["brands", "capacities", "ports", "powers"];
   }
-  if (/ssd|disco|memoria|almacenamiento|pendrive|micro\s*sd/.test(lower)) {
+  if (/ssd|disco|memoria|almacenamiento|pendrive|micro\s*sd|usb/.test(lower)) {
     return ["brands", "storageCapacities", "connections"];
   }
-  if (/reloj|smartwatch|watch|pulsera/.test(lower)) {
-    return ["brands", "colors", "caseMaterials"];
+  if (/reloj|smartwatch|watch|pulsera|band/.test(lower)) {
+    return ["brands", "watchSizes", "colors", "caseMaterials"];
   }
   if (/celular|telefono|teléfono|smartphone|tablet|ipad/.test(lower)) {
     return ["brands", "storageCapacities", "colors"];
   }
-  if (/perfume|locion|loción|fragancia/.test(lower)) {
+  if (/perfume|locion|loción|fragancia|aroma/.test(lower)) {
     return ["perfumeVolumes", "perfumeTypes"];
   }
-  if (/streaming|cuenta|pantalla|suscripcion|suscripción/.test(lower)) {
+  if (/streaming|cuenta|pantalla|suscripcion|suscripción|digital/.test(lower)) {
     return ["streamingPlatforms", "streamingDurations"];
   }
 
@@ -84,22 +85,84 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
   chargerSubtypes: {
     key: "chargerSubtypes",
     label: "Subtipo",
-    options: ["Cubo", "Cable", "Cargador Completo"],
+    options: [
+      "Cubo",
+      "Cable",
+      "Cargador Completo",
+      "Cargador Inalámbrico / MagSafe",
+      "Cargador Vehicular",
+      "Estación Multi-Puerto",
+      "Adaptador OTG / Hub",
+    ],
   },
   brands: {
     key: "brands",
     label: "Marca",
-    options: ["iPhone", "1Hora", "Anker", "Belkin", "Tipo C", "Samsung", "Ugreen"],
+    options: [
+      "iPhone",
+      "1Hora",
+      "Anker",
+      "Belkin",
+      "Tipo C",
+      "Samsung",
+      "Ugreen",
+      "Baseus",
+      "Apple Original",
+      "Xiaomi",
+      "JBL",
+      "Sony",
+      "Motorola",
+      "Garmin",
+      "SanDisk",
+      "Kingston",
+      "Genérico Premium",
+    ],
   },
   powers: {
     key: "powers",
     label: "Potencia (W)",
-    options: ["20W", "25W", "30W", "35W", "45W", "60W", "100W", "140W"],
+    options: [
+      "20W",
+      "25W",
+      "30W",
+      "35W",
+      "45W",
+      "60W",
+      "65W",
+      "67W",
+      "100W",
+      "120W",
+      "140W",
+      "240W",
+      "15W MagSafe",
+      "18W",
+      "10W",
+      "5W",
+    ],
   },
   cableFinishes: {
     key: "cableFinishes",
     label: "Acabado del cable",
-    options: ["Normal", "Trenzado"],
+    options: [
+      "Normal",
+      "Trenzado",
+      "Silicona Líquida",
+      "Nylon Reforzado Kevlar",
+      "Magnético",
+      "Con Pantalla LED",
+      "Retráctil / Espiral",
+    ],
+  },
+  cableLengths: {
+    key: "cableLengths",
+    label: "Longitud del cable",
+    options: [
+      "1 Metro",
+      "2 Metros",
+      "1.5 Metros",
+      "3 Metros",
+      "25 cm (Corto)",
+    ],
   },
   caseMaterials: {
     key: "caseMaterials",
@@ -109,6 +172,11 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
       "Transparente Anti-amarilleo",
       "Lujo / MagSafe",
       "Uso Rudo",
+      "Fibra de Carbono / Aramida",
+      "Cuero / Piel Vegana",
+      "Acrílico Rígido",
+      "Hidrogel / Cerámico",
+      "Zafiro / Vidrio Templado 9H",
     ],
   },
   caseModels: {
@@ -120,9 +188,17 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
       "iPhone 12 Pro Max",
       "iPhone 13 / 14",
       "iPhone 13 Pro Max",
+      "iPhone 14 Pro",
+      "iPhone 14 Pro Max",
       "iPhone 15",
       "iPhone 15 Pro",
       "iPhone 15 Pro Max",
+      "iPhone 16",
+      "iPhone 16 Pro",
+      "iPhone 16 Pro Max",
+      "Samsung S23 Ultra",
+      "Samsung S24 Ultra",
+      "Universal / MagSafe",
     ],
   },
   audioModels: {
@@ -132,52 +208,117 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
       "AirPods Serie 4",
       "AirPods Pro 2da Generación",
       "AirPods Pro 3ra Generación",
+      "AirPods Max",
+      "EarPods Alámbricos",
+      "Buds Pro ANC",
+      "Parlante Portátil Bluetooth",
+      "Micrófono Lavalier Inalámbrico",
     ],
   },
   connections: {
     key: "connections",
     label: "Tipo de Conexión",
-    options: ["USB-C", "Lightning", "MagSafe", "Bluetooth 5.3"],
+    options: [
+      "USB-C",
+      "Lightning",
+      "MagSafe",
+      "Bluetooth 5.3",
+      "USB-C a Lightning",
+      "USB-C a USB-C",
+      "USB-A a USB-C",
+      "USB-A a Lightning",
+      "Auxiliar 3.5mm",
+      "Inalámbrico Qi2",
+    ],
   },
   capacities: {
     key: "capacities",
     label: "Capacidad (mAh)",
-    options: ["5000mAh", "10000mAh", "20000mAh", "30000mAh"],
+    options: [
+      "5000mAh",
+      "10000mAh",
+      "15000mAh",
+      "20000mAh",
+      "25000mAh",
+      "30000mAh",
+      "50000mAh",
+    ],
   },
   ports: {
     key: "ports",
     label: "Conexiones / Puertos",
-    options: ["USB-C PD", "Dual USB-C + USB-A", "MagSafe Inalámbrico", "Cable Integrado"],
+    options: [
+      "USB-C PD",
+      "Dual USB-C + USB-A",
+      "MagSafe Inalámbrico",
+      "Cable Integrado",
+      "Triple Puerto (2x USB-C + USB-A)",
+      "Salida AC + USB-C",
+    ],
   },
   storageCapacities: {
     key: "storageCapacities",
     label: "Capacidad",
-    options: ["128GB", "256GB", "512GB", "1TB", "2TB"],
+    options: ["64GB", "128GB", "256GB", "512GB", "1TB", "2TB", "4TB"],
   },
   colors: {
     key: "colors",
     label: "Color / Acabado",
-    options: ["Negro Espacial", "Blanco Estelar", "Titanio Natural", "Plata", "Azul"],
+    options: [
+      "Negro Espacial",
+      "Blanco Estelar",
+      "Titanio Natural",
+      "Titanio Desierto",
+      "Titanio Azul",
+      "Plata",
+      "Azul",
+      "Rosa",
+      "Verde Alpino",
+      "Morado Oscuro",
+      "Rojo",
+      "Transparente",
+    ],
+  },
+  watchSizes: {
+    key: "watchSizes",
+    label: "Tamaño de Caja",
+    options: ["40mm", "41mm", "42mm", "44mm", "45mm", "46mm", "49mm Ultra"],
   },
   perfumeVolumes: {
     key: "perfumeVolumes",
     label: "Presentación (ml)",
-    options: ["50ml", "100ml", "120ml", "200ml"],
+    options: ["30ml", "50ml", "75ml", "100ml", "120ml", "150ml", "200ml", "Decant 10ml"],
   },
   perfumeTypes: {
     key: "perfumeTypes",
     label: "Concentración",
-    options: ["Eau de Parfum (EDP)", "Eau de Toilette (EDT)", "Extrait de Parfum"],
+    options: [
+      "Eau de Parfum (EDP)",
+      "Eau de Toilette (EDT)",
+      "Extrait de Parfum",
+      "Parfum Intense",
+      "Body Mist",
+    ],
   },
   streamingPlatforms: {
     key: "streamingPlatforms",
     label: "Plataforma",
-    options: ["Netflix 4K", "Spotify Premium", "Disney+ / Star+", "Max 4K", "YouTube Premium"],
+    options: [
+      "Netflix 4K",
+      "Spotify Premium",
+      "Disney+ / Star+",
+      "Max 4K",
+      "YouTube Premium",
+      "Amazon Prime Video",
+      "Crunchyroll Mega Fan",
+      "Apple TV+ / Music",
+      "Canva Pro / ChatGPT",
+    ],
   },
   streamingDurations: {
     key: "streamingDurations",
     label: "Vigencia",
-    options: ["Perfil 1 Mes", "Cuenta Completa 1 Mes", "3 Meses", "1 Año"],
+    options: ["Perfil 1 Mes", "Cuenta Completa 1 Mes", "3 Meses", "6 Meses", "1 Año"],
   },
 };
 
@@ -200,7 +341,7 @@ export const DEFAULT_CATEGORY_CONFIGS: CategoryConfig[] = [
   {
     name: "Power Banks / Baterías",
     isSystemDefault: true,
-    attributeKeys: ["brands", "capacities", "ports"],
+    attributeKeys: ["brands", "capacities", "ports", "powers"],
   },
   {
     name: "Celulares",
@@ -235,6 +376,8 @@ export const DEFAULT_CATALOG_CONFIG: CatalogConfig = {
 
 /**
  * Fusiona de manera segura una configuración almacenada con la configuración base de fábrica.
+ * Respeta las categorías predeterminadas que el usuario haya decidido quitar de la barra activa (`categoryOrder`),
+ * conservando sus definiciones en `categories` para que puedan restaurarse desde Respaldo.
  */
 export function mergeWithDefaultCatalogConfig(
   stored?: Partial<CatalogConfig> | null
@@ -243,7 +386,7 @@ export function mergeWithDefaultCatalogConfig(
     return structuredCloneConfig(DEFAULT_CATALOG_CONFIG);
   }
 
-  // 1. Atributos fusionados
+  // 1. Atributos fusionados (incluyendo nuevas opciones del banco ampliado)
   const mergedAttributes: Record<string, AttributeDefinition> = {};
   for (const [k, def] of Object.entries(DEFAULT_ATTRIBUTES)) {
     mergedAttributes[k] = {
@@ -270,6 +413,15 @@ export function mergeWithDefaultCatalogConfig(
             }
           }
         }
+        // Si es un atributo base del sistema, asegurar que las nuevas opciones del catálogo ampliado estén disponibles
+        const baseDef = DEFAULT_ATTRIBUTES[k];
+        if (baseDef) {
+          for (const baseOpt of baseDef.options) {
+            if (!cleanOptions.some((existing) => isSameCatalogText(existing, baseOpt))) {
+              cleanOptions.push(baseOpt);
+            }
+          }
+        }
         mergedAttributes[k] = {
           key: userAttr.key,
           label: userAttr.label,
@@ -279,7 +431,7 @@ export function mergeWithDefaultCatalogConfig(
     }
   }
 
-  // 2. Categorías fusionadas (garantizando que las base de fábrica existan siempre)
+  // 2. Categorías fusionadas (garantizando que las definiciones base de fábrica existan como respaldo)
   const mergedCategories: CategoryConfig[] = [];
   const seenNames = new Set<string>();
 
@@ -301,7 +453,7 @@ export function mergeWithDefaultCatalogConfig(
           isSystemDefault: Boolean(defaultMatch),
           attributeKeys:
             Array.isArray(cat.attributeKeys) && cat.attributeKeys.length > 0
-              ? cat.attributeKeys
+              ? [...cat.attributeKeys]
               : defaultMatch?.attributeKeys ?? inferAttributeKeysForCategory(cleanName),
         });
       }
@@ -320,7 +472,7 @@ export function mergeWithDefaultCatalogConfig(
     }
   }
 
-  // 3. Orden de categorías
+  // 3. Orden activo de categorías (respeta si el usuario eliminó categorías predeterminadas de la barra activa)
   const mergedOrder: ProductCategory[] = [];
   const seenOrder = new Set<string>();
 
@@ -336,13 +488,13 @@ export function mergeWithDefaultCatalogConfig(
         mergedOrder.push(finalName);
       }
     }
-  }
-
-  for (const cat of mergedCategories) {
-    const lower = cat.name.toLowerCase();
-    if (!seenOrder.has(lower)) {
-      seenOrder.add(lower);
-      mergedOrder.push(cat.name);
+  } else {
+    for (const cat of mergedCategories) {
+      const lower = cat.name.toLowerCase();
+      if (!seenOrder.has(lower)) {
+        seenOrder.add(lower);
+        mergedOrder.push(cat.name);
+      }
     }
   }
 
