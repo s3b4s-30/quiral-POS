@@ -7,8 +7,8 @@ import { AttributeDefinition, CatalogConfig, CategoryConfig, ProductCategory } f
 export const FACTORY_BASE_CATEGORIES: ProductCategory[] = [
   "Cargadores y Cables",
   "Forros / Fundas",
-  "Audio / AirPods",
-  "Power Banks / Baterías",
+  "Audio",
+  "Power Banks / Baterías portatiles",
   "Celulares",
   "Perfumes",
   "Streaming",
@@ -51,22 +51,22 @@ export function inferAttributeKeysForCategory(categoryName: string): string[] {
   const lower = categoryName.trim().toLowerCase();
 
   if (/cargador|cable|cubo|adaptador/.test(lower)) {
-    return ["chargerSubtypes", "brands", "powers", "cableFinishes"];
+    return ["chargerSubtypes", "brands", "powers", "cableFinishes", "cableLengths"];
   }
   if (/forro|funda|case|estuche|protector|vidrio|mica/.test(lower)) {
-    return ["caseMaterials", "caseModels", "colors"];
+    return ["caseMaterials", "caseModels"];
   }
   if (/audio|airpod|auricular|audifono|audífono|parlante|bocina|microfono|micrófono/.test(lower)) {
-    return ["audioModels", "connections", "brands"];
+    return ["audioModels", "connections"];
   }
-  if (/bateria|batería|power\s*bank|portatil|portátil|magsafe/.test(lower)) {
-    return ["brands", "capacities", "ports", "powers"];
+  if (/bateria|batería|power\s*bank|portatil|portátiles|portatiles|magsafe/.test(lower)) {
+    return ["capacities", "ports"];
   }
   if (/ssd|disco|memoria|almacenamiento|pendrive|micro\s*sd|usb/.test(lower)) {
     return ["brands", "storageCapacities", "connections"];
   }
   if (/reloj|smartwatch|watch|pulsera|band/.test(lower)) {
-    return ["brands", "watchSizes", "colors", "caseMaterials"];
+    return ["brands", "colors"];
   }
   if (/celular|telefono|teléfono|smartphone|tablet|ipad/.test(lower)) {
     return ["brands", "storageCapacities", "colors"];
@@ -90,9 +90,6 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
       "Cable",
       "Cargador Completo",
       "Cargador Inalámbrico / MagSafe",
-      "Cargador Vehicular",
-      "Estación Multi-Puerto",
-      "Adaptador OTG / Hub",
     ],
   },
   brands: {
@@ -103,18 +100,10 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
       "1Hora",
       "Anker",
       "Belkin",
-      "Tipo C",
       "Samsung",
       "Ugreen",
-      "Baseus",
       "Apple Original",
       "Xiaomi",
-      "JBL",
-      "Sony",
-      "Motorola",
-      "Garmin",
-      "SanDisk",
-      "Kingston",
       "Genérico Premium",
     ],
   },
@@ -129,15 +118,6 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
       "45W",
       "60W",
       "65W",
-      "67W",
-      "100W",
-      "120W",
-      "140W",
-      "240W",
-      "15W MagSafe",
-      "18W",
-      "10W",
-      "5W",
     ],
   },
   cableFinishes: {
@@ -146,11 +126,6 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
     options: [
       "Normal",
       "Trenzado",
-      "Silicona Líquida",
-      "Nylon Reforzado Kevlar",
-      "Magnético",
-      "Con Pantalla LED",
-      "Retráctil / Espiral",
     ],
   },
   cableLengths: {
@@ -158,10 +133,9 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
     label: "Longitud del cable",
     options: [
       "1 Metro",
-      "2 Metros",
       "1.5 Metros",
+      "2 Metros",
       "3 Metros",
-      "25 cm (Corto)",
     ],
   },
   caseMaterials: {
@@ -170,13 +144,7 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
     options: [
       "Silicona Líquida",
       "Transparente Anti-amarilleo",
-      "Lujo / MagSafe",
-      "Uso Rudo",
-      "Fibra de Carbono / Aramida",
-      "Cuero / Piel Vegana",
-      "Acrílico Rígido",
-      "Hidrogel / Cerámico",
-      "Zafiro / Vidrio Templado 9H",
+      "Lujo",
     ],
   },
   caseModels: {
@@ -196,23 +164,18 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
       "iPhone 16",
       "iPhone 16 Pro",
       "iPhone 16 Pro Max",
-      "Samsung S23 Ultra",
-      "Samsung S24 Ultra",
-      "Universal / MagSafe",
     ],
   },
   audioModels: {
     key: "audioModels",
     label: "Modelo",
     options: [
+      "AirPods Serie 3",
       "AirPods Serie 4",
       "AirPods Pro 2da Generación",
       "AirPods Pro 3ra Generación",
       "AirPods Max",
       "EarPods Alámbricos",
-      "Buds Pro ANC",
-      "Parlante Portátil Bluetooth",
-      "Micrófono Lavalier Inalámbrico",
     ],
   },
   connections: {
@@ -228,7 +191,6 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
       "USB-A a USB-C",
       "USB-A a Lightning",
       "Auxiliar 3.5mm",
-      "Inalámbrico Qi2",
     ],
   },
   capacities: {
@@ -249,11 +211,9 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
     label: "Conexiones / Puertos",
     options: [
       "USB-C PD",
-      "Dual USB-C + USB-A",
+      "Lightning",
+      "Dual USB-C + USB-Lightning",
       "MagSafe Inalámbrico",
-      "Cable Integrado",
-      "Triple Puerto (2x USB-C + USB-A)",
-      "Salida AC + USB-C",
     ],
   },
   storageCapacities: {
@@ -278,11 +238,6 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
       "Rojo",
       "Transparente",
     ],
-  },
-  watchSizes: {
-    key: "watchSizes",
-    label: "Tamaño de Caja",
-    options: ["40mm", "41mm", "42mm", "44mm", "45mm", "46mm", "49mm Ultra"],
   },
   perfumeVolumes: {
     key: "perfumeVolumes",
@@ -334,14 +289,14 @@ export const DEFAULT_CATEGORY_CONFIGS: CategoryConfig[] = [
     attributeKeys: ["caseMaterials", "caseModels"],
   },
   {
-    name: "Audio / AirPods",
+    name: "Audio",
     isSystemDefault: true,
     attributeKeys: ["audioModels", "connections"],
   },
   {
-    name: "Power Banks / Baterías",
+    name: "Power Banks / Baterías portatiles",
     isSystemDefault: true,
-    attributeKeys: ["brands", "capacities", "ports", "powers"],
+    attributeKeys: ["capacities", "ports"],
   },
   {
     name: "Celulares",
@@ -364,8 +319,8 @@ export const DEFAULT_CATALOG_CONFIG: CatalogConfig = {
   categoryOrder: [
     "Cargadores y Cables",
     "Forros / Fundas",
-    "Audio / AirPods",
-    "Power Banks / Baterías",
+    "Audio",
+    "Power Banks / Baterías portatiles",
     "Celulares",
     "Perfumes",
     "Streaming",
@@ -386,7 +341,7 @@ export function mergeWithDefaultCatalogConfig(
     return structuredCloneConfig(DEFAULT_CATALOG_CONFIG);
   }
 
-  // 1. Atributos fusionados (incluyendo nuevas opciones del banco ampliado)
+  // 1. Atributos base del sistema actualizados según la selección del usuario
   const mergedAttributes: Record<string, AttributeDefinition> = {};
   for (const [k, def] of Object.entries(DEFAULT_ATTRIBUTES)) {
     mergedAttributes[k] = {
@@ -396,6 +351,7 @@ export function mergeWithDefaultCatalogConfig(
     };
   }
 
+  // Si el usuario tenía atributos personalizados (custom_*) o agregó opciones adicionales, preservarlas
   if (stored.attributes && typeof stored.attributes === "object") {
     for (const [k, userAttr] of Object.entries(stored.attributes)) {
       if (
@@ -404,29 +360,40 @@ export function mergeWithDefaultCatalogConfig(
         typeof userAttr.label === "string" &&
         Array.isArray(userAttr.options)
       ) {
-        const cleanOptions: string[] = [];
-        for (const opt of userAttr.options) {
-          if (typeof opt === "string") {
-            const norm = normalizeCatalogText(opt);
-            if (norm && !cleanOptions.some((existing) => isSameCatalogText(existing, norm))) {
-              cleanOptions.push(norm);
+        if (!mergedAttributes[k]) {
+          // Atributo totalmente personalizado por el usuario
+          const cleanOptions: string[] = [];
+          for (const opt of userAttr.options) {
+            if (typeof opt === "string") {
+              const norm = normalizeCatalogText(opt);
+              if (norm && !cleanOptions.some((existing) => isSameCatalogText(existing, norm))) {
+                cleanOptions.push(norm);
+              }
+            }
+          }
+          if (cleanOptions.length > 0) {
+            mergedAttributes[k] = {
+              key: userAttr.key,
+              label: userAttr.label,
+              options: cleanOptions,
+            };
+          }
+        } else {
+          // Atributo base: si el usuario agregó opciones que no están en DEFAULT_ATTRIBUTES, conservarlas
+          const currentOpts = mergedAttributes[k].options;
+          for (const opt of userAttr.options) {
+            if (typeof opt === "string") {
+              const norm = normalizeCatalogText(opt);
+              if (
+                norm &&
+                !currentOpts.some((existing) => isSameCatalogText(existing, norm)) &&
+                userAttr.key.startsWith("custom_")
+              ) {
+                currentOpts.push(norm);
+              }
             }
           }
         }
-        // Si es un atributo base del sistema, asegurar que las nuevas opciones del catálogo ampliado estén disponibles
-        const baseDef = DEFAULT_ATTRIBUTES[k];
-        if (baseDef) {
-          for (const baseOpt of baseDef.options) {
-            if (!cleanOptions.some((existing) => isSameCatalogText(existing, baseOpt))) {
-              cleanOptions.push(baseOpt);
-            }
-          }
-        }
-        mergedAttributes[k] = {
-          key: userAttr.key,
-          label: userAttr.label,
-          options: cleanOptions.length > 0 ? cleanOptions : mergedAttributes[k]?.options ?? [],
-        };
       }
     }
   }
@@ -440,21 +407,31 @@ export function mergeWithDefaultCatalogConfig(
       if (cat && typeof cat.name === "string") {
         const cleanName = normalizeCatalogText(cat.name);
         if (!cleanName || cleanName.toLowerCase() === "todos") continue;
-        const lower = cleanName.toLowerCase();
+
+        // Migrar nombres viejos si existían ("Audio / AirPods" -> "Audio", "Power Banks / Baterías" -> "Power Banks / Baterías portatiles")
+        let finalCatName = cleanName;
+        if (isSameCatalogText(cleanName, "Audio / AirPods")) {
+          finalCatName = "Audio";
+        } else if (isSameCatalogText(cleanName, "Power Banks / Baterías")) {
+          finalCatName = "Power Banks / Baterías portatiles";
+        }
+
+        const lower = finalCatName.toLowerCase();
         if (seenNames.has(lower)) continue;
         seenNames.add(lower);
 
         const defaultMatch = DEFAULT_CATEGORY_CONFIGS.find((d) =>
-          isSameCatalogText(d.name, cleanName)
+          isSameCatalogText(d.name, finalCatName)
         );
 
         mergedCategories.push({
-          name: defaultMatch ? defaultMatch.name : cleanName,
+          name: defaultMatch ? defaultMatch.name : finalCatName,
           isSystemDefault: Boolean(defaultMatch),
           attributeKeys:
-            Array.isArray(cat.attributeKeys) && cat.attributeKeys.length > 0
+            defaultMatch?.attributeKeys ??
+            (Array.isArray(cat.attributeKeys) && cat.attributeKeys.length > 0
               ? [...cat.attributeKeys]
-              : defaultMatch?.attributeKeys ?? inferAttributeKeysForCategory(cleanName),
+              : inferAttributeKeysForCategory(finalCatName)),
         });
       }
     }
@@ -479,8 +456,15 @@ export function mergeWithDefaultCatalogConfig(
   if (Array.isArray(stored.categoryOrder)) {
     for (const rawName of stored.categoryOrder) {
       if (typeof rawName !== "string") continue;
-      const matchCat = mergedCategories.find((c) => isSameCatalogText(c.name, rawName));
-      const finalName = matchCat ? matchCat.name : normalizeCatalogText(rawName);
+      let norm = normalizeCatalogText(rawName);
+      if (isSameCatalogText(norm, "Audio / AirPods")) {
+        norm = "Audio";
+      } else if (isSameCatalogText(norm, "Power Banks / Baterías")) {
+        norm = "Power Banks / Baterías portatiles";
+      }
+
+      const matchCat = mergedCategories.find((c) => isSameCatalogText(c.name, norm));
+      const finalName = matchCat ? matchCat.name : norm;
       if (!finalName || finalName.toLowerCase() === "todos") continue;
       const lower = finalName.toLowerCase();
       if (!seenOrder.has(lower)) {

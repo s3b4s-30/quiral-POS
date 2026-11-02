@@ -194,7 +194,7 @@ export default function NewProductModal({
       if (attrKey === "caseMaterials") return caseMaterial;
       if (attrKey === "caseModels") return caseModel;
     }
-    if (category === "Audio / AirPods") {
+    if (category === "Audio" || category === "Audio / AirPods") {
       if (attrKey === "audioModels") return audioModel;
       if (attrKey === "connections") return audioConnection;
     }
@@ -212,8 +212,15 @@ export default function NewProductModal({
     if (attrKey === "caseMaterials" && category === "Forros / Fundas")
       setCaseMaterial(val);
     if (attrKey === "caseModels" && category === "Forros / Fundas") setCaseModel(val);
-    if (attrKey === "audioModels" && category === "Audio / AirPods") setAudioModel(val);
-    if (attrKey === "connections" && category === "Audio / AirPods")
+    if (
+      attrKey === "audioModels" &&
+      (category === "Audio" || category === "Audio / AirPods")
+    )
+      setAudioModel(val);
+    if (
+      attrKey === "connections" &&
+      (category === "Audio" || category === "Audio / AirPods")
+    )
       setAudioConnection(val);
 
     setDynamicSelections((prev) => ({ ...prev, [attrKey]: val }));
@@ -236,17 +243,19 @@ export default function NewProductModal({
     if (category === "Forros / Fundas") {
       return `Forro ${caseMaterial} (${caseModel})`;
     }
-    if (category === "Audio / AirPods") {
+    if (category === "Audio" || category === "Audio / AirPods") {
       return `${audioModel} (${audioConnection})`;
     }
     const selectedValues = activeAttributeKeys
       .map((k) => getSelectedValueForAttribute(k))
       .filter(Boolean);
-    if (isSameCatalogText(category, "Power Banks / Baterías")) {
-      const brandVal = dynamicSelections.brands || "";
+    if (
+      isSameCatalogText(category, "Power Banks / Baterías") ||
+      isSameCatalogText(category, "Power Banks / Baterías portatiles")
+    ) {
       const capVal = dynamicSelections.capacities || "";
       const portVal = dynamicSelections.ports || "";
-      return `Power Bank ${brandVal} ${capVal}${portVal ? ` (${portVal})` : ""}`.trim();
+      return `Power Bank ${capVal}${portVal ? ` (${portVal})` : ""}`.trim();
     }
     return [category, ...selectedValues].join(" ").trim();
   };
@@ -447,7 +456,7 @@ export default function NewProductModal({
       }
     } else if (category === "Forros / Fundas") {
       subtitle = `Forro · ${caseModel}`;
-    } else if (category === "Audio / AirPods") {
+    } else if (category === "Audio" || category === "Audio / AirPods") {
       subtitle = `Audio · ${audioConnection}`;
     } else {
       const vals = activeAttributeKeys
@@ -547,7 +556,10 @@ export default function NewProductModal({
     if (category === "Forros / Fundas" && attrKey === "caseModels") {
       return "Modelos:";
     }
-    if (category === "Audio / AirPods" && attrKey === "connections") {
+    if (
+      (category === "Audio" || category === "Audio / AirPods") &&
+      attrKey === "connections"
+    ) {
       return "Conexión:";
     }
     return `${defaultLabel}:`;

@@ -44,16 +44,16 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     await expect(page.getByText("Fija e inamovible al inicio de la barra")).toBeVisible();
     await expect(page.getByText("Valores Predeterminados Fijos (Respaldo)")).toBeVisible();
 
-    // Eliminar una categoría predeterminada ("Power Banks / Baterías", que tiene 0 productos) de la barra activa
+    // Eliminar una categoría predeterminada ("Power Banks / Baterías portatiles", que tiene 0 productos) de la barra activa
     const deleteDefaultCatBtn = page.locator(
-      'button[aria-label="Eliminar categoría Power Banks / Baterías"]'
+      'button[aria-label="Eliminar categoría Power Banks / Baterías portatiles"]'
     );
     await expect(deleteDefaultCatBtn).toBeVisible();
     await deleteDefaultCatBtn.click();
 
     // Debe trasladarse a la sección inferior de Respaldo como botón interactivo de recuperación (+)
     const restoreDefaultCatBtn = page.locator(
-      'button[aria-label="Recuperar categoría Power Banks / Baterías"]'
+      'button[aria-label="Recuperar categoría Power Banks / Baterías portatiles"]'
     );
     await expect(restoreDefaultCatBtn).toBeVisible();
 
@@ -90,10 +90,10 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
 
     await expect(page.getByRole("heading", { name: "Nuevo producto" })).toBeVisible();
 
-    // Verificar atributos adaptativos de "Power Banks / Baterías"
+    // Verificar atributos adaptativos de "Power Banks / Baterías portatiles"
     const powerBankCategoryBtn = page
       .locator("#new-product-form")
-      .getByRole("button", { name: "Power Banks / Baterías", exact: true });
+      .getByRole("button", { name: "Power Banks / Baterías portatiles", exact: true });
     await expect(powerBankCategoryBtn).toBeVisible();
     await powerBankCategoryBtn.click();
 
