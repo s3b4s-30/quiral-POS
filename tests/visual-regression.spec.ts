@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 
 test.describe("Quiral POS — Pruebas de Regresión Visual y UI/UX (Apple HIG)", () => {
   test.use({
@@ -83,8 +83,8 @@ test.describe("Quiral POS — Pruebas de Regresión Visual y UI/UX (Apple HIG)",
     // Potencia se oculta, acabado de cable se muestra con opciones Normal y Trenzado
     await expect(page.getByText("Potencia:")).not.toBeVisible();
     await expect(page.getByText("Acabado del cable:")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Normal" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Trenzado" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Normal", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Trenzado", exact: true })).toBeVisible();
 
     // 3.3 Seleccionar Cargador Completo
     const completoBtn = page.locator("button").filter({ hasText: /^Cargador Completo$/ });
@@ -134,7 +134,7 @@ test.describe("Quiral POS — Pruebas de Regresión Visual y UI/UX (Apple HIG)",
     await menuBtn.click();
 
     // Pulsar en 'Perfil'
-    const profileBtn = page.getByRole("button", { name: "Perfil" });
+    const profileBtn = page.locator("#top-menu-popover").getByRole("button", { name: "Perfil", exact: true });
     await expect(profileBtn).toBeVisible();
     await profileBtn.click();
 
