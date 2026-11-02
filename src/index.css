@@ -19,7 +19,7 @@
     --border-color: #e5e5ea;
     --sat: env(safe-area-inset-top, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
-    --quiral-header-offset: calc(env(safe-area-inset-top, 0px) + 4.25rem);
+    --quiral-header-offset: calc(env(safe-area-inset-top, 0px) + 3.5rem);
   }
 
   .dark {
@@ -213,12 +213,16 @@ body.modal-open .modal-sheet-dialog {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 40;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   height: var(--quiral-header-offset);
   background-color: var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
-  padding-top: calc(env(safe-area-inset-top, 0px) + 0.625rem);
-  padding-bottom: 0.625rem;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: 0;
   padding-left: 1rem;
   padding-right: 1rem;
 }
@@ -240,7 +244,7 @@ body.modal-open .modal-sheet-dialog {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  padding-top: max(4rem, var(--quiral-header-offset));
+  padding-top: var(--quiral-header-offset);
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5.5rem);
 }
 

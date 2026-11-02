@@ -55,11 +55,11 @@ export default function TopHeader({
 
   return (
     <header
-      className={`quiral-top-header select-none transition-colors duration-75 ${
+      className={`quiral-top-header fixed top-0 w-full z-50 backdrop-blur-md pt-[env(safe-area-inset-top,0px)] select-none transition-colors duration-75 ${
         isAccent ? "border-b !border-blue-500/20 dark:!border-blue-500/30" : ""
       }`}
     >
-      <div className="mx-auto flex max-w-xl md:max-w-4xl lg:max-w-5xl items-center justify-between gap-3">
+      <div className="mx-auto flex h-14 w-full max-w-xl md:max-w-4xl lg:max-w-5xl items-center justify-between gap-3">
         {/* Título: flexible con truncamiento para nunca empujar los controles */}
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           {userProfile?.storeLogoUrl && (

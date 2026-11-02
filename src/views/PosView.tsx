@@ -74,7 +74,7 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
 
   return (
     <>
-      <div className="quiral-scroll-container pt-16" id="pos-scroll">
+      <div className="quiral-scroll-container" id="pos-scroll">
         <div className="mx-auto max-w-xl md:max-w-4xl lg:max-w-5xl px-4">
           {/* Header sticky con fondo sólido opaco nativo (Apple HIG) */}
           <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
@@ -124,7 +124,7 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
           {/* Listado de tarjetas de productos en grilla adaptable con margen inferior anti-colisión */}
           <div
             className={`grid grid-cols-1 md:grid-cols-2 gap-3 ${
-              cartUnits > 0 ? "pb-44 sm:pb-36" : "pb-32"
+              cartUnits > 0 ? "pb-20 sm:pb-16" : "pb-6"
             }`}
           >
             {loading ? (

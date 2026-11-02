@@ -67,9 +67,9 @@ export default function SummaryView({ onModalStateChange }: SummaryViewProps) {
   return (
     <div
       id="summary-scroll"
-      className="quiral-scroll-container pt-16 transition-colors duration-75"
+      className="quiral-scroll-container transition-colors duration-75"
     >
-      <div className="mx-auto max-w-xl md:max-w-4xl lg:max-w-5xl px-4 pb-32">
+      <div className="mx-auto max-w-xl md:max-w-4xl lg:max-w-5xl px-4 pt-3 pb-6">
         {/* 1. Dashboard Principal de Métricas (Tokens del Sistema Apple HIG) */}
         {loading ? (
           <section className="grid grid-cols-1 min-[360px]:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">

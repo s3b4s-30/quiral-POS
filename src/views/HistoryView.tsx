@@ -26,7 +26,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
   }, [sales, query]);
 
   return (
-    <div id="history-scroll" className="quiral-scroll-container pt-16 transition-colors duration-75">
+    <div id="history-scroll" className="quiral-scroll-container transition-colors duration-75">
       <div className="mx-auto max-w-xl md:max-w-4xl lg:max-w-5xl px-4">
         {/* Header sticky con fondo sólido opaco nativo (Apple HIG) */}
         <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
@@ -55,7 +55,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
         </div>
 
         {/* Listado de Ventas en Historial */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-32">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-6">
           {loading ? (
             Array.from({ length: 4 }).map((_, idx) => (
               <div

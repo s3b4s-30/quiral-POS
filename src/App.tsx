@@ -173,7 +173,7 @@ function AppInner() {
           ) : activeTab === "summary" ? (
             <SummaryView onModalStateChange={setIsSummaryModalOpen} />
           ) : (
-            <div className="quiral-scroll-container pt-16 px-4 pb-32 text-center text-[var(--text-secondary)]">
+            <div className="quiral-scroll-container px-4 pb-6 text-center text-[var(--text-secondary)]">
               <p className="text-base font-semibold pt-12">Esta sección estará disponible próximamente.</p>
               <button
                 type="button"
