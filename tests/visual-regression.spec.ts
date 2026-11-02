@@ -1,4 +1,4 @@
-﻿import { test, expect } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
 test.describe("Quiral POS — Pruebas de Regresión Visual y UI/UX (Apple HIG)", () => {
   test.use({
@@ -121,6 +121,18 @@ test.describe("Quiral POS — Pruebas de Regresión Visual y UI/UX (Apple HIG)",
 
     // Validar que la clase .dark fue removida
     await expect(html).not.toHaveClass(/dark/);
+
+    // Validar que el backdrop de TopMenu cubre el 100% de la pantalla (y no solo la franja superior)
+    const backdrop = page.locator('[data-testid="top-menu-backdrop"]');
+    await expect(backdrop).toBeVisible();
+    const box = await backdrop.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.width).toBeGreaterThanOrEqual(390);
+    expect(box!.height).toBeGreaterThanOrEqual(700);
+
+    // Tocar fuera del menú (en la zona inferior del backdrop) debe cerrar el TopMenu bloqueando elementos inferiores
+    await backdrop.click({ position: { x: 50, y: 650 } });
+    await expect(page.locator("#top-menu-popover")).not.toBeVisible();
   });
 
   test("5. Apertura y aislamiento de StoreProfileModal desde TopMenu", async ({ page }) => {
