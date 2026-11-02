@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { getStoreMembership, printSecurityWarning, signOutUser } from "../lib/authService";
 import { DEMO_STORE_ID, generateDemoSeed } from "../lib/demoSeed";
@@ -751,10 +751,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     saleInFlightRef.current = true;
     try {
       const maxSaleNumber = sales.reduce(
-        (max, s) => Math.max(max, typeof s.saleNumber === "number" ? s.saleNumber : 1000),
-        1000
+        (max, s) => Math.max(max, typeof s.saleNumber === "number" ? s.saleNumber : 0),
+        0
       );
-      const nextNumber = maxSaleNumber + 1;
+      const nextNumber = maxSaleNumber > 0 ? maxSaleNumber + 1 : 1;
 
       const saleItems: SaleItem[] = cartSnapshot.map((item) => {
         const product = products.find((p) => p.id === item.productId);

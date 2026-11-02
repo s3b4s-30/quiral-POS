@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, Pencil, Search, Trash2, X } from "lucide-react";
+﻿import { AlertTriangle, Check, Pencil, Search, Trash2, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
 import ModalSheet from "../components/ModalSheet";
@@ -374,7 +374,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
               </div>
             </div>
 
-            <label className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/60 p-3.5 cursor-pointer">
+            <label className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900/60 p-3.5 cursor-pointer transition-colors">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-[var(--text-primary)]">
                   Restituir unidades al inventario
@@ -444,7 +444,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/50 p-3.5 space-y-2 text-xs">
+              <div className="rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900/70 p-3.5 space-y-2 text-xs transition-colors">
                 <div className="flex justify-between">
                   <span className="text-[var(--text-secondary)]">Cliente:</span>
                   <span className="font-bold text-[var(--text-primary)]">
@@ -481,7 +481,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                   value={editCustomerName}
                   onChange={(e) => setEditCustomerName(e.target.value)}
                   placeholder="Cliente General"
-                  className="mt-1.5 w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/50 px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+                  className="mt-1.5 w-full rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-[#007aff] dark:focus:border-[#0a84ff] transition-colors"
                 />
               </div>
 
@@ -493,7 +493,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                 {editItems.map((item) => (
                   <div
                     key={item.id}
-                    className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/50 p-3 space-y-2"
+                    className="rounded-2xl border border-[var(--border-color)] dark:border-zinc-800/80 bg-[var(--bg-elevated)] dark:bg-zinc-900/60 p-3 space-y-2 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-bold text-[var(--text-primary)] flex-1 min-w-0 line-clamp-2">
@@ -532,7 +532,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                           onChange={(e) =>
                             updateEditItemPrice(item.id, parseCOPInput(e.target.value))
                           }
-                          className="tabular-nums mt-0.5 w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+                          className="tabular-nums mt-0.5 w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff] dark:focus:border-[#0a84ff] transition-colors"
                         />
                       </div>
                       {editItems.length > 1 && (
@@ -565,7 +565,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                         className={`min-h-10 rounded-xl border text-xs font-bold transition-colors ${
                           active
                             ? "border-[#007aff] bg-[#007aff] text-white shadow-sm"
-                            : "border-[var(--border-color)] bg-[var(--bg-primary)]/50 text-[var(--text-primary)]"
+                            : "border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200 hover:bg-black/5 dark:hover:bg-zinc-800"
                         }`}
                       >
                         {method}
@@ -586,7 +586,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                     inputMode="numeric"
                     value={formatCOP(effectiveEditTotal)}
                     onChange={(e) => setEditTotalInput(String(parseCOPInput(e.target.value)))}
-                    className="tabular-nums mt-1.5 w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/50 px-4 py-2.5 text-base font-extrabold text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+                    className="tabular-nums mt-1.5 w-full rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-4 py-2.5 text-base font-extrabold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff] dark:focus:border-[#0a84ff] transition-colors"
                   />
                 </div>
 
@@ -599,7 +599,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                     value={editNote}
                     onChange={(e) => setEditNote(e.target.value)}
                     placeholder="Observación o ajuste de la venta..."
-                    className="mt-1.5 w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/50 px-4 py-2 text-xs font-medium text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+                    className="mt-1.5 w-full rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-4 py-2 text-xs font-medium text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-[#007aff] dark:focus:border-[#0a84ff] transition-colors"
                   />
                 </div>
               </div>
