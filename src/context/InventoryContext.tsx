@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import type { Session } from "@supabase/supabase-js";
 import { getStoreMembership, printSecurityWarning, signOutUser } from "../lib/authService";
 import { DEMO_STORE_ID, ensureFreshDemoStorage, generateDemoSeed } from "../lib/demoSeed";
-import { supabase } from "../lib/supabase";
+import { logDbEvent, supabase, SUPABASE_PAGE_SIZE, withDbTelemetry } from "../lib/supabase";
 import { Batch, CartItem, CatalogConfig, CategoryConfig, Closure, PaymentMethod, Product, ProductCategory, Sale, SaleItem, Supplier, UserProfile } from "../types/domain";
 import {
   DEFAULT_CATALOG_CONFIG,
@@ -212,12 +212,14 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const [supRes, prodRes, salesRes, closuresRes] = await Promise.all([
-        supabase.from("suppliers").select("data").eq("store_id", activeStore),
-        supabase.from("products").select("data").eq("store_id", activeStore),
-        supabase.from("sales").select("data").eq("store_id", activeStore).order("created_at", { ascending: false }),
-        supabase.from("cycle_closings").select("data").eq("store_id", activeStore).order("closed_at", { ascending: false }),
-      ]);
+      const [supRes, prodRes, salesRes, closuresRes, catConfRes] = await withDbTelemetry("load_store_bundle", activeStore, () => Promise.all([
+        supabase.from("suppliers").select("data").eq("store_id", activeStore).limit(SUPABASE_PAGE_SIZE),
+        supabase.from("products").select("data").eq("store_id", activeStore).order("updated_at", { ascending: false }).limit(SUPABASE_PAGE_SIZE),
+        supabase.from("sales").select("data").eq("store_id", activeStore).order("created_at", { ascending: false }).limit(SUPABASE_PAGE_SIZE),
+        supabase.from("cycle_closings").select("data").eq("store_id", activeStore).order("closed_at", { ascending: false }).limit(SUPABASE_PAGE_SIZE),
+        supabase.from("catalog_configs").select("config").eq("store_id", activeStore).maybeSingle(),
+      ]));
+
 
       if (requestId !== activeStoreRequestIdRef.current) return;
       const loadedSuppliers = supRes.data?.map((r) => r.data as Supplier) ?? [];
@@ -242,7 +244,20 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       setProducts(loadedProducts);
       setSales(cleanSales);
       setClosures(cleanClosures);
-      setCatalogConfig(getStoredCatalogConfig(activeStore));
+      if (catConfRes?.data?.config) {
+        const mergedRemote = mergeWithDefaultCatalogConfig(
+          catConfRes.data.config as Partial<CatalogConfig>
+        );
+        setCatalogConfig(mergedRemote);
+        try {
+          localStorage.setItem(
+            `quiral_catalog_config_v3_${activeStore}`,
+            JSON.stringify(mergedRemote)
+          );
+        } catch {}
+      } else {
+        setCatalogConfig(getStoredCatalogConfig(activeStore));
+      }
 
       setError(null);
       lastLoadedStoreIdRef.current = activeStore;
@@ -508,7 +523,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       )
       .subscribe((status, err) => {
         if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          console.warn(`[Realtime] Aviso de conexión (${status}):`, err);
+          logDbEvent("warn", `realtime_${status.toLowerCase()}`, { storeId, details: err ? String(err) : status });
         }
       });
 
@@ -548,7 +563,9 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         payload.closed_at = c.closedAt;
       }
 
-      const { error: err } = await supabase.from(table).upsert(payload);
+      const { error: err } = await withDbTelemetry(`upsert_${table}`, storeId, () =>
+        supabase.from(table).upsert(payload)
+      );
       if (err) throw err;
     },
     [storeId, isDemoUser]
@@ -775,11 +792,16 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (storeId && !isDemoUser) {
-        void supabase.auth
-          .updateUser({ data: { catalog_config: nextConfig } })
-          .catch(() => {
-            // Silencioso en caso de modo offline temporal
-          });
+        void withDbTelemetry("upsert_catalog_config", storeId, () =>
+          supabase.rpc("upsert_catalog_config", {
+            target_store: storeId,
+            config_payload: nextConfig,
+          })
+        ).catch(() => {
+          void supabase.auth
+            .updateUser({ data: { catalog_config: nextConfig } })
+            .catch(() => {});
+        });
       }
     },
     [storeId, isDemoUser]
@@ -1152,6 +1174,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         { productId, batchId: batch.id, quantity: 1, unitPrice: product.price },
       ]);
+
     }
     return true;
   };
