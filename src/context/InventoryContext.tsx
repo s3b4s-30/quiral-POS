@@ -80,6 +80,7 @@ interface InventoryContextType {
   addAttributeOption: (attributeKey: string, newOption: string) => string | null;
   renameAttributeOption: (attributeKey: string, oldOption: string, newOption: string) => boolean;
   deleteAttributeOption: (attributeKey: string, optionToRemove: string) => void;
+  reorderAttributeOptions: (attributeKey: string, newOptions: string[]) => void;
   createCustomAttribute: (label: string, initialOptions?: string[]) => string | null;
   resetCatalogConfigToDefault: () => void;
   signOut: () => Promise<void>;
@@ -98,7 +99,7 @@ const getStoredStoreProfile = (storeId: string): Partial<UserProfile> => {
 
 const getStoredCatalogConfig = (targetStoreId: string): CatalogConfig => {
   try {
-    const raw = localStorage.getItem(`quiral_catalog_config_${targetStoreId}`);
+    const raw = localStorage.getItem(`quiral_catalog_config_v2_${targetStoreId}`);
     if (raw) {
       return mergeWithDefaultCatalogConfig(JSON.parse(raw) as Partial<CatalogConfig>);
     }
@@ -764,7 +765,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       const activeStore = storeId || DEMO_STORE_ID;
       try {
         localStorage.setItem(
-          `quiral_catalog_config_${activeStore}`,
+          `quiral_catalog_config_v2_${activeStore}`,
           JSON.stringify(nextConfig)
         );
       } catch (err) {
@@ -1037,6 +1038,34 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         [attributeKey]: {
           ...currentAttr,
           options: nextOptions,
+        },
+      },
+    };
+
+    setCatalogConfig(nextConfig);
+    persistCatalogConfig(nextConfig);
+  };
+
+  const reorderAttributeOptions = (attributeKey: string, newOptions: string[]) => {
+    const currentAttr = catalogConfig.attributes[attributeKey];
+    if (!currentAttr) return;
+
+    const cleanOptions: string[] = [];
+    for (const rawOpt of newOptions) {
+      const norm = normalizeCatalogText(rawOpt);
+      if (norm && !cleanOptions.some((o) => isSameCatalogText(o, norm))) {
+        cleanOptions.push(norm);
+      }
+    }
+    if (cleanOptions.length === 0) return;
+
+    const nextConfig: CatalogConfig = {
+      ...catalogConfig,
+      attributes: {
+        ...catalogConfig.attributes,
+        [attributeKey]: {
+          ...currentAttr,
+          options: cleanOptions,
         },
       },
     };
@@ -1551,6 +1580,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         addAttributeOption,
         renameAttributeOption,
         deleteAttributeOption,
+        reorderAttributeOptions,
         createCustomAttribute,
         resetCatalogConfigToDefault,
         signOut,

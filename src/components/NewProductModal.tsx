@@ -1,4 +1,4 @@
-import { Check, Plus, Sliders, Sparkles, Tag, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Minus, Plus, Sliders, Tag, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import AttributeConfigModal from "./AttributeConfigModal";
 import ModalSheet from "./ModalSheet";
@@ -27,7 +27,6 @@ export default function NewProductModal({
     addProduct,
     catalogConfig,
     addCategory,
-    updateCategoryAttributes,
     addAttributeOption,
   } = useInventory();
 
@@ -46,7 +45,6 @@ export default function NewProductModal({
     "1Hora",
     "Anker",
     "Belkin",
-    "Tipo C",
   ];
   const chargerPowers = catalogConfig.attributes.powers?.options ?? [
     "20W",
@@ -55,6 +53,7 @@ export default function NewProductModal({
     "35W",
     "45W",
     "60W",
+    "65W",
   ];
   const cableFinishes = catalogConfig.attributes.cableFinishes?.options ?? [
     "Normal",
@@ -63,8 +62,7 @@ export default function NewProductModal({
   const caseMaterials = catalogConfig.attributes.caseMaterials?.options ?? [
     "Silicona Líquida",
     "Transparente Anti-amarilleo",
-    "Lujo / MagSafe",
-    "Uso Rudo",
+    "Lujo",
   ];
   const caseModels = catalogConfig.attributes.caseModels?.options ?? [
     "iPhone 11",
@@ -77,6 +75,7 @@ export default function NewProductModal({
     "iPhone 15 Pro Max",
   ];
   const audioModels = catalogConfig.attributes.audioModels?.options ?? [
+    "AirPods Serie 3",
     "AirPods Serie 4",
     "AirPods Pro 2da Generación",
     "AirPods Pro 3ra Generación",
@@ -87,7 +86,7 @@ export default function NewProductModal({
     "MagSafe",
   ];
 
-  // Estados para las familias clásicas y atributos sincronizados
+  // Estados para las categorías principales y atributos sincronizados
   const [chargerSubtype, setChargerSubtype] = useState(chargerSubtypes[0] || "Cubo");
   const [chargerBrand, setChargerBrand] = useState(chargerBrands[0] || "iPhone");
   const [chargerPower, setChargerPower] = useState(chargerPowers[0] || "20W");
@@ -101,7 +100,7 @@ export default function NewProductModal({
   );
 
   const [audioModel, setAudioModel] = useState(
-    audioModels[1] || audioModels[0] || "AirPods Pro 2da Generación"
+    audioModels[1] || audioModels[0] || "AirPods Serie 4"
   );
   const [audioConnection, setAudioConnection] = useState(
     audioConnections[0] || "USB-C"
@@ -116,23 +115,22 @@ export default function NewProductModal({
   const [addingAttrKey, setAddingAttrKey] = useState<string | null>(null);
   const [newAttrOptionText, setNewAttrOptionText] = useState("");
 
-  // Estado para creación rápida (+) de una nueva categoría al vuelo con secuencia estricta de atributos
+  // Estado para creación rápida (+) de una nueva categoría al vuelo con orden claro de atributos
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryAttrKeys, setNewCategoryAttrKeys] = useState<string[]>([
     "brands",
-    "capacities",
-    "ports",
+    "colors",
   ]);
   const hasCustomAttrOrderRef = useRef(false);
 
-  // Estado para configurar el orden de atributos de la categoría activa directamente
-  const [isConfiguringCategoryAttrs, setIsConfiguringCategoryAttrs] = useState(false);
+  // Modal de Configuración de Atributos
+  const [attrModalConfig, setAttrModalConfig] = useState<{
+    open: boolean;
+    tab: "category-order" | "attribute-options";
+  }>({ open: false, tab: "attribute-options" });
 
-  // Modal de Banco Maestro de Atributos
-  const [isAttrModalOpen, setIsAttrModalOpen] = useState(false);
-
-  // Campos del formulario comercial y Control de Nomenclatura Dinámica
+  // Campos del formulario comercial y Switch de Nomenclatura
   const [name, setName] = useState("");
   const [manualBaseName, setManualBaseName] = useState("");
   const [includeAttributesInName, setIncludeAttributesInName] = useState(true);
@@ -226,7 +224,7 @@ export default function NewProductModal({
     setDynamicSelections((prev) => ({ ...prev, [attrKey]: val }));
   };
 
-  // Construir sufijo/nombre técnico de atributos según la categoría y el orden de activeAttributeKeys
+  // Construir nombre técnico según la categoría y el orden de activeAttributeKeys
   const buildTechnicalAttributesDescriptor = (): string => {
     if (category === "Cargadores y Cables") {
       if (chargerSubtype === "Cubo") {
@@ -260,7 +258,7 @@ export default function NewProductModal({
     return [category, ...selectedValues].join(" ").trim();
   };
 
-  // Construir cadena compacta de atributos seleccionados para concatenar a un nombre manual
+  // Construir cadena compacta de atributos seleccionados para agregar a un nombre manual
   const buildCompactAttributesSuffix = (): string => {
     const parts: string[] = [];
     for (const key of activeAttributeKeys) {
@@ -300,7 +298,6 @@ export default function NewProductModal({
     setAddingAttrKey(null);
     setNewAttrOptionText("");
     setIsAddingCategory(false);
-    setIsConfiguringCategoryAttrs(false);
     hasCustomAttrOrderRef.current = false;
     setError(null);
   };
@@ -310,7 +307,7 @@ export default function NewProductModal({
     onClose();
   };
 
-  // Sincronizar el nombre comercial cuando está activo el Control de Nomenclatura Dinámica
+  // Sincronizar el nombre comercial cuando está activo el switch de incluir atributos
   useEffect(() => {
     if (!includeAttributesInName) return;
 
@@ -341,13 +338,12 @@ export default function NewProductModal({
     dynamicSelections,
   ]);
 
-  // Alternar el switch de incluir subtipo/atributos en el nombre
+  // Alternar el switch de incluir subtipo y atributos en el nombre
   const handleToggleIncludeAttributesInName = () => {
     const nextState = !includeAttributesInName;
     setIncludeAttributesInName(nextState);
 
     if (nextState) {
-      // Al activarlo, si había un nombre manual escrito, lo concatenamos con los atributos clave
       const base = manualBaseName.trim();
       if (base) {
         const suffix = buildCompactAttributesSuffix();
@@ -359,8 +355,6 @@ export default function NewProductModal({
         setName(buildTechnicalAttributesDescriptor());
       }
     } else {
-      // Al desactivarlo, si había un nombre base manual se restaura solo el nombre manual;
-      // si era el nombre autogenerado, se deja libre con el prefijo base limpio para edición manual
       if (manualBaseName.trim()) {
         setName(manualBaseName.trim());
       }
@@ -389,7 +383,7 @@ export default function NewProductModal({
     setAddingAttrKey(null);
   };
 
-  // Crear nueva familia/categoría al vuelo (+) respetando el orden exacto de atributos seleccionados
+  // Crear nueva categoría al vuelo (+) respetando el orden exacto de atributos seleccionados
   const handleCreateQuickCategory = () => {
     const clean = normalizeCatalogText(newCategoryName);
     if (!clean || clean.toLowerCase() === "todos") return;
@@ -406,7 +400,7 @@ export default function NewProductModal({
     }
   };
 
-  // Seleccionar/deseleccionar atributo en estricto orden de clic (Task 3)
+  // Agregar, quitar o mover atributos al crear una nueva categoría
   const toggleNewCategoryAttrKey = (key: string) => {
     hasCustomAttrOrderRef.current = true;
     setNewCategoryAttrKeys((prev) =>
@@ -414,15 +408,22 @@ export default function NewProductModal({
     );
   };
 
-  // Alternar atributo en la categoría activa respetando la secuencia exacta de selección
-  const toggleActiveCategoryAttrKey = (key: string) => {
-    const exists = activeAttributeKeys.includes(key);
-    const nextKeys = exists
-      ? activeAttributeKeys.length > 1
-        ? activeAttributeKeys.filter((k) => k !== key)
-        : activeAttributeKeys
-      : [...activeAttributeKeys, key];
-    updateCategoryAttributes(category, nextKeys);
+  const moveNewCategoryAttrKey = (fromIdx: number, toIdx: number) => {
+    hasCustomAttrOrderRef.current = true;
+    setNewCategoryAttrKeys((prev) => {
+      if (
+        fromIdx < 0 ||
+        toIdx < 0 ||
+        fromIdx >= prev.length ||
+        toIdx >= prev.length
+      ) {
+        return prev;
+      }
+      const next = [...prev];
+      const [moved] = next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, moved);
+      return next;
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -641,7 +642,7 @@ export default function NewProductModal({
             </p>
           )}
 
-          {/* Categoría Selector con botón (+) para crear nuevas familias al vuelo */}
+          {/* Categoría Selector con botón (+) para crear nuevas categorías al vuelo */}
           <div className="mt-1 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
@@ -658,13 +659,13 @@ export default function NewProductModal({
                 className="inline-flex items-center gap-1 rounded-xl border border-[#007aff]/30 bg-[#007aff]/10 px-2.5 py-1 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform"
               >
                 <Plus size={13} />
-                <span>Nueva familia</span>
+                <span>Nueva categoría</span>
               </button>
             </div>
 
-            {/* Panel inline para crear una categoría al vuelo con orden de atributos por secuencia de clic */}
+            {/* Panel claro para crear una categoría nueva y definir sus atributos en lista */}
             {isAddingCategory && (
-              <div className="rounded-2xl border border-[#007aff]/35 bg-[#007aff]/5 dark:bg-zinc-900 p-3 space-y-2.5 animate-in fade-in duration-150">
+              <div className="rounded-2xl border border-[#007aff]/35 bg-[#007aff]/5 dark:bg-zinc-900 p-3.5 space-y-3 animate-in fade-in duration-150">
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -677,8 +678,8 @@ export default function NewProductModal({
                         handleCreateQuickCategory();
                       }
                     }}
-                    placeholder="Ej. Relojes, Baterías Portátiles, SSD..."
-                    aria-label="Nombre de la nueva familia de productos"
+                    placeholder="Nombre de la categoría (ej. Relojes, SSD)..."
+                    aria-label="Nombre de la nueva categoría"
                     className="flex-1 rounded-xl border border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] dark:bg-zinc-950 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-[#007aff]"
                   />
                   <button
@@ -687,16 +688,17 @@ export default function NewProductModal({
                     onClick={handleCreateQuickCategory}
                     disabled={!newCategoryName.trim()}
                     aria-label="Confirmar creación de categoría"
-                    className="rounded-xl bg-[#007aff] px-3 py-2 text-xs font-bold text-white shadow-sm disabled:opacity-40"
+                    className="rounded-xl bg-[#007aff] px-3.5 py-2 text-xs font-bold text-white shadow-sm disabled:opacity-40"
                   >
                     Crear
                   </button>
                 </div>
 
-                <div>
-                  <div className="mb-1 flex items-center justify-between">
+                {/* 1. Lista de atributos seleccionados para la nueva categoría (en orden) */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
-                      Atributos técnicos asociados (toca en el orden deseado):
+                      Atributos de esta categoría (en orden):
                     </p>
                     {newCategoryAttrKeys.length > 0 && (
                       <button
@@ -708,34 +710,82 @@ export default function NewProductModal({
                         aria-label="Reiniciar orden de atributos"
                         className="text-[10px] font-bold text-[#ff3b30] hover:underline"
                       >
-                        Reiniciar orden
+                        Vaciar lista
                       </button>
                     )}
                   </div>
+
+                  {newCategoryAttrKeys.length === 0 ? (
+                    <p className="rounded-xl border border-dashed border-[var(--border-color)] dark:border-zinc-800 px-3 py-2 text-[11px] text-[var(--text-secondary)] dark:text-zinc-400">
+                      Toca abajo los atributos en el orden en que deseas verlos.
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {newCategoryAttrKeys.map((key, idx) => {
+                        const attr = catalogConfig.attributes[key];
+                        if (!attr) return null;
+                        return (
+                          <div
+                            key={key}
+                            className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-950 px-2.5 py-1.5"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => toggleNewCategoryAttrKey(key)}
+                              aria-label={`Quitar ${attr.label} de nueva categoría`}
+                              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30] hover:text-white active:scale-90 transition-all"
+                            >
+                              <Minus size={12} strokeWidth={2.75} />
+                            </button>
+                            <span className="flex-1 truncate text-xs font-bold text-[var(--text-primary)] dark:text-zinc-100">
+                              {idx + 1}. {attr.label}
+                            </span>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                disabled={idx === 0}
+                                onClick={() => moveNewCategoryAttrKey(idx, idx - 1)}
+                                aria-label={`Subir ${attr.label}`}
+                                className="flex h-6 w-6 items-center justify-center rounded-md border border-[var(--border-color)] dark:border-zinc-800 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25"
+                              >
+                                <ArrowUp size={12} />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={idx === newCategoryAttrKeys.length - 1}
+                                onClick={() => moveNewCategoryAttrKey(idx, idx + 1)}
+                                aria-label={`Bajar ${attr.label}`}
+                                className="flex h-6 w-6 items-center justify-center rounded-md border border-[var(--border-color)] dark:border-zinc-800 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25"
+                              >
+                                <ArrowDown size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Atributos disponibles para agregar con un toque */}
+                <div>
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
+                    Toca para agregar atributos:
+                  </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {Object.values(catalogConfig.attributes).map((attr) => {
-                      const orderIdx = newCategoryAttrKeys.indexOf(attr.key);
-                      const selected = orderIdx !== -1;
-                      return (
+                    {Object.values(catalogConfig.attributes)
+                      .filter((attr) => !newCategoryAttrKeys.includes(attr.key))
+                      .map((attr) => (
                         <button
                           key={attr.key}
                           type="button"
                           onClick={() => toggleNewCategoryAttrKey(attr.key)}
-                          className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors ${
-                            selected
-                              ? "bg-[#007aff] text-white shadow-sm"
-                              : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-950 text-[var(--text-secondary)] dark:text-zinc-400"
-                          }`}
+                          className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-950 px-2.5 py-1 text-[11px] font-semibold text-[var(--text-primary)] dark:text-zinc-300 hover:border-[#007aff] active:scale-95 transition-all"
                         >
-                          {selected && (
-                            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/25 text-[10px] font-extrabold">
-                              {orderIdx + 1}
-                            </span>
-                          )}
+                          <Plus size={11} className="text-[#007aff]" />
                           <span>{attr.label}</span>
                         </button>
-                      );
-                    })}
+                      ))}
                   </div>
                 </div>
               </div>
@@ -762,7 +812,7 @@ export default function NewProductModal({
             </div>
           </div>
 
-          {/* Opciones y Especificaciones Dinámicas según el Orden Exacto de Atributos */}
+          {/* Opciones y Especificaciones Dinámicas según el Orden de Atributos */}
           <div className="rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/40 dark:bg-zinc-900/50 p-3.5 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
@@ -771,16 +821,20 @@ export default function NewProductModal({
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setIsConfiguringCategoryAttrs((prev) => !prev)}
+                  onClick={() =>
+                    setAttrModalConfig({ open: true, tab: "category-order" })
+                  }
                   aria-label="Ordenar atributos de esta categoría"
                   className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--text-secondary)] dark:text-zinc-300 hover:text-[#007aff] dark:hover:text-[#0a84ff]"
                 >
                   <Tag size={11} />
-                  <span>Orden de atributos</span>
+                  <span>Ordenar atributos</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsAttrModalOpen(true)}
+                  onClick={() =>
+                    setAttrModalConfig({ open: true, tab: "attribute-options" })
+                  }
                   aria-label="Abrir banco maestro de atributos"
                   className="inline-flex items-center gap-1 text-[11px] font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
                 >
@@ -790,45 +844,11 @@ export default function NewProductModal({
               </div>
             </div>
 
-            {/* Configurador en vivo del orden exacto de atributos para la categoría actual */}
-            {isConfiguringCategoryAttrs && (
-              <div className="rounded-xl border border-[#007aff]/30 bg-[#007aff]/5 dark:bg-zinc-950 p-2.5 space-y-1.5 animate-in fade-in duration-100">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
-                  Secuencia de atributos para «{category}» (toca para ordenar):
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.values(catalogConfig.attributes).map((attr) => {
-                    const idx = activeAttributeKeys.indexOf(attr.key);
-                    const isSelected = idx !== -1;
-                    return (
-                      <button
-                        key={attr.key}
-                        type="button"
-                        onClick={() => toggleActiveCategoryAttrKey(attr.key)}
-                        className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors ${
-                          isSelected
-                            ? "bg-[#007aff] text-white shadow-sm"
-                            : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-secondary)] dark:text-zinc-400"
-                        }`}
-                      >
-                        {isSelected && (
-                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/25 text-[10px] font-extrabold">
-                            {idx + 1}
-                          </span>
-                        )}
-                        <span>{attr.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             {/* Renderizado estricto según el orden de activeAttributeKeys */}
             {activeAttributeKeys.map((attrKey) => renderAttributeBlock(attrKey))}
           </div>
 
-          {/* Nombre comercial del producto + Control de Nomenclatura Dinámica (Task 5) */}
+          {/* Nombre comercial del producto + Interruptor limpio de detalles */}
           <div className="space-y-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
@@ -849,25 +869,25 @@ export default function NewProductModal({
               />
             </div>
 
-            {/* Switch de Control de Nomenclatura Dinámica justo debajo del nombre */}
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-900/70 px-3 py-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <Sparkles
-                  size={15}
+            {/* Interruptor limpio y legible (sin iconos de IA ni textos truncados) */}
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-900/70 px-3.5 py-2.5">
+              <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                <Tag
+                  size={16}
                   className={
                     includeAttributesInName
-                      ? "text-[#007aff] shrink-0"
-                      : "text-[var(--text-secondary)] dark:text-zinc-500 shrink-0"
+                      ? "mt-0.5 text-[#007aff] shrink-0"
+                      : "mt-0.5 text-[var(--text-secondary)] dark:text-zinc-500 shrink-0"
                   }
                 />
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-bold text-[var(--text-primary)] dark:text-zinc-200">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold leading-snug text-[var(--text-primary)] dark:text-zinc-200">
                     Incluir subtipo y atributos en el nombre
                   </p>
-                  <p className="truncate text-[10px] text-[var(--text-secondary)] dark:text-zinc-400">
+                  <p className="mt-0.5 text-[11px] leading-snug text-[var(--text-secondary)] dark:text-zinc-400">
                     {includeAttributesInName
-                      ? `Concatenación activa (${buildCompactAttributesSuffix() || category})`
-                      : "Modo manual: solo se mostrará el nombre que escribas"}
+                      ? "Se agregan automáticamente al nombre del producto."
+                      : "Usar únicamente el nombre escrito arriba."}
                   </p>
                 </div>
               </div>
@@ -1024,8 +1044,14 @@ export default function NewProductModal({
         </form>
       </ModalSheet>
 
-      {isAttrModalOpen && (
-        <AttributeConfigModal onClose={() => setIsAttrModalOpen(false)} />
+      {attrModalConfig.open && (
+        <AttributeConfigModal
+          activeCategory={category}
+          initialTab={attrModalConfig.tab}
+          onClose={() =>
+            setAttrModalConfig({ open: false, tab: "attribute-options" })
+          }
+        />
       )}
     </>
   );

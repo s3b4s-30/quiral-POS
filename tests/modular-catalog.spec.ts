@@ -127,7 +127,7 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     await page.getByRole("button", { name: "Potencia (W)", exact: true }).click();
     await page.getByRole("button", { name: "Marca", exact: true }).click();
 
-    const newCategoryInput = page.locator('input[aria-label="Nombre de la nueva familia de productos"]');
+    const newCategoryInput = page.locator('input[aria-label="Nombre de la nueva categoría"]');
     await expect(newCategoryInput).toBeVisible();
     await newCategoryInput.fill("  Relojes   Inteligentes  "); // Normalización automática -> "Relojes Inteligentes"
 

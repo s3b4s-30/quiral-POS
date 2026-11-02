@@ -360,39 +360,21 @@ export function mergeWithDefaultCatalogConfig(
         typeof userAttr.label === "string" &&
         Array.isArray(userAttr.options)
       ) {
-        if (!mergedAttributes[k]) {
-          // Atributo totalmente personalizado por el usuario
-          const cleanOptions: string[] = [];
-          for (const opt of userAttr.options) {
-            if (typeof opt === "string") {
-              const norm = normalizeCatalogText(opt);
-              if (norm && !cleanOptions.some((existing) => isSameCatalogText(existing, norm))) {
-                cleanOptions.push(norm);
-              }
+        const cleanOptions: string[] = [];
+        for (const opt of userAttr.options) {
+          if (typeof opt === "string") {
+            const norm = normalizeCatalogText(opt);
+            if (norm && !cleanOptions.some((existing) => isSameCatalogText(existing, norm))) {
+              cleanOptions.push(norm);
             }
           }
-          if (cleanOptions.length > 0) {
-            mergedAttributes[k] = {
-              key: userAttr.key,
-              label: userAttr.label,
-              options: cleanOptions,
-            };
-          }
-        } else {
-          // Atributo base: si el usuario agregó opciones que no están en DEFAULT_ATTRIBUTES, conservarlas
-          const currentOpts = mergedAttributes[k].options;
-          for (const opt of userAttr.options) {
-            if (typeof opt === "string") {
-              const norm = normalizeCatalogText(opt);
-              if (
-                norm &&
-                !currentOpts.some((existing) => isSameCatalogText(existing, norm)) &&
-                userAttr.key.startsWith("custom_")
-              ) {
-                currentOpts.push(norm);
-              }
-            }
-          }
+        }
+        if (cleanOptions.length > 0) {
+          mergedAttributes[k] = {
+            key: userAttr.key,
+            label: userAttr.label,
+            options: cleanOptions,
+          };
         }
       }
     }
@@ -428,10 +410,9 @@ export function mergeWithDefaultCatalogConfig(
           name: defaultMatch ? defaultMatch.name : finalCatName,
           isSystemDefault: Boolean(defaultMatch),
           attributeKeys:
-            defaultMatch?.attributeKeys ??
-            (Array.isArray(cat.attributeKeys) && cat.attributeKeys.length > 0
+            Array.isArray(cat.attributeKeys) && cat.attributeKeys.length > 0
               ? [...cat.attributeKeys]
-              : inferAttributeKeysForCategory(finalCatName)),
+              : defaultMatch?.attributeKeys ?? inferAttributeKeysForCategory(finalCatName),
         });
       }
     }

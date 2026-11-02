@@ -494,13 +494,14 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
                         </div>
                         <button
                           type="button"
-                          onClick={() =>
-                            setEditingAttrCategory(isEditingAttrs ? null : catName)
-                          }
+                          onClick={() => {
+                            setEditingAttrCategory(catName);
+                            setIsAttributeModalOpen(true);
+                          }}
                           aria-label={`Ordenar atributos de ${catName}`}
                           className="mt-0.5 block max-w-full truncate text-left text-[10px] font-medium text-[var(--text-secondary)] dark:text-zinc-400 hover:text-[#007aff] dark:hover:text-[#0a84ff]"
                         >
-                          {attrLabels ? `Orden: ${attrLabels}` : "Configurar atributos"}
+                          {attrLabels ? `Atributos: ${attrLabels}` : "Configurar atributos"}
                         </button>
                       </div>
 
@@ -648,7 +649,14 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
       </ModalSheet>
 
       {isAttributeModalOpen && (
-        <AttributeConfigModal onClose={() => setIsAttributeModalOpen(false)} />
+        <AttributeConfigModal
+          activeCategory={editingAttrCategory || undefined}
+          initialTab={editingAttrCategory ? "category-order" : "attribute-options"}
+          onClose={() => {
+            setIsAttributeModalOpen(false);
+            setEditingAttrCategory(null);
+          }}
+        />
       )}
     </>
   );
