@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from "react";
-import lottie, { type AnimationItem } from "lottie-web";
+import lottie from "lottie-web/build/player/lottie_light";
+import { type AnimationItem } from "lottie-web";
+import emptyBoxJson from "../assets/empty-box.json";
 
 export interface LottiePlayerProps {
   /** Objeto de animación en formato JSON Lottie */
@@ -29,7 +31,6 @@ export interface LottiePlayerProps {
  * 1. Renderizado vectorial en SVG a 60 FPS sin saturar el hilo principal de React.
  * 2. Destrucción determinística de la instancia al desmontar para prevenir fugas de memoria en WebKit iOS.
  * 3. Aceleración por hardware mediante composición de capas GPU (transform: translateZ(0)).
- * 4. Integración fluida con contenedores de salvaguarda anti-colisión (pb-32 / pb-44).
  */
 export default function LottiePlayer({
   animationData,
@@ -50,12 +51,16 @@ export default function LottiePlayer({
     if (!animationData && !path) return;
 
     try {
+      const clonedData = animationData
+        ? (JSON.parse(JSON.stringify(animationData)) as Record<string, unknown>)
+        : undefined;
+
       const anim = lottie.loadAnimation({
         container: containerRef.current,
         renderer: "svg",
         loop,
         autoplay,
-        animationData,
+        animationData: clonedData,
         path,
         rendererSettings: {
           progressiveLoad: true,
@@ -99,6 +104,12 @@ export default function LottiePlayer({
     />
   );
 }
+
+/**
+ * Animación Lottie para estados vacíos (Catálogo sin resultados y Carrito vacío)
+ */
+export const EMPTY_BOX_ANIMATION: Record<string, unknown> =
+  emptyBoxJson as Record<string, unknown>;
 
 /**
  * Animación Lottie minimalista integrada (Vector Pulse Checkmark)

@@ -27,15 +27,6 @@ const TAB_TITLES: Record<Tab, string> = {
 
 /**
  * TopHeader — Cabecera Fija Nativa Superior (Apple HIG)
- * 
- * Características:
- * 1. Espaciado superior estricto: sin márgenes redundantes ni artificios de padding fijo.
- * 2. Fondo 100% sólido HIG consistente con el fondo nativo de la aplicación.
- * 3. Título en flexbox con flex-1 y truncate para nunca colisionar con acciones.
- * 4. Diferenciación visual exclusiva mediante prop `variant`:
- *    - "accent": título y borde inferior en acento azul (blue-500 / #007aff).
- *    - "default": título y borde en paleta nativa estándar.
- * 5. Reutilizable y escalable para las 4 pestañas (Resumen, Vender, Inventario, Historial).
  */
 export default function TopHeader({
   activeTab,
@@ -55,7 +46,7 @@ export default function TopHeader({
 
   return (
     <header
-      className={`quiral-top-header fixed top-0 w-full z-50 backdrop-blur-md pt-[env(safe-area-inset-top,0px)] select-none transition-colors duration-75 ${
+      className={`quiral-top-header fixed top-0 w-full z-50 backdrop-blur-md pt-[env(safe-area-inset-top)] select-none transition-colors duration-75 ${
         isAccent ? "border-b !border-blue-500/20 dark:!border-blue-500/30" : ""
       }`}
     >

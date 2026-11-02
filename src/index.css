@@ -205,8 +205,8 @@ body.modal-open .modal-sheet-dialog {
 
 /* 
   Cabecera fija superior nativa (Apple HIG):
-  Fondo 100% sólido (sin blur), anclada a top-0 con cálculo limpio de área segura 
-  (env(safe-area-inset-top)) sin forzar mínimos artificiales que generen espacios vacíos.
+  Anclada a top-0 con cálculo limpio de área segura (env(safe-area-inset-top))
+  y soporte translúcido nativo.
 */
 .quiral-top-header {
   position: fixed;
@@ -220,6 +220,7 @@ body.modal-open .modal-sheet-dialog {
   backdrop-filter: blur(12px);
   height: var(--quiral-header-offset);
   background-color: var(--bg-primary);
+  background-color: color-mix(in srgb, var(--bg-primary) 85%, transparent);
   border-bottom: 1px solid var(--border-color);
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: 0;
