@@ -464,23 +464,21 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
                         : "border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900/90"
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-2.5">
+                    <div className="flex items-center justify-between gap-3">
                       {/* Lado Izquierdo: Botón rojo (-) para quitar cualquier categoría (predeterminada o personalizada) */}
-                      <div className="shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleRequestDeleteCategory(catName)}
-                          aria-label={`Eliminar categoría ${catName}`}
-                          title={
-                            isFactory
-                              ? `Quitar ${catName} de la barra activa (pasa a Respaldo)`
-                              : `Eliminar ${catName}`
-                          }
-                          className="flex h-7 w-7 items-center justify-center rounded-full bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30] hover:text-white active:scale-90 transition-all"
-                        >
-                          <Minus size={15} strokeWidth={2.75} />
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRequestDeleteCategory(catName)}
+                        aria-label={`Eliminar categoría ${catName}`}
+                        title={
+                          isFactory
+                            ? `Quitar ${catName} de la barra activa (pasa a Respaldo)`
+                            : `Eliminar ${catName}`
+                        }
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30] hover:text-white active:scale-90 transition-all"
+                      >
+                        <Minus size={15} strokeWidth={2.75} className="shrink-0" />
+                      </button>
 
                       {/* Centro: Nombre de la categoría + Metadatos y Orden de Atributos */}
                       <div className="min-w-0 flex-1">

@@ -1,4 +1,16 @@
-import { ArrowDown, ArrowUp, Check, Minus, Plus, Sliders, Tag, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  Check,
+  Eye,
+  Minus,
+  Plus,
+  RotateCcw,
+  Sliders,
+  Tag,
+  X,
+} from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import AttributeConfigModal from "./AttributeConfigModal";
 import ModalSheet from "./ModalSheet";
@@ -115,16 +127,21 @@ export default function NewProductModal({
   const [addingAttrKey, setAddingAttrKey] = useState<string | null>(null);
   const [newAttrOptionText, setNewAttrOptionText] = useState("");
 
-  // Estado para creación rápida (+) de una nueva categoría al vuelo con orden claro de atributos
+  // Estado para el flujo limpio de creación de nueva categoría con previsualización y orden en vivo
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryAttrKeys, setNewCategoryAttrKeys] = useState<string[]>([
-    "brands",
-    "colors",
-  ]);
-  const hasCustomAttrOrderRef = useRef(false);
+  const [newCategoryAttrKeys, setNewCategoryAttrKeys] = useState<string[]>([]);
 
-  // Modal de Configuración de Atributos
+  // Estados de arrastre táctil / drag & drop para la lista de atributos de nueva categoría
+  const [draggedAttrIdx, setDraggedAttrIdx] = useState<number | null>(null);
+  const [dragOverAttrIdx, setDragOverAttrIdx] = useState<number | null>(null);
+  const [touchDragAttrIdx, setTouchDragAttrIdx] = useState<number | null>(null);
+  const touchDragAttrIdxRef = useRef<number | null>(null);
+  const longPressAttrTimerRef = useRef<number | null>(null);
+  const touchStartAttrYRef = useRef<number>(0);
+  const newCatAttrListRef = useRef<HTMLDivElement | null>(null);
+
+  // Modal de Configuración de Atributos (Banco Maestro)
   const [attrModalConfig, setAttrModalConfig] = useState<{
     open: boolean;
     tab: "category-order" | "attribute-options";
@@ -171,14 +188,6 @@ export default function NewProductModal({
       return next;
     });
   }, [category, activeAttributeKeys, catalogConfig.attributes]);
-
-  // Sugerir automáticamente bloques de atributos al escribir el nombre de una nueva categoría
-  // solo si el usuario no ha personalizado manualmente el orden de selección
-  useEffect(() => {
-    if (newCategoryName.trim().length >= 3 && !hasCustomAttrOrderRef.current) {
-      setNewCategoryAttrKeys(inferAttributeKeysForCategory(newCategoryName));
-    }
-  }, [newCategoryName]);
 
   // Helper para obtener el valor actualmente seleccionado de cualquier clave de atributo
   const getSelectedValueForAttribute = (attrKey: string): string => {
@@ -298,7 +307,8 @@ export default function NewProductModal({
     setAddingAttrKey(null);
     setNewAttrOptionText("");
     setIsAddingCategory(false);
-    hasCustomAttrOrderRef.current = false;
+    setNewCategoryName("");
+    setNewCategoryAttrKeys([]);
     setError(null);
   };
 
@@ -383,7 +393,15 @@ export default function NewProductModal({
     setAddingAttrKey(null);
   };
 
-  // Crear nueva categoría al vuelo (+) respetando el orden exacto de atributos seleccionados
+  // Abrir el flujo limpio de "+ Nueva categoría" despejando selecciones previas
+  const handleOpenNewCategoryFlow = () => {
+    setNewCategoryName("");
+    setNewCategoryAttrKeys([]);
+    setError(null);
+    setIsAddingCategory(true);
+  };
+
+  // Crear nueva categoría respetando el orden exacto de atributos y volver a "Nuevo producto"
   const handleCreateQuickCategory = () => {
     const clean = normalizeCatalogText(newCategoryName);
     if (!clean || clean.toLowerCase() === "todos") return;
@@ -395,27 +413,26 @@ export default function NewProductModal({
     if (created) {
       setCategory(created.name);
       setNewCategoryName("");
+      setNewCategoryAttrKeys([]);
       setIsAddingCategory(false);
-      hasCustomAttrOrderRef.current = false;
     }
   };
 
   // Agregar, quitar o mover atributos al crear una nueva categoría
   const toggleNewCategoryAttrKey = (key: string) => {
-    hasCustomAttrOrderRef.current = true;
     setNewCategoryAttrKeys((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
     );
   };
 
   const moveNewCategoryAttrKey = (fromIdx: number, toIdx: number) => {
-    hasCustomAttrOrderRef.current = true;
     setNewCategoryAttrKeys((prev) => {
       if (
         fromIdx < 0 ||
         toIdx < 0 ||
         fromIdx >= prev.length ||
-        toIdx >= prev.length
+        toIdx >= prev.length ||
+        fromIdx === toIdx
       ) {
         return prev;
       }
@@ -426,8 +443,95 @@ export default function NewProductModal({
     });
   };
 
+  // Soporte de arrastre táctil directo para la lista de atributos de nueva categoría
+  const clearAttrLongPressTimer = () => {
+    if (longPressAttrTimerRef.current !== null) {
+      window.clearTimeout(longPressAttrTimerRef.current);
+      longPressAttrTimerRef.current = null;
+    }
+  };
+
+  const handleAttrHandleTouchStart = (idx: number, clientY: number) => {
+    clearAttrLongPressTimer();
+    touchStartAttrYRef.current = clientY;
+    touchDragAttrIdxRef.current = idx;
+    setTouchDragAttrIdx(idx);
+  };
+
+  const handleAttrRowTouchStart = (idx: number, clientY: number) => {
+    clearAttrLongPressTimer();
+    touchStartAttrYRef.current = clientY;
+    longPressAttrTimerRef.current = window.setTimeout(() => {
+      touchDragAttrIdxRef.current = idx;
+      setTouchDragAttrIdx(idx);
+      longPressAttrTimerRef.current = null;
+    }, 200);
+  };
+
+  const handleAttrTouchMovePoint = (
+    clientX: number,
+    clientY: number,
+    e?: React.TouchEvent
+  ) => {
+    const activeIdx = touchDragAttrIdxRef.current;
+    if (activeIdx === null) {
+      if (Math.abs(clientY - touchStartAttrYRef.current) > 10) {
+        clearAttrLongPressTimer();
+      }
+      return;
+    }
+
+    if (e && e.cancelable) {
+      e.preventDefault();
+    }
+
+    let targetIdx: number | null = null;
+    const elUnderFinger = document.elementFromPoint(clientX, clientY);
+    const rowEl = elUnderFinger?.closest(
+      "[data-newcat-attr-index]"
+    ) as HTMLElement | null;
+    if (rowEl && rowEl.dataset.newcatAttrIndex !== undefined) {
+      const parsed = parseInt(rowEl.dataset.newcatAttrIndex, 10);
+      if (!Number.isNaN(parsed)) {
+        targetIdx = parsed;
+      }
+    } else if (newCatAttrListRef.current) {
+      const rows = Array.from(
+        newCatAttrListRef.current.querySelectorAll<HTMLElement>(
+          "[data-newcat-attr-index]"
+        )
+      );
+      for (const r of rows) {
+        const rect = r.getBoundingClientRect();
+        if (clientY >= rect.top && clientY <= rect.bottom) {
+          const parsed = parseInt(r.dataset.newcatAttrIndex || "", 10);
+          if (!Number.isNaN(parsed)) {
+            targetIdx = parsed;
+            break;
+          }
+        }
+      }
+    }
+
+    if (targetIdx !== null && targetIdx !== activeIdx) {
+      moveNewCategoryAttrKey(activeIdx, targetIdx);
+      touchDragAttrIdxRef.current = targetIdx;
+      setTouchDragAttrIdx(targetIdx);
+    }
+  };
+
+  const handleAttrTouchEndOrCancel = () => {
+    clearAttrLongPressTimer();
+    touchDragAttrIdxRef.current = null;
+    setTouchDragAttrIdx(null);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isAddingCategory) {
+      handleCreateQuickCategory();
+      return;
+    }
     if (!name.trim()) {
       setError("El nombre del producto es obligatorio.");
       return;
@@ -550,7 +654,10 @@ export default function NewProductModal({
   };
 
   // Etiqueta visible para cada bloque de atributo (preservando etiquetas clásicas de regresión visual)
-  const getDisplayHeadingForAttribute = (attrKey: string, defaultLabel: string): string => {
+  const getDisplayHeadingForAttribute = (
+    attrKey: string,
+    defaultLabel: string
+  ): string => {
     if (category === "Cargadores y Cables" && attrKey === "powers") {
       return "Potencia:";
     }
@@ -613,7 +720,8 @@ export default function NewProductModal({
               {opt}
             </button>
           ))}
-          {attrKey !== "chargerSubtypes" && renderInlineAddOption(attrKey, attrDef.label)}
+          {attrKey !== "chargerSubtypes" &&
+            renderInlineAddOption(attrKey, attrDef.label)}
         </div>
       </div>
     );
@@ -626,13 +734,27 @@ export default function NewProductModal({
         onStartClose={onStartClose}
         title="Nuevo producto"
         footer={
-          <button
-            type="submit"
-            form="new-product-form"
-            className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#007aff] text-base font-bold text-white shadow-lg transition-transform active:scale-[0.98] hover:opacity-95"
-          >
-            Guardar producto
-          </button>
+          isAddingCategory ? (
+            <button
+              type="button"
+              data-testid="confirm-create-category-btn"
+              onClick={handleCreateQuickCategory}
+              disabled={!newCategoryName.trim()}
+              aria-label="Confirmar creación de categoría"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#007aff] text-base font-bold text-white shadow-lg transition-transform active:scale-[0.98] hover:opacity-95 disabled:opacity-40"
+            >
+              <Check size={18} strokeWidth={2.5} />
+              <span>Crear categoría</span>
+            </button>
+          ) : (
+            <button
+              type="submit"
+              form="new-product-form"
+              className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#007aff] text-base font-bold text-white shadow-lg transition-transform active:scale-[0.98] hover:opacity-95"
+            >
+              Guardar producto
+            </button>
+          )
         }
       >
         <form id="new-product-form" onSubmit={handleSubmit} className="space-y-5">
@@ -642,405 +764,553 @@ export default function NewProductModal({
             </p>
           )}
 
-          {/* Categoría Selector con botón (+) para crear nuevas categorías al vuelo */}
-          <div className="mt-1 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
-                Categoría
-              </span>
-              <button
-                type="button"
-                data-testid="add-new-category-inline-btn"
-                onClick={() => {
-                  setIsAddingCategory((prev) => !prev);
-                  hasCustomAttrOrderRef.current = false;
-                }}
-                aria-label="Crear nueva categoría"
-                className="inline-flex items-center gap-1 rounded-xl border border-[#007aff]/30 bg-[#007aff]/10 px-2.5 py-1 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform"
-              >
-                <Plus size={13} />
-                <span>Nueva categoría</span>
-              </button>
-            </div>
-
-            {/* Panel claro para crear una categoría nueva y definir sus atributos en lista */}
-            {isAddingCategory && (
-              <div className="rounded-2xl border border-[#007aff]/35 bg-[#007aff]/5 dark:bg-zinc-900 p-3.5 space-y-3 animate-in fade-in duration-150">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    data-testid="new-category-name-input"
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleCreateQuickCategory();
-                      }
-                    }}
-                    placeholder="Nombre de la categoría (ej. Relojes, SSD)..."
-                    aria-label="Nombre de la nueva categoría"
-                    className="flex-1 rounded-xl border border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] dark:bg-zinc-950 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-[#007aff]"
-                  />
-                  <button
-                    type="button"
-                    data-testid="confirm-create-category-btn"
-                    onClick={handleCreateQuickCategory}
-                    disabled={!newCategoryName.trim()}
-                    aria-label="Confirmar creación de categoría"
-                    className="rounded-xl bg-[#007aff] px-3.5 py-2 text-xs font-bold text-white shadow-sm disabled:opacity-40"
-                  >
-                    Crear
-                  </button>
-                </div>
-
-                {/* 1. Lista de atributos seleccionados para la nueva categoría (en orden) */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
-                      Atributos de esta categoría (en orden):
-                    </p>
-                    {newCategoryAttrKeys.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          hasCustomAttrOrderRef.current = true;
-                          setNewCategoryAttrKeys([]);
-                        }}
-                        aria-label="Reiniciar orden de atributos"
-                        className="text-[10px] font-bold text-[#ff3b30] hover:underline"
-                      >
-                        Vaciar lista
-                      </button>
-                    )}
-                  </div>
-
-                  {newCategoryAttrKeys.length === 0 ? (
-                    <p className="rounded-xl border border-dashed border-[var(--border-color)] dark:border-zinc-800 px-3 py-2 text-[11px] text-[var(--text-secondary)] dark:text-zinc-400">
-                      Toca abajo los atributos en el orden en que deseas verlos.
-                    </p>
-                  ) : (
-                    <div className="space-y-1.5">
-                      {newCategoryAttrKeys.map((key, idx) => {
-                        const attr = catalogConfig.attributes[key];
-                        if (!attr) return null;
-                        return (
-                          <div
-                            key={key}
-                            className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-950 px-2.5 py-1.5"
-                          >
-                            <button
-                              type="button"
-                              onClick={() => toggleNewCategoryAttrKey(key)}
-                              aria-label={`Quitar ${attr.label} de nueva categoría`}
-                              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30] hover:text-white active:scale-90 transition-all"
-                            >
-                              <Minus size={12} strokeWidth={2.75} />
-                            </button>
-                            <span className="flex-1 truncate text-xs font-bold text-[var(--text-primary)] dark:text-zinc-100">
-                              {idx + 1}. {attr.label}
-                            </span>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <button
-                                type="button"
-                                disabled={idx === 0}
-                                onClick={() => moveNewCategoryAttrKey(idx, idx - 1)}
-                                aria-label={`Subir ${attr.label}`}
-                                className="flex h-6 w-6 items-center justify-center rounded-md border border-[var(--border-color)] dark:border-zinc-800 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25"
-                              >
-                                <ArrowUp size={12} />
-                              </button>
-                              <button
-                                type="button"
-                                disabled={idx === newCategoryAttrKeys.length - 1}
-                                onClick={() => moveNewCategoryAttrKey(idx, idx + 1)}
-                                aria-label={`Bajar ${attr.label}`}
-                                className="flex h-6 w-6 items-center justify-center rounded-md border border-[var(--border-color)] dark:border-zinc-800 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25"
-                              >
-                                <ArrowDown size={12} />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* 2. Atributos disponibles para agregar con un toque */}
-                <div>
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
-                    Toca para agregar atributos:
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {Object.values(catalogConfig.attributes)
-                      .filter((attr) => !newCategoryAttrKeys.includes(attr.key))
-                      .map((attr) => (
-                        <button
-                          key={attr.key}
-                          type="button"
-                          onClick={() => toggleNewCategoryAttrKey(attr.key)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-950 px-2.5 py-1 text-[11px] font-semibold text-[var(--text-primary)] dark:text-zinc-300 hover:border-[#007aff] active:scale-95 transition-all"
-                        >
-                          <Plus size={11} className="text-[#007aff]" />
-                          <span>{attr.label}</span>
-                        </button>
-                      ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-              {catalogConfig.categoryOrder.map((cat) => {
-                const isActive = category === cat;
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat)}
-                    className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-colors duration-75 ${
-                      isActive
-                        ? "bg-[#007aff] text-white shadow-sm"
-                        : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/70 dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200 hover:bg-black/5 dark:hover:bg-white/10"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Opciones y Especificaciones Dinámicas según el Orden de Atributos */}
-          <div className="rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/40 dark:bg-zinc-900/50 p-3.5 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
-                Especificaciones
-              </p>
-              <div className="flex items-center gap-3">
+          {isAddingCategory ? (
+            /* =====================================================================
+               MODO DEDICADO Y DESPEJADO: CREACIÓN DE NUEVA CATEGORÍA EN VIVO
+               ===================================================================== */
+            <div
+              data-testid="clean-new-category-workspace"
+              className="space-y-4 py-0.5 animate-in fade-in duration-150"
+            >
+              {/* Barra superior de navegación de la vista de creación + Acceso directo a "Editar banco" */}
+              <div className="flex items-center justify-between gap-2">
                 <button
                   type="button"
-                  onClick={() =>
-                    setAttrModalConfig({ open: true, tab: "category-order" })
-                  }
-                  aria-label="Ordenar atributos de esta categoría"
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--text-secondary)] dark:text-zinc-300 hover:text-[#007aff] dark:hover:text-[#0a84ff]"
+                  onClick={() => {
+                    setIsAddingCategory(false);
+                    setNewCategoryName("");
+                    setNewCategoryAttrKeys([]);
+                  }}
+                  aria-label="Volver a nuevo producto"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] dark:text-zinc-200 active:scale-95 transition-transform"
                 >
-                  <Tag size={11} />
-                  <span>Ordenar atributos</span>
+                  <ArrowLeft size={14} />
+                  <span>Volver</span>
                 </button>
+
                 <button
                   type="button"
                   onClick={() =>
                     setAttrModalConfig({ open: true, tab: "attribute-options" })
                   }
                   aria-label="Abrir banco maestro de atributos"
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#007aff]/30 bg-[#007aff]/10 px-3 py-1.5 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform"
                 >
-                  <Sliders size={12} />
+                  <Sliders size={13} />
                   <span>Editar banco</span>
                 </button>
               </div>
-            </div>
 
-            {/* Renderizado estricto según el orden de activeAttributeKeys */}
-            {activeAttributeKeys.map((attrKey) => renderAttributeBlock(attrKey))}
-          </div>
-
-          {/* Nombre comercial del producto + Interruptor limpio de detalles */}
-          <div className="space-y-2">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                Nombre comercial del producto *
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setName(val);
-                  if (!includeAttributesInName) {
-                    setManualBaseName(val);
-                  }
-                }}
-                placeholder="Ej. Cubo iPhone 20W"
-                className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
-              />
-            </div>
-
-            {/* Interruptor limpio y legible (sin iconos de IA ni textos truncados) */}
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-900/70 px-3.5 py-2.5">
-              <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                <Tag
-                  size={16}
-                  className={
-                    includeAttributesInName
-                      ? "mt-0.5 text-[#007aff] shrink-0"
-                      : "mt-0.5 text-[var(--text-secondary)] dark:text-zinc-500 shrink-0"
-                  }
+              {/* 1. Nombre de la nueva categoría */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
+                  Nombre de la nueva categoría *
+                </label>
+                <input
+                  type="text"
+                  data-testid="new-category-name-input"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleCreateQuickCategory();
+                    }
+                  }}
+                  placeholder="Ej. Relojes Inteligentes, Memorias SSD..."
+                  aria-label="Nombre de la nueva categoría"
+                  autoFocus
+                  className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-[#007aff]"
                 />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold leading-snug text-[var(--text-primary)] dark:text-zinc-200">
-                    Incluir subtipo y atributos en el nombre
+              </div>
+
+              {/* 2. Banco de atributos disponibles para agregar con un toque */}
+              <div className="rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/40 dark:bg-zinc-900/50 p-3.5 space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
+                    Toca para agregar atributos:
                   </p>
-                  <p className="mt-0.5 text-[11px] leading-snug text-[var(--text-secondary)] dark:text-zinc-400">
-                    {includeAttributesInName
-                      ? "Se agregan automáticamente al nombre del producto."
-                      : "Usar únicamente el nombre escrito arriba."}
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewCategoryAttrKeys([]);
+                    }}
+                    aria-label="Reiniciar orden de atributos"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--text-secondary)] dark:text-zinc-400 hover:text-[#ff3b30] transition-colors"
+                  >
+                    <RotateCcw size={11} />
+                    <span>Limpiar</span>
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.values(catalogConfig.attributes)
+                    .filter((attr) => !newCategoryAttrKeys.includes(attr.key))
+                    .map((attr) => (
+                      <button
+                        key={attr.key}
+                        type="button"
+                        onClick={() => toggleNewCategoryAttrKey(attr.key)}
+                        className="inline-flex items-center gap-1 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] dark:text-zinc-200 hover:border-[#007aff] active:scale-95 transition-all"
+                      >
+                        <Plus size={12} strokeWidth={2.5} className="text-[#007aff] shrink-0" />
+                        <span>{attr.label}</span>
+                      </button>
+                    ))}
                 </div>
               </div>
 
-              <button
-                type="button"
-                role="switch"
-                aria-checked={includeAttributesInName}
-                aria-label="Incluir atributos en el nombre del producto"
-                data-testid="auto-append-attributes-toggle"
-                onClick={handleToggleIncludeAttributesInName}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-150 ${
-                  includeAttributesInName
-                    ? "bg-[#30d158]"
-                    : "bg-black/20 dark:bg-zinc-700"
-                }`}
+              {/* 3. Previsualización Dinámica de la Categoría */}
+              <div
+                data-testid="new-category-live-preview"
+                className="rounded-2xl border border-[#007aff]/30 bg-[#007aff]/5 dark:bg-zinc-900/80 p-3.5 space-y-2.5"
               >
-                <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-150 ${
-                    includeAttributesInName ? "translate-x-5" : "translate-x-0.5"
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 text-[#007aff] dark:text-[#0a84ff]">
+                    <Eye size={14} className="shrink-0" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider">
+                      Previsualización dinámica
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-semibold text-[var(--text-secondary)] dark:text-zinc-400 truncate max-w-[160px]">
+                    {normalizeCatalogText(newCategoryName) || "Nueva categoría"}
+                  </span>
+                </div>
+
+                {newCategoryAttrKeys.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)]/60 dark:bg-zinc-950/50 px-3 py-3 text-center text-xs text-[var(--text-secondary)] dark:text-zinc-400">
+                    Selecciona atributos arriba para previsualizar cómo se verá el formulario de esta categoría.
+                  </p>
+                ) : (
+                  <div className="space-y-2.5 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-950 p-3">
+                    {newCategoryAttrKeys.map((attrKey) => {
+                      const attr = catalogConfig.attributes[attrKey];
+                      if (!attr) return null;
+                      const previewOptions = attr.options.slice(0, 4);
+                      return (
+                        <div key={`preview-${attrKey}`} className="space-y-1">
+                          <p className="text-[11px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
+                            {attr.label}:
+                          </p>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {previewOptions.map((opt, i) => (
+                              <span
+                                key={opt}
+                                className={`rounded-xl px-2.5 py-0.5 text-[11px] font-medium ${
+                                  i === 0
+                                    ? "bg-[#007aff] text-white font-semibold"
+                                    : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)] dark:bg-zinc-900 text-[var(--text-secondary)] dark:text-zinc-300"
+                                }`}
+                              >
+                                {opt}
+                              </span>
+                            ))}
+                            {attr.options.length > 4 && (
+                              <span className="text-[10px] font-semibold text-[var(--text-secondary)] dark:text-zinc-500">
+                                +{attr.options.length - 4} más
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* 4. Lista Interactiva de Ordenamiento en Vivo (justo debajo de la previsualización) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-0.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
+                    Orden de atributos seleccionados ({newCategoryAttrKeys.length})
+                  </p>
+                  {newCategoryAttrKeys.length > 1 && (
+                    <span className="text-[10px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
+                      Desliza o usa las flechas
+                    </span>
+                  )}
+                </div>
+
+                {newCategoryAttrKeys.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-[var(--border-color)] dark:border-zinc-800 px-3 py-2.5 text-xs text-[var(--text-secondary)] dark:text-zinc-400">
+                    Aún no has seleccionado atributos para esta categoría.
+                  </p>
+                ) : (
+                  <div
+                    ref={newCatAttrListRef}
+                    data-testid="new-category-selected-attrs-list"
+                    onTouchMove={(e) => {
+                      const touch = e.touches[0];
+                      if (touch) {
+                        handleAttrTouchMovePoint(touch.clientX, touch.clientY, e);
+                      }
+                    }}
+                    onTouchEnd={handleAttrTouchEndOrCancel}
+                    onTouchCancel={handleAttrTouchEndOrCancel}
+                    className="space-y-1.5"
+                  >
+                    {newCategoryAttrKeys.map((key, idx) => {
+                      const attr = catalogConfig.attributes[key];
+                      if (!attr) return null;
+                      const isTouchDragging = touchDragAttrIdx === idx;
+                      const isDraggedOver =
+                        dragOverAttrIdx === idx && draggedAttrIdx !== idx;
+
+                      return (
+                        <div
+                          key={key}
+                          data-newcat-attr-index={idx}
+                          draggable
+                          onDragStart={() => setDraggedAttrIdx(idx)}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setDragOverAttrIdx(idx);
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            if (draggedAttrIdx !== null) {
+                              moveNewCategoryAttrKey(draggedAttrIdx, idx);
+                            }
+                            setDraggedAttrIdx(null);
+                            setDragOverAttrIdx(null);
+                          }}
+                          onDragEnd={() => {
+                            setDraggedAttrIdx(null);
+                            setDragOverAttrIdx(null);
+                          }}
+                          onTouchStart={(e) => {
+                            const touch = e.touches[0];
+                            if (touch) {
+                              handleAttrRowTouchStart(idx, touch.clientY);
+                            }
+                          }}
+                          className={`flex items-center justify-between gap-2.5 rounded-xl border px-3 py-2 select-none transition-all ${
+                            isTouchDragging || isDraggedOver
+                              ? "border-[#007aff] bg-[#007aff]/15 dark:bg-[#007aff]/20 scale-[1.01] shadow-md z-10"
+                              : "border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900"
+                          }`}
+                        >
+                          {/* Botón rojo (-) sin superposición para quitar el atributo */}
+                          <button
+                            type="button"
+                            onClick={() => toggleNewCategoryAttrKey(key)}
+                            aria-label={`Quitar ${attr.label} de nueva categoría`}
+                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30] hover:text-white active:scale-90 transition-all"
+                          >
+                            <Minus size={14} strokeWidth={2.75} className="shrink-0" />
+                          </button>
+
+                          {/* Nombre del atributo con su posición */}
+                          <span className="min-w-0 flex-1 truncate text-xs sm:text-sm font-bold text-[var(--text-primary)] dark:text-zinc-100">
+                            {idx + 1}. {attr.label}
+                          </span>
+
+                          {/* Controles Subir / Bajar + Asa de 3 líneas */}
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => moveNewCategoryAttrKey(idx, idx - 1)}
+                              aria-label={`Subir ${attr.label}`}
+                              className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-800/70 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25 active:scale-90 transition-transform"
+                            >
+                              <ArrowUp size={13} strokeWidth={2.25} />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === newCategoryAttrKeys.length - 1}
+                              onClick={() => moveNewCategoryAttrKey(idx, idx + 1)}
+                              aria-label={`Bajar ${attr.label}`}
+                              className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-800/70 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25 active:scale-90 transition-transform"
+                            >
+                              <ArrowDown size={13} strokeWidth={2.25} />
+                            </button>
+                            <div
+                              aria-label={`Asa de arrastre ${attr.label}`}
+                              onTouchStart={(e) => {
+                                e.stopPropagation();
+                                const touch = e.touches[0];
+                                if (touch) {
+                                  handleAttrHandleTouchStart(idx, touch.clientY);
+                                }
+                              }}
+                              style={{ touchAction: "none" }}
+                              className="flex h-7 w-7 cursor-grab active:cursor-grabbing flex-col items-center justify-center gap-[3px] rounded-lg px-1 text-[var(--text-secondary)] dark:text-zinc-400"
+                            >
+                              <span className="block h-[2px] w-4 rounded-full bg-current" />
+                              <span className="block h-[2px] w-4 rounded-full bg-current" />
+                              <span className="block h-[2px] w-4 rounded-full bg-current" />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* =====================================================================
+               VISTA NORMAL: REGISTRO DE NUEVO PRODUCTO
+               ===================================================================== */
+            <>
+              {/* Categoría Selector con botón (+ Nueva categoría) */}
+              <div className="mt-1 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
+                    Categoría
+                  </span>
+                  <button
+                    type="button"
+                    data-testid="add-new-category-inline-btn"
+                    onClick={handleOpenNewCategoryFlow}
+                    aria-label="Crear nueva categoría"
+                    className="inline-flex items-center gap-1 rounded-xl border border-[#007aff]/30 bg-[#007aff]/10 px-2.5 py-1 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform"
+                  >
+                    <Plus size={13} strokeWidth={2.5} />
+                    <span>Nueva categoría</span>
+                  </button>
+                </div>
+
+                <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                  {catalogConfig.categoryOrder.map((cat) => {
+                    const isActive = category === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setCategory(cat)}
+                        className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-colors duration-75 ${
+                          isActive
+                            ? "bg-[#007aff] text-white shadow-sm"
+                            : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/70 dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200 hover:bg-black/5 dark:hover:bg-white/10"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Opciones y Especificaciones Dinámicas (sin bloque redundante de ordenar atributos) */}
+              <div className="rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/40 dark:bg-zinc-900/50 p-3.5 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
+                    Especificaciones
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setAttrModalConfig({ open: true, tab: "attribute-options" })
+                    }
+                    aria-label="Abrir banco maestro de atributos"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
+                  >
+                    <Sliders size={12} />
+                    <span>Editar banco</span>
+                  </button>
+                </div>
+
+                {/* Renderizado estricto según el orden de activeAttributeKeys */}
+                {activeAttributeKeys.map((attrKey) => renderAttributeBlock(attrKey))}
+              </div>
+
+              {/* Nombre comercial del producto + Interruptor limpio de detalles */}
+              <div className="space-y-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
+                    Nombre comercial del producto *
+                  </label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setName(val);
+                      if (!includeAttributesInName) {
+                        setManualBaseName(val);
+                      }
+                    }}
+                    placeholder="Ej. Cubo iPhone 20W"
+                    className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
+                  />
+                </div>
+
+                {/* Interruptor limpio y legible (sin iconos de IA ni textos truncados) */}
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-900/70 px-3.5 py-2.5">
+                  <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                    <Tag
+                      size={16}
+                      className={
+                        includeAttributesInName
+                          ? "mt-0.5 text-[#007aff] shrink-0"
+                          : "mt-0.5 text-[var(--text-secondary)] dark:text-zinc-500 shrink-0"
+                      }
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold leading-snug text-[var(--text-primary)] dark:text-zinc-200">
+                        Incluir subtipo y atributos en el nombre
+                      </p>
+                      <p className="mt-0.5 text-[11px] leading-snug text-[var(--text-secondary)] dark:text-zinc-400">
+                        {includeAttributesInName
+                          ? "Se agregan automáticamente al nombre del producto."
+                          : "Usar únicamente el nombre escrito arriba."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={includeAttributesInName}
+                    aria-label="Incluir atributos en el nombre del producto"
+                    data-testid="auto-append-attributes-toggle"
+                    onClick={handleToggleIncludeAttributesInName}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-150 ${
+                      includeAttributesInName
+                        ? "bg-[#30d158]"
+                        : "bg-black/20 dark:bg-zinc-700"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-150 ${
+                        includeAttributesInName ? "translate-x-5" : "translate-x-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {/* Precios (Costo a la izquierda, Venta a la derecha con tabIndex y validación visual) */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
+                    Costo de compra
+                  </label>
+                  <input
+                    type="text"
+                    tabIndex={1}
+                    value={costInput}
+                    onChange={(e) => {
+                      const num = parseCOPInput(e.target.value);
+                      setCostInput(num > 0 ? formatCOP(num) : "");
+                    }}
+                    placeholder="$0"
+                    className={`tabular-nums w-full rounded-xl border bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-medium outline-none transition-colors ${
+                      isCostGreaterThanPrice
+                        ? "border-[#ff3b30] text-[#ff3b30] focus:border-[#ff3b30]"
+                        : "border-[var(--border-color)] dark:border-zinc-800 text-[var(--text-secondary)] dark:text-zinc-200 focus:border-[#007aff]"
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
+                    Precio de venta *
+                  </label>
+                  <input
+                    type="text"
+                    tabIndex={2}
+                    value={priceInput}
+                    onChange={(e) => {
+                      const num = parseCOPInput(e.target.value);
+                      setPriceInput(num > 0 ? formatCOP(num) : "");
+                    }}
+                    placeholder="$0"
+                    className="tabular-nums w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-bold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
+                  />
+                </div>
+              </div>
+
+              {/* Validación Visual de Margen ($0 <= costo <= precio) */}
+              {currentPrice > 0 && currentCost > 0 && (
+                <div
+                  className={`rounded-xl px-3 py-2 text-xs font-semibold flex items-center justify-between ${
+                    isCostGreaterThanPrice
+                      ? "bg-[#ff3b30]/15 text-[#ff3b30] border border-[#ff3b30]/30"
+                      : "bg-[#30d158]/15 text-[#30d158] border border-[#30d158]/30"
                   }`}
-                />
-              </button>
-            </div>
-          </div>
+                >
+                  <span>
+                    {isCostGreaterThanPrice
+                      ? "⚠️ El costo supera el precio de venta"
+                      : "Margen de ganancia estimado"}
+                  </span>
+                  <span className="tabular-nums">
+                    {isCostGreaterThanPrice
+                      ? `Pérdida: -${formatCOP(currentCost - currentPrice)}`
+                      : `+${formatCOP(unitProfit)} (${marginPercent}%)`}
+                  </span>
+                </div>
+              )}
 
-          {/* Precios (Costo a la izquierda, Venta a la derecha con tabIndex y validación visual) */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                Costo de compra
-              </label>
-              <input
-                type="text"
-                tabIndex={1}
-                value={costInput}
-                onChange={(e) => {
-                  const num = parseCOPInput(e.target.value);
-                  setCostInput(num > 0 ? formatCOP(num) : "");
-                }}
-                placeholder="$0"
-                className={`tabular-nums w-full rounded-xl border bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-medium outline-none transition-colors ${
-                  isCostGreaterThanPrice
-                    ? "border-[#ff3b30] text-[#ff3b30] focus:border-[#ff3b30]"
-                    : "border-[var(--border-color)] dark:border-zinc-800 text-[var(--text-secondary)] dark:text-zinc-200 focus:border-[#007aff]"
-                }`}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                Precio de venta *
-              </label>
-              <input
-                type="text"
-                tabIndex={2}
-                value={priceInput}
-                onChange={(e) => {
-                  const num = parseCOPInput(e.target.value);
-                  setPriceInput(num > 0 ? formatCOP(num) : "");
-                }}
-                placeholder="$0"
-                className="tabular-nums w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-bold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
-              />
-            </div>
-          </div>
+              {/* Stock inicial y Garantía */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
+                    Stock inicial
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={stockInput}
+                    onChange={(e) => setStockInput(e.target.value)}
+                    placeholder="1"
+                    className="tabular-nums w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
+                    Garantía (días)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={warrantyDays}
+                    onChange={(e) => setWarrantyDays(e.target.value)}
+                    placeholder="15"
+                    className="tabular-nums w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
+                  />
+                </div>
+              </div>
 
-          {/* Validación Visual de Margen ($0 <= costo <= precio) */}
-          {currentPrice > 0 && currentCost > 0 && (
-            <div
-              className={`rounded-xl px-3 py-2 text-xs font-semibold flex items-center justify-between ${
-                isCostGreaterThanPrice
-                  ? "bg-[#ff3b30]/15 text-[#ff3b30] border border-[#ff3b30]/30"
-                  : "bg-[#30d158]/15 text-[#30d158] border border-[#30d158]/30"
-              }`}
-            >
-              <span>
-                {isCostGreaterThanPrice
-                  ? "⚠️ El costo supera el precio de venta"
-                  : "Margen de ganancia estimado"}
-              </span>
-              <span className="tabular-nums">
-                {isCostGreaterThanPrice
-                  ? `Pérdida: -${formatCOP(currentCost - currentPrice)}`
-                  : `+${formatCOP(unitProfit)} (${marginPercent}%)`}
-              </span>
-            </div>
+              {/* Proveedor selector */}
+              <div>
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
+                    Proveedor (Obligatorio) *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={onOpenSuppliers}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
+                  >
+                    <Plus size={13} />
+                    <span>Gestionar proveedores</span>
+                  </button>
+                </div>
+
+                {suppliers.length === 0 ? (
+                  <p className="rounded-xl border border-[#ff9500]/40 bg-[#ff9500]/10 p-3 text-xs text-[#ff9500]">
+                    No hay proveedores registrados. Crea al menos uno para guardar este
+                    producto.
+                  </p>
+                ) : (
+                  <select
+                    value={selectedSupplierId}
+                    onChange={(e) => setSelectedSupplierId(e.target.value)}
+                    className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-medium text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
+                  >
+                    {suppliers.map((sup) => (
+                      <option key={sup.id} value={sup.id}>
+                        {sup.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </>
           )}
-
-          {/* Stock inicial y Garantía */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                Stock inicial
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={stockInput}
-                onChange={(e) => setStockInput(e.target.value)}
-                placeholder="1"
-                className="tabular-nums w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                Garantía (días)
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={warrantyDays}
-                onChange={(e) => setWarrantyDays(e.target.value)}
-                placeholder="15"
-                className="tabular-nums w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
-              />
-            </div>
-          </div>
-
-          {/* Proveedor selector */}
-          <div>
-            <div className="mb-1 flex items-center justify-between">
-              <label className="text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                Proveedor (Obligatorio) *
-              </label>
-              <button
-                type="button"
-                onClick={onOpenSuppliers}
-                className="inline-flex items-center gap-1 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
-              >
-                <Plus size={13} />
-                <span>Gestionar proveedores</span>
-              </button>
-            </div>
-
-            {suppliers.length === 0 ? (
-              <p className="rounded-xl border border-[#ff9500]/40 bg-[#ff9500]/10 p-3 text-xs text-[#ff9500]">
-                No hay proveedores registrados. Crea al menos uno para guardar este
-                producto.
-              </p>
-            ) : (
-              <select
-                value={selectedSupplierId}
-                onChange={(e) => setSelectedSupplierId(e.target.value)}
-                className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-medium text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
-              >
-                {suppliers.map((sup) => (
-                  <option key={sup.id} value={sup.id}>
-                    {sup.name}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
         </form>
       </ModalSheet>
 

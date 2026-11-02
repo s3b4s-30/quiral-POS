@@ -71,7 +71,7 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     await expect(modalHeading).not.toBeVisible();
   });
 
-  test("2. Creación de familia con orden estricto de atributos por secuencia de clic, switch de nomenclatura dinámica y protección de huérfanos", async ({
+  test("2. Creación limpia de categoría con previsualización en vivo, botón Crear categoría, orden de atributos y protección de huérfanos", async ({
     page,
   }) => {
     await page.goto("/");
@@ -89,6 +89,10 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     await addProductBtn.click();
 
     await expect(page.getByRole("heading", { name: "Nuevo producto" })).toBeVisible();
+
+    // Verificar que en la vista normal de Nuevo producto solo está "Editar banco" (sin botón redundante "Ordenar atributos")
+    await expect(page.locator('button[aria-label="Abrir banco maestro de atributos"]')).toBeVisible();
+    await expect(page.locator('button[aria-label="Ordenar atributos de esta categoría"]')).toHaveCount(0);
 
     // Verificar atributos adaptativos de "Power Banks / Baterías portatiles"
     const powerBankCategoryBtn = page
@@ -113,28 +117,38 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     // El nuevo valor normalizado debe aparecer seleccionado como píldora
     await expect(page.getByRole("button", { name: "35000mAh", exact: true })).toBeVisible();
 
-    // Crear una nueva categoría personalizada (+ Nueva familia) con ORDEN ESTRICTO de selección de atributos:
-    // 1° Potencia (W), 2° Marca
-    const newFamilyBtn = page.locator('button[aria-label="Crear nueva categoría"]');
-    await expect(newFamilyBtn).toBeVisible();
-    await newFamilyBtn.click();
+    // Abrir el flujo limpio de creación de nueva categoría (+ Nueva categoría)
+    const newCategoryBtn = page.locator('button[aria-label="Crear nueva categoría"]');
+    await expect(newCategoryBtn).toBeVisible();
+    await newCategoryBtn.click();
 
-    const resetAttrOrderBtn = page.locator('button[aria-label="Reiniciar orden de atributos"]');
-    await expect(resetAttrOrderBtn).toBeVisible();
-    await resetAttrOrderBtn.click();
+    // Verificar que la vista se despeja, muestra "Editar banco", Previsualización dinámica y el botón inferior "Crear categoría"
+    await expect(page.locator('[data-testid="clean-new-category-workspace"]')).toBeVisible();
+    await expect(page.locator('button[aria-label="Abrir banco maestro de atributos"]')).toBeVisible();
+    await expect(page.locator('[data-testid="new-category-live-preview"]')).toBeVisible();
 
-    // Seleccionar primero "Potencia (W)" (#1) y segundo "Marca" (#2)
-    await page.getByRole("button", { name: "Potencia (W)", exact: true }).click();
+    const confirmCreateCatBtn = page.locator('button[aria-label="Confirmar creación de categoría"]');
+    await expect(confirmCreateCatBtn).toBeVisible();
+    await expect(confirmCreateCatBtn).toContainText("Crear categoría");
+
+    // Seleccionar primero "Marca" y luego "Potencia (W)", y usar la lista interactiva debajo de la previsualización para subir "Potencia (W)" al #1
     await page.getByRole("button", { name: "Marca", exact: true }).click();
+    await page.getByRole("button", { name: "Potencia (W)", exact: true }).click();
+
+    const moveUpPowerBtn = page.locator('button[aria-label="Subir Potencia (W)"]');
+    await expect(moveUpPowerBtn).toBeVisible();
+    await moveUpPowerBtn.click();
 
     const newCategoryInput = page.locator('input[aria-label="Nombre de la nueva categoría"]');
     await expect(newCategoryInput).toBeVisible();
     await newCategoryInput.fill("  Relojes   Inteligentes  "); // Normalización automática -> "Relojes Inteligentes"
 
-    const confirmCreateCatBtn = page.locator('button[aria-label="Confirmar creación de categoría"]');
+    // Presionar el botón inferior "Crear categoría" y verificar que regresa a la vista normal de "Nuevo producto"
     await confirmCreateCatBtn.click();
+    await expect(page.locator('[data-testid="clean-new-category-workspace"]')).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Guardar producto" })).toBeVisible();
 
-    // Verificar que los bloques de atributos se renderizan en el orden exacto de clic: [powers, brands]
+    // Verificar que los bloques de atributos se renderizan en el orden exacto configurado: [powers, brands]
     const attrBlocks = page.locator("#new-product-form [data-attribute-key]");
     await expect(attrBlocks.nth(0)).toHaveAttribute("data-attribute-key", "powers");
     await expect(attrBlocks.nth(1)).toHaveAttribute("data-attribute-key", "brands");
