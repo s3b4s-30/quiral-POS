@@ -1,25 +1,21 @@
-import { Filter, Search, X } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import { Filter, Search, SlidersHorizontal, X } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import AdvancedFiltersModal, {
   AdvancedFilterValues,
   DEFAULT_ADVANCED_FILTERS,
 } from "../components/AdvancedFiltersModal";
+import CategoryManagerModal from "../components/CategoryManagerModal";
 import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
 import ProductCard from "../components/ProductCard";
 import { useInventory } from "../context/InventoryContext";
 import { ProductCategory } from "../types/domain";
+import { isSameCatalogText } from "../utils/catalogConfig";
 import { formatCOP, parseCOPInput } from "../utils/formatters";
 
 interface InventoryViewProps {
   onOpenSuppliers: () => void;
   onFilterModalStateChange?: (isOpen: boolean) => void;
 }
-
-const BASE_CATEGORIES: ProductCategory[] = [
-  "Cargadores y Cables",
-  "Forros / Fundas",
-  "Audio / AirPods",
-];
 
 export default function InventoryView({
   onOpenSuppliers: _onOpenSuppliers,
@@ -31,6 +27,7 @@ export default function InventoryView({
     showCosts,
     setSelectedProduct,
     loading,
+    catalogConfig,
   } = useInventory();
 
   // Filtros
@@ -40,11 +37,45 @@ export default function InventoryView({
     DEFAULT_ADVANCED_FILTERS
   );
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+
+  // Gestor de Long-Press para píldoras de categorías (Estilo WhatsApp / iOS)
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggeredRef = useRef(false);
 
   const handleOpenFilterModal = (open: boolean) => {
     setIsFilterModalOpen(open);
-    onFilterModalStateChange?.(open);
+    onFilterModalStateChange?.(open || isCategoryModalOpen);
   };
+
+  const handleOpenCategoryModal = (open: boolean) => {
+    setIsCategoryModalOpen(open);
+    onFilterModalStateChange?.(open || isFilterModalOpen);
+  };
+
+  const clearLongPressTimer = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const handleCategoryPressStart = () => {
+    clearLongPressTimer();
+    longPressTriggeredRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      handleOpenCategoryModal(true);
+    }, 420);
+  };
+
+  const handleCategoryPressEnd = () => {
+    clearLongPressTimer();
+  };
+
+  useEffect(() => {
+    return () => clearLongPressTimer();
+  }, []);
 
   const hasActiveAdvancedFilters = useMemo(() => {
     return (
@@ -56,37 +87,47 @@ export default function InventoryView({
     );
   }, [advancedFilters]);
 
-  // Reordenar dinámicamente la barra de categorías según stock disponible (mayor a menor)
+  // Ordenar dinámicamente la barra de categorías según el orden personalizado en catalogConfig
   const { sortedCategories, categoryStockMap } = useMemo(() => {
-    const allCatSet = new Set<ProductCategory>(BASE_CATEGORIES);
+    const orderedList: ProductCategory[] = [...catalogConfig.categoryOrder];
+
     products.forEach((p) => {
-      if (p.category) allCatSet.add(p.category);
+      if (
+        p.category &&
+        !orderedList.some((existing) => isSameCatalogText(existing, p.category))
+      ) {
+        orderedList.push(p.category);
+      }
     });
 
     const stockMap: Record<string, number> = {};
-    for (const cat of allCatSet) {
+    for (const cat of orderedList) {
       stockMap[cat] = 0;
     }
 
     products.forEach((p) => {
       const pStock = p.batches.reduce((sum, b) => sum + b.stock, 0);
-      if (stockMap[p.category] !== undefined) {
-        stockMap[p.category] += pStock;
+      const matchingKey = orderedList.find((c) => isSameCatalogText(c, p.category));
+      if (matchingKey !== undefined) {
+        stockMap[matchingKey] = (stockMap[matchingKey] || 0) + pStock;
       }
     });
 
-    const sorted = Array.from(allCatSet).sort((a, b) => {
-      const stockA = stockMap[a] || 0;
-      const stockB = stockMap[b] || 0;
-      if (stockB !== stockA) return stockB - stockA;
-      return a.localeCompare(b);
-    });
-
     return {
-      sortedCategories: ["Todos", ...sorted] as Array<"Todos" | ProductCategory>,
+      sortedCategories: ["Todos", ...orderedList] as Array<"Todos" | ProductCategory>,
       categoryStockMap: stockMap,
     };
-  }, [products]);
+  }, [products, catalogConfig.categoryOrder]);
+
+  // Si la categoría activa fue eliminada, volver a "Todos"
+  useEffect(() => {
+    if (
+      selectedCategory !== "Todos" &&
+      !sortedCategories.some((c) => isSameCatalogText(c, selectedCategory))
+    ) {
+      setSelectedCategory("Todos");
+    }
+  }, [sortedCategories, selectedCategory]);
 
   // Listado filtrado de productos con combinación multifiltro
   const filteredProducts = useMemo(() => {
@@ -97,7 +138,7 @@ export default function InventoryView({
     return products.filter((p) => {
       // Filtro de categoría
       const matchesCategory =
-        selectedCategory === "Todos" || p.category === selectedCategory;
+        selectedCategory === "Todos" || isSameCatalogText(p.category, selectedCategory);
 
       // Filtro de búsqueda por texto
       const q = query.trim().toLowerCase();
@@ -216,8 +257,8 @@ export default function InventoryView({
             </button>
           </div>
 
-          {/* 2. Chips Horizontales de Selección de Categoría (Ordenados dinámicamente de mayor a menor stock, 0 stock al final con opacidad reducida) */}
-          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {/* 2. Chips Horizontales de Selección de Categoría (Soporte Long-Press para Organizar Categorías) */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
             {sortedCategories.map((cat) => {
               const isActive = selectedCategory === cat;
               const isZeroStock = cat !== "Todos" && (categoryStockMap[cat] || 0) === 0;
@@ -225,7 +266,24 @@ export default function InventoryView({
                 <button
                   key={cat}
                   type="button"
-                  onClick={() => setSelectedCategory(cat)}
+                  onPointerDown={handleCategoryPressStart}
+                  onPointerUp={handleCategoryPressEnd}
+                  onPointerLeave={handleCategoryPressEnd}
+                  onPointerCancel={handleCategoryPressEnd}
+                  onTouchMove={handleCategoryPressEnd}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    clearLongPressTimer();
+                    handleOpenCategoryModal(true);
+                  }}
+                  onClick={() => {
+                    if (longPressTriggeredRef.current) {
+                      longPressTriggeredRef.current = false;
+                      return;
+                    }
+                    setSelectedCategory(cat);
+                  }}
+                  title="Toca para filtrar · Mantén presionado para organizar categorías"
                   className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-all duration-75 select-none ${
                     isActive
                       ? "bg-[#007aff] text-white shadow-sm"
@@ -236,6 +294,17 @@ export default function InventoryView({
                 </button>
               );
             })}
+
+            {/* Acceso directo accesible para organizar categorías */}
+            <button
+              type="button"
+              onClick={() => handleOpenCategoryModal(true)}
+              aria-label="Organizar categorías"
+              title="Organizar categorías (o mantén presionada una categoría)"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[#007aff] hover:border-[#007aff] active:scale-95 transition-colors"
+            >
+              <SlidersHorizontal size={14} />
+            </button>
           </div>
         </div>
 
@@ -367,6 +436,11 @@ export default function InventoryView({
           onApply={(newFilters) => setAdvancedFilters(newFilters)}
           onReset={() => setAdvancedFilters(DEFAULT_ADVANCED_FILTERS)}
         />
+      )}
+
+      {/* Hoja Modal de Gestión y Reordenamiento de Categorías (Long-Press) */}
+      {isCategoryModalOpen && (
+        <CategoryManagerModal onClose={() => handleOpenCategoryModal(false)} />
       )}
     </div>
   );

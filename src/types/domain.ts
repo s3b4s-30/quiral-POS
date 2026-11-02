@@ -1,4 +1,36 @@
-export type ProductCategory = "Cargadores y Cables" | "Forros / Fundas" | "Audio / AirPods" | "Celulares" | "Perfumes" | "Streaming";
+export type BaseProductCategory =
+  | "Cargadores y Cables"
+  | "Forros / Fundas"
+  | "Audio / AirPods"
+  | "Power Banks / Baterías"
+  | "Celulares"
+  | "Perfumes"
+  | "Streaming"
+  | "General / Otros";
+
+export type ProductCategory = BaseProductCategory | (string & {});
+
+export interface AttributeDefinition {
+  key: string;
+  label: string;
+  options: string[];
+}
+
+export interface CategoryConfig {
+  name: ProductCategory;
+  isSystemDefault: boolean;
+  /** Claves de los bloques de atributos asociados a esta categoría */
+  attributeKeys: string[];
+}
+
+export interface CatalogConfig {
+  /** Orden personalizado de categorías en la barra de filtros (sin incluir "Todos", que va fijo al inicio) */
+  categoryOrder: ProductCategory[];
+  /** Definiciones de categorías personalizadas y base con sus atributos vinculados */
+  categories: CategoryConfig[];
+  /** Banco maestro de atributos libres y editables */
+  attributes: Record<string, AttributeDefinition>;
+}
 
 export interface Supplier {
   id: string;

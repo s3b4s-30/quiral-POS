@@ -3,7 +3,17 @@ import type { Session } from "@supabase/supabase-js";
 import { getStoreMembership, printSecurityWarning, signOutUser } from "../lib/authService";
 import { DEMO_STORE_ID, generateDemoSeed } from "../lib/demoSeed";
 import { supabase } from "../lib/supabase";
-import { Batch, CartItem, Closure, PaymentMethod, Product, Sale, SaleItem, Supplier, UserProfile } from "../types/domain";
+import { Batch, CartItem, CatalogConfig, CategoryConfig, Closure, PaymentMethod, Product, ProductCategory, Sale, SaleItem, Supplier, UserProfile } from "../types/domain";
+import {
+  DEFAULT_CATALOG_CONFIG,
+  FACTORY_BASE_CATEGORIES,
+  FALLBACK_ORPHAN_CATEGORY,
+  inferAttributeKeysForCategory,
+  isSameCatalogText,
+  mergeWithDefaultCatalogConfig,
+  normalizeCatalogText,
+  structuredCloneConfig,
+} from "../utils/catalogConfig";
 
 export const SUPPLIER_PALETTE = [
   "#007AFF", "#AF52DE", "#28CD41", "#FF9500", "#5AC8FA", "#FF3B30",
@@ -62,6 +72,16 @@ interface InventoryContextType {
   purgeOutOfStock: () => number;
   deleteMultipleProducts: (productIds: string[]) => Promise<number>;
   clearAllProducts: () => Promise<number>;
+  catalogConfig: CatalogConfig;
+  updateCategoryOrder: (newOrder: ProductCategory[]) => void;
+  addCategory: (name: string, attributeKeys?: string[]) => CategoryConfig | null;
+  deleteCategory: (categoryName: ProductCategory, fallbackCategory?: ProductCategory) => Promise<number>;
+  updateCategoryAttributes: (categoryName: ProductCategory, attributeKeys: string[]) => void;
+  addAttributeOption: (attributeKey: string, newOption: string) => string | null;
+  renameAttributeOption: (attributeKey: string, oldOption: string, newOption: string) => boolean;
+  deleteAttributeOption: (attributeKey: string, optionToRemove: string) => void;
+  createCustomAttribute: (label: string, initialOptions?: string[]) => string | null;
+  resetCatalogConfigToDefault: () => void;
   signOut: () => Promise<void>;
   refreshData: () => Promise<void>;
 }
@@ -74,6 +94,16 @@ const getStoredStoreProfile = (storeId: string): Partial<UserProfile> => {
     if (raw) return JSON.parse(raw) as Partial<UserProfile>;
   } catch {}
   return {};
+};
+
+const getStoredCatalogConfig = (targetStoreId: string): CatalogConfig => {
+  try {
+    const raw = localStorage.getItem(`quiral_catalog_config_${targetStoreId}`);
+    if (raw) {
+      return mergeWithDefaultCatalogConfig(JSON.parse(raw) as Partial<CatalogConfig>);
+    }
+  } catch {}
+  return mergeWithDefaultCatalogConfig(null);
 };
 
 const makeId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -125,6 +155,9 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [closures, setClosures] = useState<Closure[]>([]);
+  const [catalogConfig, setCatalogConfig] = useState<CatalogConfig>(() =>
+    getStoredCatalogConfig(DEMO_STORE_ID)
+  );
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -162,6 +195,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         setProducts(demoData.products);
         setSales(deduplicateSales(storedSales));
         setClosures(demoData.closures);
+        setCatalogConfig(getStoredCatalogConfig(activeStore));
       } catch {
         setSuppliers(demoData.suppliers);
         setProducts(demoData.products);
@@ -205,6 +239,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       setProducts(loadedProducts);
       setSales(cleanSales);
       setClosures(cleanClosures);
+      setCatalogConfig(getStoredCatalogConfig(activeStore));
 
       setError(null);
       lastLoadedStoreIdRef.current = activeStore;
@@ -723,6 +758,334 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     return totalCount;
   };
 
+  // Persistencia de configuración modular de catálogo y atributos
+  const persistCatalogConfig = useCallback(
+    (nextConfig: CatalogConfig) => {
+      const activeStore = storeId || DEMO_STORE_ID;
+      try {
+        localStorage.setItem(
+          `quiral_catalog_config_${activeStore}`,
+          JSON.stringify(nextConfig)
+        );
+      } catch (err) {
+        console.warn("Error guardando catalogConfig en localStorage:", err);
+      }
+
+      if (storeId && !isDemoUser) {
+        void supabase.auth
+          .updateUser({ data: { catalog_config: nextConfig } })
+          .catch(() => {
+            // Silencioso en caso de modo offline temporal
+          });
+      }
+    },
+    [storeId, isDemoUser]
+  );
+
+  const updateCategoryOrder = (newOrder: ProductCategory[]) => {
+    setCatalogConfig((prev) => {
+      const seen = new Set<string>();
+      const cleanOrder: ProductCategory[] = [];
+
+      for (const item of newOrder) {
+        const norm = normalizeCatalogText(item);
+        if (!norm || norm.toLowerCase() === "todos") continue;
+        const lower = norm.toLowerCase();
+        if (!seen.has(lower)) {
+          seen.add(lower);
+          cleanOrder.push(norm);
+        }
+      }
+
+      for (const cat of prev.categories) {
+        const lower = cat.name.toLowerCase();
+        if (!seen.has(lower)) {
+          seen.add(lower);
+          cleanOrder.push(cat.name);
+        }
+      }
+
+      const next: CatalogConfig = {
+        ...prev,
+        categoryOrder: cleanOrder,
+      };
+      persistCatalogConfig(next);
+      return next;
+    });
+  };
+
+  const addCategory = (name: string, attributeKeys?: string[]): CategoryConfig | null => {
+    const cleanName = normalizeCatalogText(name);
+    if (!cleanName || cleanName.toLowerCase() === "todos") return null;
+
+    const existing = catalogConfig.categories.find((c) =>
+      isSameCatalogText(c.name, cleanName)
+    );
+    if (existing) {
+      return existing;
+    }
+
+    const keys =
+      attributeKeys && attributeKeys.length > 0
+        ? attributeKeys
+        : inferAttributeKeysForCategory(cleanName);
+
+    const newCat: CategoryConfig = {
+      name: cleanName,
+      isSystemDefault: FACTORY_BASE_CATEGORIES.some((b) =>
+        isSameCatalogText(b, cleanName)
+      ),
+      attributeKeys: keys,
+    };
+
+    const nextConfig: CatalogConfig = {
+      ...catalogConfig,
+      categoryOrder: [cleanName, ...catalogConfig.categoryOrder],
+      categories: [...catalogConfig.categories, newCat],
+    };
+
+    setCatalogConfig(nextConfig);
+    persistCatalogConfig(nextConfig);
+    return newCat;
+  };
+
+  const deleteCategory = async (
+    categoryName: ProductCategory,
+    fallbackCategory: ProductCategory = FALLBACK_ORPHAN_CATEGORY
+  ): Promise<number> => {
+    const isFactory = FACTORY_BASE_CATEGORIES.some((b) =>
+      isSameCatalogText(b, categoryName)
+    );
+    if (isFactory) return 0;
+
+    const affectedProducts = products.filter((p) =>
+      isSameCatalogText(p.category, categoryName)
+    );
+    const cleanFallback = normalizeCatalogText(fallbackCategory) || FALLBACK_ORPHAN_CATEGORY;
+
+    if (affectedProducts.length > 0) {
+      const updatedList: Product[] = [];
+      setProducts((prev) =>
+        prev.map((p) => {
+          if (!isSameCatalogText(p.category, categoryName)) return p;
+          const moved: Product = { ...p, category: cleanFallback };
+          updatedList.push(moved);
+          return moved;
+        })
+      );
+
+      for (const mp of updatedList) {
+        void persist("products", mp).catch((err: unknown) => {
+          report(err instanceof Error ? err.message : String(err));
+        });
+      }
+    }
+
+    setCatalogConfig((prev) => {
+      const nextCategories = prev.categories.filter(
+        (c) => !isSameCatalogText(c.name, categoryName)
+      );
+      const nextOrder = prev.categoryOrder.filter(
+        (c) => !isSameCatalogText(c, categoryName)
+      );
+
+      if (
+        affectedProducts.length > 0 &&
+        !nextCategories.some((c) => isSameCatalogText(c.name, cleanFallback))
+      ) {
+        nextCategories.push({
+          name: cleanFallback,
+          isSystemDefault: false,
+          attributeKeys: inferAttributeKeysForCategory(cleanFallback),
+        });
+      }
+
+      if (
+        affectedProducts.length > 0 &&
+        !nextOrder.some((c) => isSameCatalogText(c, cleanFallback))
+      ) {
+        nextOrder.push(cleanFallback);
+      }
+
+      const next: CatalogConfig = {
+        ...prev,
+        categoryOrder: nextOrder,
+        categories: nextCategories,
+      };
+      persistCatalogConfig(next);
+      return next;
+    });
+
+    return affectedProducts.length;
+  };
+
+  const updateCategoryAttributes = (
+    categoryName: ProductCategory,
+    attributeKeys: string[]
+  ) => {
+    if (attributeKeys.length === 0) return;
+    setCatalogConfig((prev) => {
+      const nextCategories = prev.categories.map((c) =>
+        isSameCatalogText(c.name, categoryName)
+          ? { ...c, attributeKeys: [...attributeKeys] }
+          : c
+      );
+      const next: CatalogConfig = {
+        ...prev,
+        categories: nextCategories,
+      };
+      persistCatalogConfig(next);
+      return next;
+    });
+  };
+
+  const addAttributeOption = (attributeKey: string, newOption: string): string | null => {
+    const cleanOpt = normalizeCatalogText(newOption);
+    if (!cleanOpt) return null;
+
+    const currentAttr = catalogConfig.attributes[attributeKey];
+    if (!currentAttr) return null;
+
+    const existingMatch = currentAttr.options.find((opt) =>
+      isSameCatalogText(opt, cleanOpt)
+    );
+    if (existingMatch) {
+      return existingMatch;
+    }
+
+    const nextConfig: CatalogConfig = {
+      ...catalogConfig,
+      attributes: {
+        ...catalogConfig.attributes,
+        [attributeKey]: {
+          ...currentAttr,
+          options: [...currentAttr.options, cleanOpt],
+        },
+      },
+    };
+
+    setCatalogConfig(nextConfig);
+    persistCatalogConfig(nextConfig);
+    return cleanOpt;
+  };
+
+  const renameAttributeOption = (
+    attributeKey: string,
+    oldOption: string,
+    newOption: string
+  ): boolean => {
+    const cleanNew = normalizeCatalogText(newOption);
+    if (!cleanNew) return false;
+
+    const currentAttr = catalogConfig.attributes[attributeKey];
+    if (!currentAttr) return false;
+
+    const duplicate = currentAttr.options.find(
+      (opt) => !isSameCatalogText(opt, oldOption) && isSameCatalogText(opt, cleanNew)
+    );
+    if (duplicate) return false;
+
+    const nextOptions = currentAttr.options.map((opt) =>
+      isSameCatalogText(opt, oldOption) ? cleanNew : opt
+    );
+
+    const nextConfig: CatalogConfig = {
+      ...catalogConfig,
+      attributes: {
+        ...catalogConfig.attributes,
+        [attributeKey]: {
+          ...currentAttr,
+          options: nextOptions,
+        },
+      },
+    };
+
+    setCatalogConfig(nextConfig);
+    persistCatalogConfig(nextConfig);
+    return true;
+  };
+
+  const deleteAttributeOption = (attributeKey: string, optionToRemove: string) => {
+    const currentAttr = catalogConfig.attributes[attributeKey];
+    if (!currentAttr || currentAttr.options.length <= 1) return;
+
+    const nextOptions = currentAttr.options.filter(
+      (opt) => !isSameCatalogText(opt, optionToRemove)
+    );
+    if (nextOptions.length === 0) return;
+
+    const nextConfig: CatalogConfig = {
+      ...catalogConfig,
+      attributes: {
+        ...catalogConfig.attributes,
+        [attributeKey]: {
+          ...currentAttr,
+          options: nextOptions,
+        },
+      },
+    };
+
+    setCatalogConfig(nextConfig);
+    persistCatalogConfig(nextConfig);
+  };
+
+  const createCustomAttribute = (
+    label: string,
+    initialOptions: string[] = []
+  ): string | null => {
+    const cleanLabel = normalizeCatalogText(label);
+    if (!cleanLabel) return null;
+
+    const existingEntry = Object.values(catalogConfig.attributes).find((attr) =>
+      isSameCatalogText(attr.label, cleanLabel)
+    );
+    if (existingEntry) return existingEntry.key;
+
+    const key =
+      "custom_" +
+      cleanLabel
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "") +
+      "_" +
+      Date.now().toString(36).slice(-4);
+
+    const cleanOptions: string[] = [];
+    for (const rawOpt of initialOptions) {
+      const norm = normalizeCatalogText(rawOpt);
+      if (norm && !cleanOptions.some((o) => isSameCatalogText(o, norm))) {
+        cleanOptions.push(norm);
+      }
+    }
+    if (cleanOptions.length === 0) {
+      cleanOptions.push("Estándar");
+    }
+
+    const nextConfig: CatalogConfig = {
+      ...catalogConfig,
+      attributes: {
+        ...catalogConfig.attributes,
+        [key]: {
+          key,
+          label: cleanLabel,
+          options: cleanOptions,
+        },
+      },
+    };
+
+    setCatalogConfig(nextConfig);
+    persistCatalogConfig(nextConfig);
+    return key;
+  };
+
+  const resetCatalogConfigToDefault = () => {
+    const fresh = structuredCloneConfig(DEFAULT_CATALOG_CONFIG);
+    setCatalogConfig(fresh);
+    persistCatalogConfig(fresh);
+  };
+
   // Carrito de compras
   const addToCart = (productId: string) => {
     const product = products.find((p) => p.id === productId);
@@ -1164,6 +1527,16 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         purgeOutOfStock,
         deleteMultipleProducts,
         clearAllProducts,
+        catalogConfig,
+        updateCategoryOrder,
+        addCategory,
+        deleteCategory,
+        updateCategoryAttributes,
+        addAttributeOption,
+        renameAttributeOption,
+        deleteAttributeOption,
+        createCustomAttribute,
+        resetCatalogConfigToDefault,
         signOut,
         refreshData,
       }}

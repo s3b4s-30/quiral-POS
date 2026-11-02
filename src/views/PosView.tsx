@@ -1,59 +1,121 @@
-import { Search, X } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CartSummaryBar from "../components/CartSummaryBar";
+import CategoryManagerModal from "../components/CategoryManagerModal";
 import CheckoutSheet from "../components/CheckoutSheet";
 import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
 import PosProductCard from "../components/PosProductCard";
 import { useInventory } from "../context/InventoryContext";
 import { ProductCategory } from "../types/domain";
+import { isSameCatalogText } from "../utils/catalogConfig";
 
 interface PosViewProps {
   onCheckoutStateChange: (open: boolean) => void;
 }
 
 export default function PosView({ onCheckoutStateChange }: PosViewProps) {
-  const { products, suppliers, cart, cartUnits, addToCart, loading } = useInventory();
+  const {
+    products,
+    suppliers,
+    cart,
+    cartUnits,
+    addToCart,
+    loading,
+    catalogConfig,
+  } = useInventory();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<"Todos" | ProductCategory>("Todos");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isCheckoutClosing, setIsCheckoutClosing] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
-  const categories = useMemo(
-    () => ["Todos", ...new Set(products.map((product) => product.category))],
-    [products],
-  );
+  // Gestor de Long-Press para píldoras de categorías en POS
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggeredRef = useRef(false);
+
+  const handleOpenCategoryModal = (open: boolean) => {
+    setIsCategoryModalOpen(open);
+    onCheckoutStateChange(open || isCheckoutOpen);
+  };
+
+  const clearLongPressTimer = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const handleCategoryPressStart = () => {
+    clearLongPressTimer();
+    longPressTriggeredRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      handleOpenCategoryModal(true);
+    }, 420);
+  };
+
+  const handleCategoryPressEnd = () => {
+    clearLongPressTimer();
+  };
+
+  useEffect(() => {
+    return () => clearLongPressTimer();
+  }, []);
+
+  // Categorías ordenadas según catalogConfig.categoryOrder, con "Todos" fijo al inicio
+  const categories = useMemo(() => {
+    const ordered: ProductCategory[] = [...catalogConfig.categoryOrder];
+    for (const product of products) {
+      if (
+        product.category &&
+        !ordered.some((existing) => isSameCatalogText(existing, product.category))
+      ) {
+        ordered.push(product.category);
+      }
+    }
+    return ["Todos", ...ordered] as Array<"Todos" | ProductCategory>;
+  }, [products, catalogConfig.categoryOrder]);
+
+  useEffect(() => {
+    if (
+      category !== "Todos" &&
+      !categories.some((c) => isSameCatalogText(c, category))
+    ) {
+      setCategory("Todos");
+    }
+  }, [categories, category]);
 
   const supplierColors = useMemo(
     () => new Map(suppliers.map((supplier) => [supplier.id, supplier.color])),
-    [suppliers],
+    [suppliers]
   );
 
   const cartQuantities = useMemo(
     () => new Map(cart.map((item) => [item.productId, item.quantity])),
-    [cart],
+    [cart]
   );
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return products.filter(
       (product) =>
-        (category === "Todos" || product.category === category) &&
+        (category === "Todos" || isSameCatalogText(product.category, category)) &&
         (!normalizedQuery ||
           product.name.toLowerCase().includes(normalizedQuery) ||
-          product.subtitle?.toLowerCase().includes(normalizedQuery)),
+          product.subtitle?.toLowerCase().includes(normalizedQuery))
     );
   }, [products, query, category]);
 
   const cartTotal = useMemo(
     () => cart.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
-    [cart],
+    [cart]
   );
 
   const handleAddToCart = useCallback(
     (productId: string) => {
       addToCart(productId);
     },
-    [addToCart],
+    [addToCart]
   );
 
   const openCheckout = () => {
@@ -70,7 +132,7 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
   const closeCheckout = () => {
     setIsCheckoutOpen(false);
     setIsCheckoutClosing(false);
-    onCheckoutStateChange(false);
+    onCheckoutStateChange(isCategoryModalOpen);
   };
 
   return (
@@ -101,15 +163,32 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
               </div>
             </div>
 
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
               {categories.map((item) => {
                 const isActive = category === item;
                 return (
                   <button
                     key={item}
                     type="button"
-                    onClick={() => setCategory(item as "Todos" | ProductCategory)}
-                    className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-colors duration-75 active:scale-95 ${
+                    onPointerDown={handleCategoryPressStart}
+                    onPointerUp={handleCategoryPressEnd}
+                    onPointerLeave={handleCategoryPressEnd}
+                    onPointerCancel={handleCategoryPressEnd}
+                    onTouchMove={handleCategoryPressEnd}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      clearLongPressTimer();
+                      handleOpenCategoryModal(true);
+                    }}
+                    onClick={() => {
+                      if (longPressTriggeredRef.current) {
+                        longPressTriggeredRef.current = false;
+                        return;
+                      }
+                      setCategory(item);
+                    }}
+                    title="Toca para filtrar · Mantén presionado para organizar categorías"
+                    className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-colors duration-75 active:scale-95 select-none ${
                       isActive
                         ? "bg-[#007aff] text-white shadow-sm"
                         : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -119,6 +198,16 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
                   </button>
                 );
               })}
+
+              <button
+                type="button"
+                onClick={() => handleOpenCategoryModal(true)}
+                aria-label="Organizar categorías"
+                title="Organizar categorías (o mantén presionada una categoría)"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[#007aff] hover:border-[#007aff] active:scale-95 transition-colors"
+              >
+                <SlidersHorizontal size={14} />
+              </button>
             </div>
           </div>
 
@@ -140,7 +229,7 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
                       <div className="h-4 w-12 rounded-full bg-black/5 dark:bg-white/10" />
                     </div>
                     <div className="h-5 w-3/4 rounded-lg bg-black/5 dark:bg-white/10" />
-                    <div className="h-3 w-1/2 rounded bg-black/5 dark:bg-white/10" />
+                    <div className="h-3 w-1/2 rounded-lg bg-black/5 dark:bg-white/10" />
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t border-[var(--border-color)]">
                     <div className="h-6 w-24 rounded-lg bg-black/5 dark:bg-white/10" />
@@ -188,7 +277,7 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
       </div>
 
       {/* Barra flotante sobre la barra inferior con resumen */}
-      {(!isCheckoutOpen || isCheckoutClosing) && cartUnits > 0 && (
+      {(!isCheckoutOpen || isCheckoutClosing) && !isCategoryModalOpen && cartUnits > 0 && (
         <CartSummaryBar units={cartUnits} total={cartTotal} onCheckout={openCheckout} />
       )}
 
@@ -198,6 +287,11 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
           onClose={closeCheckout}
           onStartClose={handleStartCloseCheckout}
         />
+      )}
+
+      {/* Modal de Gestión y Reordenamiento de Categorías (Long-Press) */}
+      {isCategoryModalOpen && (
+        <CategoryManagerModal onClose={() => handleOpenCategoryModal(false)} />
       )}
     </>
   );
