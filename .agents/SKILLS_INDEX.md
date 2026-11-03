@@ -45,6 +45,13 @@ El directorio `.agents/skills/` aloja las capacidades modulares que extienden el
 │ 14. brand               -> Identidad de Marca, Voz y Directrices       │
 │ 15. banner-design       -> Banners y Creativos Multiformato            │
 │ 16. slides              -> Presentaciones HTML Estratégicas (Chart.js) │
+├────────────────────────────────────────────────────────────────────────┤
+│ TIER 3: HABILIDADES OFICIALES ORIGINALES UPSTREAM (Adaptadas a Quiral) │
+│ 17. design-taste-frontend -> tasteskill/tasteskill (Anti-Slop V2)      │
+│ 18. web-design-guidelines -> tech-leads-club/agent-skills (Vercel A11y)│
+│ 19. awesome-design-skills -> bergside/awesome-design-skills (67 Styles)│
+│ 20. playwright-skill      -> tech-leads-club/agent-skills (Auto-Runner)│
+│ 21. @playwright/mcp       -> Servidor MCP Playwright Oficial Microsoft │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -54,7 +61,7 @@ El directorio `.agents/skills/` aloja las capacidades modulares que extienden el
 
 ### Protocolo 1: Modificación de Vistas o Componentes de UI Móvil
 
-1. **Activar:** [`quiral-ui-hig`](./skills/quiral-ui-hig/SKILL.md) e [`impeccable`](./skills/impeccable/SKILL.md).
+1. **Activar:** [`quiral-ui-hig`](./skills/quiral-ui-hig/SKILL.md), [`impeccable`](./skills/impeccable/SKILL.md) o [`web-design-guidelines`](./skills/web-design-guidelines/SKILL.md).
 2. **Consultar:** [`AGENTS.md`](../AGENTS.md) y [`DESIGN_GUIDELINES.md`](../DESIGN_GUIDELINES.md).
 3. **Aplicar Estándares:**
    - Respetar inmutabilidad de `TopHeader` (`fixed top-0 w-full z-50 backdrop-blur-md pt-[env(safe-area-inset-top)]`).
@@ -75,7 +82,7 @@ El directorio `.agents/skills/` aloja las capacidades modulares que extienden el
 
 ### Protocolo 3: Estación de Trabajo Desktop (`>= 768px`) y Platform Split
 
-1. **Activar:** [`ui-ux-modern-taste`](./skills/ui-ux-modern-taste/SKILL.md), [`quiral-ui-hig`](./skills/quiral-ui-hig/SKILL.md) y [`quiral-pos-engine`](./skills/quiral-pos-engine/SKILL.md).
+1. **Activar:** [`ui-ux-modern-taste`](./skills/ui-ux-modern-taste/SKILL.md), [`design-taste-frontend`](./skills/design-taste-frontend/SKILL.md), [`quiral-ui-hig`](./skills/quiral-ui-hig/SKILL.md) y [`quiral-pos-engine`](./skills/quiral-pos-engine/SKILL.md).
 2. **Consultar:** [`docs/DESKTOP_UI_RULES.md`](../docs/DESKTOP_UI_RULES.md) y [`AGENTS.md`](../AGENTS.md).
 3. **Aplicar Estándares:**
    - Desacoplamiento físico estricto mediante `useIsDesktop.ts` (`*Mobile.tsx` vs `*Desktop.tsx`).
@@ -87,7 +94,7 @@ El directorio `.agents/skills/` aloja las capacidades modulares que extienden el
 
 ### Protocolo 4: Traducción de Diseños y Capturas Visuales a Código
 
-1. **Activar:** [`image-to-code`](./skills/image-to-code/SKILL.md) y [`ui-ux-modern-taste`](./skills/ui-ux-modern-taste/SKILL.md).
+1. **Activar:** [`image-to-code`](./skills/image-to-code/SKILL.md) (versión upstream `tasteskill/tasteskill`), [`ui-ux-modern-taste`](./skills/ui-ux-modern-taste/SKILL.md) y [`awesome-design-skills`](./skills/awesome-design-skills/SKILL.md).
 2. **Consultar:** [`DESIGN_GUIDELINES.md`](../DESIGN_GUIDELINES.md) y [`docs/DESKTOP_UI_RULES.md`](../docs/DESKTOP_UI_RULES.md).
 3. **Aplicar Estándares:**
    - Pipeline de 5 fases: descomposición, tokens Dual OLED, Platform Split, maquetación React 18 + TS, y verificación Exit 0.
@@ -96,7 +103,7 @@ El directorio `.agents/skills/` aloja las capacidades modulares que extienden el
 
 ### Protocolo 5: Automatización, Diagnóstico y Ejecución E2E
 
-1. **Activar:** [`playwright-cli`](./skills/playwright-cli/SKILL.md).
+1. **Activar:** [`playwright-cli`](./skills/playwright-cli/SKILL.md) o [`playwright-skill`](./skills/playwright-skill/SKILL.md) junto con el servidor MCP `@playwright/mcp`.
 2. **Consultar:** [`playwright.config.ts`](../playwright.config.ts) y [`AGENTS.md`](../AGENTS.md).
 3. **Aplicar Estándares:**
    - Ejecución autónoma con `npx playwright test` (52/52 tests pasando en Chromium y Mobile Safari).

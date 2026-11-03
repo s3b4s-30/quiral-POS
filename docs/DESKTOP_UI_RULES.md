@@ -192,3 +192,14 @@ Para gobernar el desarrollo continuo de la estación de trabajo en escritorio y 
    - Automatización y ejecución autónoma de la suite completa de 52 pruebas E2E.
    - Ejecución segmentada por proyectos (`chromium` y `Mobile Safari iPhone 14 Standalone`).
    - Runbook de resolución de fallos y garantía innegociable de 100% Exit 0.
+
+---
+
+## 10. Frameworks Upstream Oficiales y Servidor MCP (@playwright/mcp)
+
+Para potenciar la auditoría y diseño con los paquetes upstream oficiales recomendados:
+
+1. **[`design-taste-frontend`](../.agents/skills/design-taste-frontend/SKILL.md) (`tasteskill/tasteskill`):** Marco Anti-Slop de ingeniería frontend y dirección de arte adaptable a Quiral POS.
+2. **[`web-design-guidelines`](../.agents/skills/web-design-guidelines/SKILL.md) (`tech-leads-club/agent-skills`):** Guías oficiales de Vercel para auditoría a11y, focus states, formularios y tipografía.
+3. **[`awesome-design-skills`](../.agents/skills/awesome-design-skills/SKILL.md) (`bergside/awesome-design-skills`):** 67 sistemas de diseño oficiales (Premium, Sleek, Enterprise, Bento, Shadcn) adaptados a la paleta Dual OLED.
+4. **[`playwright-skill`](../.agents/skills/playwright-skill/SKILL.md) y Servidor MCP Playwright (`@playwright/mcp`):** Configurado en `~/.gemini/config/mcp_config.json` para automatización browser en modo aislado (`--isolated`).

@@ -6,3 +6,5 @@ test-results
 playwright-report
 blob-report
 .husky
+.agents
+skills-lock.json
