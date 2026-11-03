@@ -412,8 +412,8 @@ export default function InventoryView({
   }
 
   return (
-    /* Contenedor Principal: scroll vertical nativo Apple HIG */
-    <div id="inventory-scroll" className="quiral-scroll-container transition-colors duration-75">
+    /* Contenedor Principal: scroll vertical nativo Apple HIG en móvil o estación completa en desktop */
+    <div id="inventory-scroll" className={`${isDesktopViewport ? "w-full h-full overflow-y-auto" : "quiral-scroll-container"} transition-colors duration-75`}>
       <div className="mx-auto max-w-xl md:max-w-6xl lg:max-w-7xl px-4">
         {/* 1. Buscador Instantáneo, Embudo Multifiltro y Categorías Modulares Fijas */}
         <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-3 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">

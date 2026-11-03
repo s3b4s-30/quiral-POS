@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
+import { useIsDesktop } from "../hooks/useIsDesktop";
+import DesktopModal from "./DesktopModal";
 
 export interface ModalSheetProps {
   onClose: () => void;
@@ -15,7 +17,20 @@ export interface ModalSheetProps {
   enableDragToDismiss?: boolean;
 }
 
-export default function ModalSheet({
+/**
+ * ModalSheet — Semáforo Adaptativo por Plataforma:
+ * - En Desktop (>= 768px): Renderiza DesktopModal (centrado, amplio, sin drag handles ni gestos táctiles).
+ * - En Móvil (< 768px): Renderiza MobileModalSheet (100% nativo Apple HIG, con swipe-to-dismiss y safe-areas).
+ */
+export default function ModalSheet(props: ModalSheetProps) {
+  const isDesktop = useIsDesktop();
+  if (isDesktop) {
+    return <DesktopModal {...props} />;
+  }
+  return <MobileModalSheet {...props} />;
+}
+
+function MobileModalSheet({
   onClose,
   onStartClose,
   title,

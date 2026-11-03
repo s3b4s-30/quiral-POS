@@ -3,6 +3,7 @@ import React, { useMemo, useState } from "react";
 import CycleClosingModal from "../components/CycleClosingModal";
 import SalesPerformanceModal from "../components/SalesPerformanceModal";
 import { useInventory } from "../context/InventoryContext";
+import { useIsDesktop } from "../hooks/useIsDesktop";
 import { formatCOP, formatFullDate } from "../utils/formatters";
 
 interface SummaryViewProps {
@@ -11,6 +12,7 @@ interface SummaryViewProps {
 
 export default function SummaryView({ onModalStateChange }: SummaryViewProps) {
   const { sales, products, closures, createClosure, showCosts, loading } = useInventory();
+  const isDesktop = useIsDesktop();
 
   const [isPerformanceOpen, setIsPerformanceOpen] = useState(false);
   const [isClosingCycleOpen, setIsClosingCycleOpen] = useState(false);
@@ -67,7 +69,7 @@ export default function SummaryView({ onModalStateChange }: SummaryViewProps) {
   return (
     <div
       id="summary-scroll"
-      className="quiral-scroll-container transition-colors duration-75"
+      className={`${isDesktop ? "w-full h-full overflow-y-auto" : "quiral-scroll-container"} transition-colors duration-75`}
     >
       <div className="mx-auto max-w-xl md:max-w-4xl lg:max-w-5xl px-4 pt-3 pb-6">
         {/* 1. Dashboard Principal de Métricas (Tokens del Sistema Apple HIG) */}

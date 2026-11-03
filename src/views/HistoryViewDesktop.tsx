@@ -159,8 +159,8 @@ export default function HistoryViewDesktop({
   };
 
   return (
-    <div id="history-scroll" className="quiral-scroll-container transition-colors duration-75">
-      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6">
+    <div id="history-scroll" className="w-full h-full overflow-y-auto transition-colors duration-75">
+      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 py-4">
         {/* Header sticky con fondo sólido opaco nativo (Apple HIG) */}
         <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
           <div className="relative">

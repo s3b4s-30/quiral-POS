@@ -115,7 +115,7 @@ export default function PosViewDesktop({ onCheckoutStateChange }: PosViewDesktop
   return (
     <div
       data-testid="desktop-pos-split-view"
-      className="w-full h-[calc(100vh-var(--quiral-header-offset,4rem))] mt-[var(--quiral-header-offset,4rem)] flex overflow-hidden bg-[var(--bg-primary)]"
+      className="w-full h-full flex overflow-hidden bg-[var(--bg-primary)]"
     >
       {/* Columna Izquierda: Catálogo y Búsqueda Rápida (~65% - 70%) */}
       <section className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-[var(--bg-primary)]">

@@ -14,6 +14,7 @@ import SuppliersModal from "./components/SuppliersModal";
 import TopHeader from "./components/TopHeader";
 import { type Theme } from "./components/TopMenu";
 import { InventoryProvider, useInventory } from "./context/InventoryContext";
+import { useIsDesktop } from "./hooks/useIsDesktop";
 import HistoryView from "./views/HistoryView";
 import InventoryView from "./views/InventoryView";
 import PosView from "./views/PosView";
@@ -43,6 +44,7 @@ function AppInner() {
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isModalClosing, setIsModalClosing] = useState(false);
+  const isDesktop = useIsDesktop();
 
   const {
     userProfile,
@@ -172,18 +174,20 @@ function AppInner() {
       />
 
       <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden relative">
-        {/* Cabecera Fija Nativa Superior (100% sólida, sin blur, estática, con diferenciador por props) */}
-        <TopHeader
-          activeTab={activeTab}
-          variant="accent"
-          onTabChange={handleTabChange}
-          theme={theme}
-          onThemeChange={setTheme}
-          onOpenSuppliers={handleOpenSuppliers}
-          onOpenProfile={handleOpenStoreProfile}
-        onOpenProfileSecurity={() => setIsProfileSecurityOpen(true)}
-          onLogout={signOut}
-        />
+        {/* Cabecera Fija Nativa Superior (Solo Móvil < 768px; en Desktop se usa DesktopSidebar) */}
+        {!isDesktop && (
+          <TopHeader
+            activeTab={activeTab}
+            variant="accent"
+            onTabChange={handleTabChange}
+            theme={theme}
+            onThemeChange={setTheme}
+            onOpenSuppliers={handleOpenSuppliers}
+            onOpenProfile={handleOpenStoreProfile}
+            onOpenProfileSecurity={() => setIsProfileSecurityOpen(true)}
+            onLogout={signOut}
+          />
+        )}
 
         {/* Contenedor Principal: las vistas manejan su scroll con .quiral-scroll-container */}
         <main className="h-full w-full overflow-hidden relative">

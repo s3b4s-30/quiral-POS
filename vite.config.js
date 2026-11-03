@@ -13,10 +13,24 @@ export default defineConfig({
     build: {
         rollupOptions: {
             output: {
-                manualChunks: {
-                    "vendor-react": ["react", "react-dom"],
-                    "vendor-supabase": ["@supabase/supabase-js"],
-                    "vendor-icons": ["lucide-react"],
+                manualChunks: function (id) {
+                    if (id.includes("node_modules")) {
+                        if (id.includes("react") || id.includes("react-dom")) {
+                            return "vendor-react";
+                        }
+                        if (id.includes("@supabase")) {
+                            return "vendor-supabase";
+                        }
+                        if (id.includes("lucide-react")) {
+                            return "vendor-icons";
+                        }
+                        if (id.includes("lottie-web")) {
+                            return "vendor-lottie";
+                        }
+                    }
+                    if (id.includes("empty-box.json")) {
+                        return "vendor-lottie";
+                    }
                 },
             },
         },
