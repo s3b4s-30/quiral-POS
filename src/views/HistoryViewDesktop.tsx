@@ -254,14 +254,14 @@ export default function HistoryViewDesktop({
                               #{sale.saleNumber}
                             </span>
                           </td>
-                          <td className="py-4 px-4 sm:px-5 tabular-nums text-xs sm:text-sm font-semibold text-[var(--text-secondary)] whitespace-nowrap">
+                          <td className="py-4 px-4 sm:px-5 tabular-nums text-xs sm:text-sm font-bold text-[var(--text-secondary)] whitespace-nowrap">
                             {formatDateWithTime(sale.createdAt) || formatShortDate(sale.createdAt)}
                           </td>
                           <td className="py-4 px-4 sm:px-5 min-w-0">
-                            <p className="text-base sm:text-[17px] font-bold text-[var(--text-primary)] leading-snug truncate">
+                            <p className="text-base sm:text-lg font-bold text-[var(--text-primary)] leading-snug truncate">
                               {sale.customerName}
                             </p>
-                            <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] mt-0.5 truncate">
+                            <p className="text-xs sm:text-sm font-semibold text-[var(--text-secondary)] mt-0.5 truncate">
                               {totalUnits} {totalUnits === 1 ? "artículo" : "artículos"}:{" "}
                               {sale.items.map((it) => `${it.qty}x ${it.productName}`).join(", ")}
                             </p>
@@ -277,7 +277,7 @@ export default function HistoryViewDesktop({
                             </span>
                           </td>
                           <td className="py-4 px-4 sm:px-5 text-right whitespace-nowrap pr-6">
-                            <span className="tabular-nums font-black text-base sm:text-lg text-[var(--text-primary)] leading-none select-none">
+                            <span className="tabular-nums font-black text-base sm:text-lg lg:text-xl text-[var(--text-primary)] leading-none select-none">
                               {formatCOP(sale.totalAmount)}
                             </span>
                           </td>

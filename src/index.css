@@ -97,19 +97,23 @@ a {
   scrollbar-width: none;
 }
 
-/* Scrollbar personalizado estilo Quiral OLED */
+/* Scrollbar personalizado estilo Quiral OLED (Aplica a ventana y contenedores internos) */
+*::-webkit-scrollbar,
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+*::-webkit-scrollbar-track,
 ::-webkit-scrollbar-track {
   background: var(--bg-primary);
 }
+*::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 9999px;
   transition: background 200ms ease;
 }
+*::-webkit-scrollbar-thumb:hover,
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent-primary);
 }

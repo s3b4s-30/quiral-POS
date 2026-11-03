@@ -124,14 +124,14 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-extrabold text-[var(--text-primary)] truncate">
+              <h2 className="text-base sm:text-lg font-black tracking-tight text-[var(--text-primary)] truncate">
                 Ticket de Venta
               </h2>
               <span className="tabular-nums rounded-md bg-black/5 dark:bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-[var(--text-secondary)]">
                 #{nextSaleNumber}
               </span>
             </div>
-            <p className="text-xs text-[var(--text-secondary)] truncate">
+            <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] truncate">
               {cartUnits} {cartUnits === 1 ? "artículo" : "artículos"} seleccionados
             </p>
           </div>
@@ -218,11 +218,11 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
                 {/* Fila Superior: Nombre del producto, precio unitario y botón quitar */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-extrabold text-[var(--text-primary)] leading-snug line-clamp-2">
+                    <p className="text-sm sm:text-[15px] font-bold text-[var(--text-primary)] leading-snug line-clamp-2">
                       {product.name}
                     </p>
                     {product.subtitle && (
-                      <p className="text-[10px] text-[var(--text-secondary)] truncate mt-0.5">
+                      <p className="text-xs font-medium text-[var(--text-secondary)] truncate mt-0.5">
                         {product.subtitle}
                       </p>
                     )}
@@ -252,7 +252,7 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
                     </button>
                     <span
                       data-testid={`pos-ticket-qty-${item.productId}`}
-                      className="tabular-nums min-w-[28px] text-center text-xs font-black text-[var(--text-primary)]"
+                      className="tabular-nums min-w-[30px] text-center text-sm font-black text-[var(--text-primary)]"
                     >
                       {item.quantity}
                     </span>
@@ -271,7 +271,7 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
 
                   {/* Input de Precio Unitario Editable en vivo */}
                   <div className="flex items-center gap-1.5 text-right">
-                    <span className="text-[10px] text-[var(--text-secondary)] font-medium">c/u:</span>
+                    <span className="text-xs text-[var(--text-secondary)] font-semibold">c/u:</span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -279,7 +279,7 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
                       onChange={(e) =>
                         updateCartItemPrice(product.id, parseCOPInput(e.target.value))
                       }
-                      className="tabular-nums w-24 text-right rounded-lg border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2 py-1 text-xs font-black text-[var(--text-primary)] outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+                      className="tabular-nums w-24 sm:w-28 text-right rounded-lg border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2 py-1 text-xs sm:text-sm font-black text-[var(--text-primary)] outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
                     />
                   </div>
                 </div>
@@ -287,7 +287,7 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
                 {/* Subfila Lotes / Proveedor si hay múltiples lotes disponibles (Ergonomía de Mouse: flex-wrap completo) */}
                 {product.batches.filter((b) => b.stock > 0).length > 1 && (
                   <div className="pt-1.5 border-t border-[var(--border-color)]/40 flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] text-[var(--text-secondary)] shrink-0 font-medium mr-1">
+                    <span className="text-xs text-[var(--text-secondary)] shrink-0 font-semibold mr-1">
                       Lote:
                     </span>
                     {product.batches
@@ -344,14 +344,14 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               placeholder="Cliente general / Notas (opcional)..."
-              className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-9 pr-3 py-2 text-xs font-semibold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+              className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-9 pr-3 py-2.5 text-xs sm:text-sm font-semibold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
             />
           </div>
         </div>
 
         {/* Métodos de Pago en Grilla de 4 */}
         <div>
-          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+          <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
             Método de Pago
           </label>
           <div className="grid grid-cols-4 gap-1.5">
@@ -395,7 +395,7 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
           )}
 
           <div className="pt-1 border-t border-[var(--border-color)]/80 flex items-center justify-between">
-            <span className="text-xs font-extrabold text-[var(--text-primary)]">Total a Cobrar</span>
+            <span className="text-sm font-black text-[var(--text-primary)]">Total a Cobrar</span>
             <div className="flex items-center gap-1.5">
               <input
                 type="text"
@@ -413,7 +413,7 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
                 }}
                 placeholder={formatCOP(subtotal)}
                 aria-label="Ajustar total a cobrar"
-                className="tabular-nums w-28 text-right rounded-lg border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2 py-1 text-sm font-black text-[var(--text-primary)] outline-none focus:border-accent transition-all"
+                className="tabular-nums w-28 sm:w-32 text-right rounded-lg border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-sm sm:text-base font-black text-[var(--text-primary)] outline-none focus:border-accent transition-all"
               />
             </div>
           </div>

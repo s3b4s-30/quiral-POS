@@ -887,7 +887,7 @@ export default function DesktopInventoryGrid({
                             : "opacity-30 group-hover:opacity-100"
                         }`}
                       />
-                      <span className="tabular-nums text-[11px] font-bold text-[var(--text-secondary)]">
+                      <span className="tabular-nums text-xs font-bold text-[var(--text-secondary)]">
                         {originalIndex}
                       </span>
                     </div>
@@ -900,7 +900,7 @@ export default function DesktopInventoryGrid({
                         <button
                           type="button"
                           onClick={() => onInspectProduct(product)}
-                          className="text-left font-bold text-[13px] text-[var(--text-primary)] hover:text-accent transition-colors duration-150 truncate block max-w-full"
+                          className="text-left font-bold text-sm text-[var(--text-primary)] hover:text-accent transition-colors duration-150 truncate block max-w-full"
                           title="Clic para abrir el panel de inspección y atributos avanzados"
                         >
                           {product.name}
@@ -911,7 +911,7 @@ export default function DesktopInventoryGrid({
                             {attributeBadges.map((badge, bIdx) => (
                               <span
                                 key={`${product.id}-attr-${bIdx}`}
-                                className="inline-flex items-center rounded-md border border-[var(--border-color)] bg-[var(--bg-primary)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--text-secondary)]"
+                                className="inline-flex items-center rounded-md border border-[var(--border-color)] bg-[var(--bg-primary)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--text-secondary)]"
                               >
                                 {badge}
                               </span>
@@ -941,7 +941,7 @@ export default function DesktopInventoryGrid({
 
                   {/* 3. Categoría (160px) */}
                   <td className="w-[160px] border-r border-[var(--border-color)] px-3 py-2">
-                    <span className="inline-flex max-w-full truncate rounded-full border border-accent/25 bg-accent-subtle px-2.5 py-0.5 text-[11px] font-bold text-accent">
+                    <span className="inline-flex max-w-full truncate rounded-full border border-accent/25 bg-accent-subtle px-2.5 py-0.5 text-xs font-bold text-accent">
                       {product.category}
                     </span>
                   </td>

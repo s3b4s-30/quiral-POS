@@ -88,25 +88,25 @@ export const ProductCard = React.memo(function ProductCard({
             <button
               type="button"
               onClick={handleOpenDetail}
-              className="text-left line-clamp-2 text-sm sm:text-[15px] font-semibold leading-snug text-[var(--text-primary)] hover:text-accent hover:underline transition-colors block cursor-pointer"
+              className="text-left line-clamp-2 text-sm sm:text-base font-bold leading-snug text-[var(--text-primary)] hover:text-accent hover:underline transition-colors block cursor-pointer"
               title="Clic para ver detalle y editar producto"
             >
               {product.name}
             </button>
           ) : (
-            <h3 className="line-clamp-2 text-sm sm:text-[15px] font-semibold leading-snug text-[var(--text-primary)]">
+            <h3 className="line-clamp-2 text-sm sm:text-base font-bold leading-snug text-[var(--text-primary)]">
               {product.name}
             </h3>
           )}
           {product.subtitle && (
-            <p className="mt-0.5 truncate text-[11px] sm:text-xs text-[var(--text-secondary)]">
+            <p className="mt-0.5 truncate text-xs sm:text-sm font-medium text-[var(--text-secondary)]">
               {product.subtitle}
             </p>
           )}
         </div>
 
         <div className="text-right shrink-0 max-w-[55%]">
-          <span className="tabular-nums text-sm sm:text-base md:text-lg font-extrabold text-[var(--text-primary)] leading-tight whitespace-nowrap">
+          <span className="tabular-nums text-base sm:text-lg md:text-xl font-black text-[var(--text-primary)] leading-tight whitespace-nowrap">
             {formatCOP(product.price)}
           </span>
         </div>
@@ -117,7 +117,7 @@ export const ProductCard = React.memo(function ProductCard({
         {/* Footer Izquierda: Unidades y puntos de lote */}
         <div className="flex items-center gap-1.5 shrink-0">
           <span
-            className={`tabular-nums text-xs font-bold ${
+            className={`tabular-nums text-xs sm:text-sm font-extrabold ${
               stock > 0 ? "text-[#30d158]" : "text-[#ff3b30]"
             }`}
           >
