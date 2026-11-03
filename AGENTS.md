@@ -10,7 +10,7 @@ Bienvenido al repositorio de **Quiral POS**. Este documento establece las direct
 > **REGLA DETERMINISTA E INQUEBRANTABLE PARA TODO AGENTE, SKILL O ASISTENTE DE IA:**
 > Queda **ESTRICTAMENTE PROHIBIDO** alterar `src/App.tsx`, `src/components/TopHeader.tsx`, `src/components/TopMenu.tsx`, `src/index.css` o `index.html` de cualquier forma que degrade o modifique el layout base "edge-to-edge" de iOS Safari / PWA Standalone:
 > 1. **Anclaje Superior y `safe-area-inset-top` Intocable:**
->    - El encabezado superior (`TopHeader` / `.quiral-top-header`) DEBE permanecer como `fixed top-0 w-full z-50 backdrop-blur-md pt-[env(safe-area-inset-top)]` con `--quiral-header-offset: calc(env(safe-area-inset-top, 0px) + 3.5rem)` y contenedor interno `h-14 w-full`.
+>    - El encabezado superior (`TopHeader` / `.quiral-top-header`) DEBE permanecer como `fixed top-0 w-full z-50 backdrop-blur-md pt-[calc(env(safe-area-inset-top,0px)+0.5rem)]` con `--quiral-header-offset: calc(env(safe-area-inset-top, 0px) + 4rem)` y contenedor interno `h-14 w-full`.
 >    - En `index.html`, `<meta name="apple-mobile-web-app-status-bar-style" content="default" />` y `viewport-fit=cover` NO deben cambiarse a `black-translucent` ni eliminarse.
 >    - **PROHIBIDO** agregar clases intrusas como `pt-16`, `mt-14`, `mt-16` o márgenes superiores adicionales a `.quiral-scroll-container` en las vistas (`InventoryView`, `PosView`, `HistoryView`, `SummaryView`, `App.tsx`), ya que `.quiral-scroll-container` ya gestiona `padding-top: var(--quiral-header-offset)`.
 > 2. **Desenfoque Translúcido (`backdrop-blur`) Protegido:**

@@ -4,7 +4,7 @@
 Todo agente autónomo, skill o asistente de IA que opere en este repositorio está sujeto a las siguientes prohibiciones deterministas sobre el layout base "edge-to-edge" para iPhone / iOS PWA:
 
 1. **PROHIBIDO alterar el layout base en `src/App.tsx`, `src/components/TopHeader.tsx`, `src/components/TopMenu.tsx`, `src/index.css` e `index.html`:**
-   - `TopHeader.tsx` y `.quiral-top-header` DEBEN conservar `fixed top-0 w-full z-50 backdrop-blur-md pt-[env(safe-area-inset-top)]` con `--quiral-header-offset: calc(env(safe-area-inset-top, 0px) + 3.5rem)` y altura interna `h-14 w-full`.
+   - `TopHeader.tsx` y `.quiral-top-header` DEBEN conservar `fixed top-0 w-full z-50 backdrop-blur-md pt-[calc(env(safe-area-inset-top,0px)+0.5rem)]` con `--quiral-header-offset: calc(env(safe-area-inset-top, 0px) + 4rem)` y altura interna `h-14 w-full`.
    - `index.html` DEBE conservar `<meta name="apple-mobile-web-app-status-bar-style" content="default" />` y `viewport-fit=cover`. Nunca cambiar a `black-translucent`.
    - El efecto translúcido `backdrop-filter: blur(12px)` con `color-mix(in srgb, var(--bg-primary) 85%, transparent)` en `.quiral-top-header` es INMUTABLE.
 

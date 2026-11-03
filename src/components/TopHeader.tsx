@@ -46,7 +46,7 @@ export default function TopHeader({
 
   return (
     <header
-      className={`quiral-top-header fixed top-0 w-full z-50 backdrop-blur-md pt-[env(safe-area-inset-top)] select-none transition-colors duration-75 ${
+      className={`quiral-top-header fixed top-0 w-full z-50 backdrop-blur-md pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] select-none transition-colors duration-75 ${
         isAccent ? "border-b !border-blue-500/20 dark:!border-blue-500/30" : ""
       }`}
     >

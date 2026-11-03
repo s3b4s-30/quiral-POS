@@ -19,7 +19,7 @@
     --border-color: #e5e5ea;
     --sat: env(safe-area-inset-top, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
-    --quiral-header-offset: calc(env(safe-area-inset-top, 0px) + 3.5rem);
+    --quiral-header-offset: calc(env(safe-area-inset-top, 0px) + 4rem);
   }
 
   .dark {
@@ -226,7 +226,7 @@ body.modal-open nav {
   background-color: var(--bg-primary);
   background-color: color-mix(in srgb, var(--bg-primary) 85%, transparent);
   border-bottom: 1px solid var(--border-color);
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
   padding-bottom: 0;
   padding-left: 1rem;
   padding-right: 1rem;
