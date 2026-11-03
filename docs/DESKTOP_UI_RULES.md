@@ -98,3 +98,17 @@ En cualquier archivo con sufijo `*Desktop.tsx` o vistas exclusivas de escritorio
    - `src/modules/history/`: Contiene `HistoryViewDesktop`, `HistoryViewMobile`, `SalesPerformanceModal`, `CycleClosingModal`.
    - **Enrutadores Semáforo:** Las vistas principales en `src/views/` (`PosView.tsx`, `HistoryView.tsx`, `InventoryView.tsx`) importan de `src/modules/` y aplican `useIsDesktop()` sin duplicación lógica.
 
+---
+
+## 6. Rendimiento y Ergonomía en Escritorio (Fase 2)
+
+1. **Virtualización de DOM con `@tanstack/react-virtual` (`useScrollParentVirtualizer`):**
+   - Se implementó el hook de alto rendimiento [`src/hooks/useScrollParentVirtualizer.ts`](file:///c:/Users/Sebas/Desktop/elytras/quiral-POS/src/hooks/useScrollParentVirtualizer.ts) para virtualizar tablas grandes tanto en el Inventario (`DesktopInventoryGrid.tsx`) como en el Historial (`HistoryViewDesktop.tsx`).
+   - **Cero Doble-Scroll:** La virtualización opera directamente sobre el contenedor de scroll nativo de la estación de trabajo (`#inventory-scroll`, `#history-scroll`), calculando `scrollMargin` dinámicamente y usando espaciadores en el `<tbody>` sin romper la semántica de `<table>`.
+   - **Umbral Inteligente (`DESKTOP_VIRTUALIZATION_THRESHOLD = 40`):** Cuando la cantidad de registros es inferior a 40, se renderizan todas las filas sin overhead; al superar el umbral, el navegador únicamente conserva en el DOM las filas visibles en pantalla más un buffer de sobre-escaneo (`overscan: 10-12`).
+
+2. **Optimización Estricta de Renders (`React.memo` + Stable Handlers):**
+   - **Componentes Atómicos Memorizados:** `InventoryGridRow`, `EditableGridCell`, `RowActionButtons`, `QuickAddRow` y `HistoryTableRow` están envueltos en `React.memo` con comparadores deterministas de props.
+   - **Manejadores Estables de Teclado:** Se utilizó el patrón *Latest-Ref* con `useMemo<GridHandlers>` para que las funciones de navegación matricial (`↑`, `↓`, `←`, `→`, `Enter`, `Tab`, `Esc`, `Espacio`) y mutación de stock tengan una identidad referencial 100% constante, eliminando re-renders masivos al teclear o editar celdas.
+   - **Aislamiento de la Fila Rápida:** `QuickAddRow` mantiene su estado de escritura localmente; escribir en el campo de creación rápida (`Ctrl+N`) no dispara re-renders en las filas existentes de la tabla.
+

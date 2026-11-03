@@ -1,9 +1,11 @@
 import { AlertTriangle, Check, Pencil, Search, Trash2, X } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../../../components/LottiePlayer";
 import { useInventory } from "../../../context/InventoryContext";
+import { useScrollParentVirtualizer } from "../../../hooks/useScrollParentVirtualizer";
 import { PaymentMethod, Sale, SaleItem } from "../../../types/domain";
-import { formatCOP, formatDateWithTime, formatShortDate, getWarrantyStatus, parseCOPInput } from "../../../utils/formatters";
+import { formatCOP, parseCOPInput } from "../../../utils/formatters";
+import { HistoryTableRow } from "./HistoryTableRow";
 
 const PAYMENT_METHODS: PaymentMethod[] = ["Efectivo", "Nequi", "Bancolombia", "Tarjeta"];
 
@@ -61,7 +63,13 @@ export default function HistoryViewDesktop({
     });
   }, [sales, query]);
 
-  const openEditModal = (sale: Sale, e: React.MouseEvent) => {
+  const rowsBodyRef = useRef<HTMLTableSectionElement>(null);
+
+  const handleToggleOpen = useCallback((saleId: string) => {
+    setOpenSaleId((prev) => (prev === saleId ? null : saleId));
+  }, []);
+
+  const openEditModal = useCallback((sale: Sale, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingSale(sale);
     setEditCustomerName(sale.customerName);
@@ -71,27 +79,27 @@ export default function HistoryViewDesktop({
     setEditNote(sale.note ?? "");
     setConfirmSaveEdit(false);
     onModalStateChange?.(true);
-  };
+  }, [onModalStateChange]);
 
-  const closeEditModal = () => {
+  const closeEditModal = useCallback(() => {
     setEditingSale(null);
     setConfirmSaveEdit(false);
     onModalStateChange?.(false);
-  };
+  }, [onModalStateChange]);
 
-  const openDeleteModal = (sale: Sale, e: React.MouseEvent) => {
+  const openDeleteModal = useCallback((sale: Sale, e: React.MouseEvent) => {
     e.stopPropagation();
     setRestoreStockOnDelete(true);
     setSaleToDelete(sale);
     onModalStateChange?.(true);
-  };
+  }, [onModalStateChange]);
 
-  const closeDeleteModal = () => {
+  const closeDeleteModal = useCallback(() => {
     setSaleToDelete(null);
     onModalStateChange?.(false);
-  };
+  }, [onModalStateChange]);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (!saleToDelete) return;
     const deletedId = saleToDelete.id;
     deleteSale(deletedId, restoreStockOnDelete);
@@ -100,7 +108,28 @@ export default function HistoryViewDesktop({
     }
     setSaleToDelete(null);
     onModalStateChange?.(false);
-  };
+  }, [deleteSale, onModalStateChange, openSaleId, restoreStockOnDelete, saleToDelete]);
+
+  const handleToggleWarranty = useCallback((saleId: string, itemId: string) => {
+    toggleItemWarranty(saleId, itemId);
+  }, [toggleItemWarranty]);
+
+  // Virtualización de la tabla de auditoría sobre el scroll existente (#history-scroll)
+  const getSaleKey = useCallback(
+    (index: number) => filteredSales[index]?.id ?? index,
+    [filteredSales]
+  );
+
+  const virtual = useScrollParentVirtualizer({
+    count: filteredSales.length,
+    scrollElementId: "history-scroll",
+    anchorRef: rowsBodyRef,
+    estimateSize: 76,
+    overscan: 10,
+    getItemKey: getSaleKey,
+  });
+
+  const measureRowRef = virtual.enabled ? virtual.virtualizer.measureElement : undefined;
 
   const updateEditItemQty = (itemId: string, delta: number) => {
     setEditItems((prev) => {
@@ -237,155 +266,38 @@ export default function HistoryViewDesktop({
                     <th className="py-3.5 px-4 sm:px-5 w-60 min-w-[220px] text-right">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--border-color)] text-sm font-medium">
-                  {filteredSales.map((sale) => {
-                    const isOpen = openSaleId === sale.id;
-                    const totalUnits = sale.items.reduce((s, it) => s + it.qty, 0);
+                <tbody
+                  ref={rowsBodyRef}
+                  className="divide-y divide-[var(--border-color)] text-sm font-medium"
+                >
+                  {virtual.paddingTop > 0 && (
+                    <tr aria-hidden="true" data-virtual-spacer="top">
+                      <td colSpan={6} style={{ height: virtual.paddingTop, padding: 0, border: 0 }} />
+                    </tr>
+                  )}
 
+                  {virtual.indexes.map((idx) => {
+                    const sale = filteredSales[idx];
+                    if (!sale) return null;
                     return (
-                      <React.Fragment key={sale.id}>
-                        <tr
-                          data-testid={`desktop-history-row-${sale.id}`}
-                          onClick={() => setOpenSaleId(isOpen ? null : sale.id)}
-                          className="group hover:bg-black/[0.035] dark:hover:bg-white/[0.045] cursor-pointer transition-all duration-150"
-                        >
-                          <td className="py-4 px-4 sm:px-5">
-                            <span className="tabular-nums font-black text-sm text-accent bg-accent-subtle px-2.5 py-1 rounded-lg">
-                              #{sale.saleNumber}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 sm:px-5 tabular-nums text-xs sm:text-sm font-bold text-[var(--text-secondary)] whitespace-nowrap">
-                            {formatDateWithTime(sale.createdAt) || formatShortDate(sale.createdAt)}
-                          </td>
-                          <td className="py-4 px-4 sm:px-5 min-w-0">
-                            <p className="text-base sm:text-lg font-bold text-[var(--text-primary)] leading-snug truncate">
-                              {sale.customerName}
-                            </p>
-                            <p className="text-xs sm:text-sm font-semibold text-[var(--text-secondary)] mt-0.5 truncate">
-                              {totalUnits} {totalUnits === 1 ? "artículo" : "artículos"}:{" "}
-                              {sale.items.map((it) => `${it.qty}x ${it.productName}`).join(", ")}
-                            </p>
-                            {sale.note && (
-                              <p className="text-xs italic text-[var(--text-secondary)] mt-1 truncate">
-                                Nota: {sale.note}
-                              </p>
-                            )}
-                          </td>
-                          <td className="py-4 px-4 sm:px-5 whitespace-nowrap">
-                            <span className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs sm:text-sm font-bold text-[var(--text-primary)]">
-                              {sale.paymentMethod}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 sm:px-5 text-right whitespace-nowrap pr-6">
-                            <span className="tabular-nums font-black text-base sm:text-lg lg:text-xl text-[var(--text-primary)] leading-none select-none">
-                              {formatCOP(sale.totalAmount)}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 sm:px-5 text-right whitespace-nowrap w-60 min-w-[220px]">
-                            <div
-                              className="flex items-center justify-end gap-2 shrink-0"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <button
-                                type="button"
-                                onClick={(e) => openEditModal(sale, e)}
-                                aria-label={`Modificar venta #${sale.saleNumber}`}
-                                title="Modificar venta"
-                                className="inline-flex h-8 sm:h-9 items-center gap-1.5 rounded-xl border border-transparent bg-accent-subtle px-3 text-xs font-bold text-accent hover:border-accent-subtle active:scale-95 transition-all"
-                              >
-                                <Pencil size={13} />
-                                <span>Modificar</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => openDeleteModal(sale, e)}
-                                aria-label={`Eliminar venta #${sale.saleNumber}`}
-                                title="Eliminar venta"
-                                className="inline-flex h-8 sm:h-9 items-center gap-1.5 rounded-xl border border-transparent bg-red-500/10 px-3 text-xs font-bold text-red-500 hover:border-red-500/20 active:scale-95 transition-all"
-                              >
-                                <Trash2 size={13} />
-                                <span>Eliminar</span>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-
-                        {/* Desglose Multi-Columna de Artículos y Garantías (Cero Carruseles Cortados) */}
-                        {isOpen && (
-                          <tr className="bg-black/[0.015] dark:bg-white/[0.015]">
-                            <td colSpan={6} className="py-4 px-6">
-                              <div className="space-y-3 border-l-2 border-accent pl-4 py-1">
-                                <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
-                                  Desglose del Ticket #{sale.saleNumber} ({sale.items.length}{" "}
-                                  {sale.items.length === 1 ? "referencia" : "referencias"} · {totalUnits} unidades)
-                                </p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                  {sale.items.map((item) => {
-                                    const w = getWarrantyStatus(
-                                      sale.createdAt,
-                                      item.warrantyDays,
-                                      item.warrantyClaimed
-                                    );
-
-                                    return (
-                                      <div
-                                        key={item.id}
-                                        className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3 space-y-2 shadow-xs hover:border-accent/40 transition-all duration-150"
-                                      >
-                                        <div className="flex items-start justify-between gap-2">
-                                          <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-bold text-[var(--text-primary)] truncate">
-                                              {item.qty}x {item.productName}
-                                            </p>
-                                            <p className="tabular-nums text-xs font-semibold text-[var(--text-secondary)] mt-0.5">
-                                              {formatCOP(item.unitPrice)} c/u
-                                            </p>
-                                          </div>
-                                          <span className="tabular-nums text-sm font-black text-[var(--text-primary)]">
-                                            {formatCOP(item.unitPrice * item.qty)}
-                                          </span>
-                                        </div>
-
-                                        <div className="flex items-center justify-between pt-1.5 border-t border-[var(--border-color)]/60 text-xs">
-                                          <span
-                                            className={`rounded-full px-2 py-0.5 font-bold text-[11px] ${
-                                              w.status === "claimed"
-                                                ? "bg-[#ff3b30]/15 text-[#ff3b30]"
-                                                : w.status === "expired"
-                                                ? "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)]"
-                                                : "bg-[#30d158]/15 text-[#30d158]"
-                                            }`}
-                                          >
-                                            {w.label}
-                                          </span>
-
-                                          {w.status !== "expired" && (
-                                            <button
-                                              type="button"
-                                              onClick={() => toggleItemWarranty(sale.id, item.id)}
-                                              className={`rounded-lg px-2.5 py-1 text-xs font-bold active:scale-95 transition-all ${
-                                                item.warrantyClaimed
-                                                  ? "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                                                  : "bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30]/25"
-                                              }`}
-                                            >
-                                              {item.warrantyClaimed
-                                                ? "Revertir reclamo"
-                                                : "Marcar reclamo"}
-                                            </button>
-                                          )}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
+                      <HistoryTableRow
+                        key={sale.id}
+                        sale={sale}
+                        isOpen={openSaleId === sale.id}
+                        onToggleOpen={handleToggleOpen}
+                        onOpenEdit={openEditModal}
+                        onOpenDelete={openDeleteModal}
+                        onToggleWarranty={handleToggleWarranty}
+                        measureRef={measureRowRef}
+                      />
                     );
                   })}
+
+                  {virtual.paddingBottom > 0 && (
+                    <tr aria-hidden="true" data-virtual-spacer="bottom">
+                      <td colSpan={6} style={{ height: virtual.paddingBottom, padding: 0, border: 0 }} />
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
