@@ -187,7 +187,7 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
     return (
       <div
         data-testid="desktop-pos-split-view"
-        className="w-full h-full flex overflow-hidden pt-[var(--quiral-header-offset,4rem)]"
+        className="w-full h-[calc(100vh-var(--quiral-header-offset,4rem))] mt-[var(--quiral-header-offset,4rem)] flex overflow-hidden"
       >
         {/* Columna Izquierda: Catálogo y Búsqueda Rápida (~65% - 70%) */}
         <section className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-[var(--bg-primary)]">
@@ -255,10 +255,10 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
           </div>
 
           {/* Cuadrícula de Productos con Scroll Vertical Independiente */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-5">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 lg:p-6">
             {loading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                {Array.from({ length: 8 }).map((_, idx) => (
+              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
+                {Array.from({ length: 10 }).map((_, idx) => (
                   <div
                     key={`pos-desktop-skeleton-${idx}`}
                     className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3.5 shadow-sm animate-pulse flex flex-col justify-between h-36"
@@ -303,7 +303,7 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
                 {filteredProducts.map((product) => (
                   <PosProductCard
                     key={product.id}

@@ -160,7 +160,7 @@ export default function HistoryView({
 
   return (
     <div id="history-scroll" className="quiral-scroll-container transition-colors duration-75">
-      <div className="mx-auto max-w-xl md:max-w-4xl lg:max-w-5xl px-4">
+      <div className="w-full max-w-xl md:max-w-5xl lg:max-w-7xl xl:max-w-[1400px] mx-auto px-4 sm:px-6">
         {/* Header sticky con fondo sólido opaco nativo (Apple HIG) */}
         <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
           <div className="relative">
@@ -227,15 +227,15 @@ export default function HistoryView({
                 data-testid="desktop-history-table-container"
                 className="overflow-hidden rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] shadow-xs"
               >
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse table-fixed">
                   <thead>
                     <tr className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]/80 text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
-                      <th className="py-3.5 px-5 w-28">Ticket</th>
-                      <th className="py-3.5 px-5 w-48">Fecha y Hora</th>
-                      <th className="py-3.5 px-5 min-w-[240px]">Cliente / Referencias</th>
-                      <th className="py-3.5 px-5 w-36">Método</th>
-                      <th className="py-3.5 px-5 w-40 text-right">Total</th>
-                      <th className="py-3.5 px-5 w-40 text-right">Acciones</th>
+                      <th className="py-3.5 px-4 sm:px-5 w-24 sm:w-28">Ticket</th>
+                      <th className="py-3.5 px-4 sm:px-5 w-36 lg:w-44 xl:w-48">Fecha y Hora</th>
+                      <th className="py-3.5 px-4 sm:px-5 min-w-0">Cliente / Referencias</th>
+                      <th className="py-3.5 px-4 sm:px-5 w-28 lg:w-36">Método</th>
+                      <th className="py-3.5 px-4 sm:px-5 w-32 lg:w-40 text-right">Total</th>
+                      <th className="py-3.5 px-4 sm:px-5 w-36 lg:w-44 text-right">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-color)] text-sm font-medium">
@@ -250,39 +250,39 @@ export default function HistoryView({
                             onClick={() => setOpenSaleId(isOpen ? null : sale.id)}
                             className="group hover:bg-black/[0.02] dark:hover:bg-white/[0.02] cursor-pointer transition-colors"
                           >
-                            <td className="py-4 px-5">
+                            <td className="py-4 px-4 sm:px-5">
                               <span className="tabular-nums font-black text-sm text-accent bg-accent-subtle px-2.5 py-1 rounded-lg">
                                 #{sale.saleNumber}
                               </span>
                             </td>
-                            <td className="py-4 px-5 tabular-nums text-xs sm:text-sm font-semibold text-[var(--text-secondary)] whitespace-nowrap">
+                            <td className="py-4 px-4 sm:px-5 tabular-nums text-xs sm:text-sm font-semibold text-[var(--text-secondary)] whitespace-nowrap">
                               {formatDateWithTime(sale.createdAt) || formatShortDate(sale.createdAt)}
                             </td>
-                            <td className="py-4 px-5 min-w-[240px]">
-                              <p className="text-base sm:text-[17px] font-bold text-[var(--text-primary)] leading-snug">
+                            <td className="py-4 px-4 sm:px-5 min-w-0">
+                              <p className="text-base sm:text-[17px] font-bold text-[var(--text-primary)] leading-snug truncate">
                                 {sale.customerName}
                               </p>
-                              <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] mt-0.5">
+                              <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] mt-0.5 truncate">
                                 {totalUnits} {totalUnits === 1 ? "artículo" : "artículos"}:{" "}
                                 {sale.items.map((it) => `${it.qty}x ${it.productName}`).join(", ")}
                               </p>
                               {sale.note && (
-                                <p className="text-xs italic text-[var(--text-secondary)] mt-1">
+                                <p className="text-xs italic text-[var(--text-secondary)] mt-1 truncate">
                                   Nota: {sale.note}
                                 </p>
                               )}
                             </td>
-                            <td className="py-4 px-5 whitespace-nowrap">
+                            <td className="py-4 px-4 sm:px-5 whitespace-nowrap">
                               <span className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs sm:text-sm font-bold text-[var(--text-primary)]">
                                 {sale.paymentMethod}
                               </span>
                             </td>
-                            <td className="py-4 px-5 text-right">
+                            <td className="py-4 px-4 sm:px-5 text-right whitespace-nowrap">
                               <span className="tabular-nums font-black text-base sm:text-lg text-[var(--text-primary)] leading-none">
                                 {formatCOP(sale.totalAmount)}
                               </span>
                             </td>
-                            <td className="py-4 px-5 text-right whitespace-nowrap">
+                            <td className="py-4 px-4 sm:px-5 text-right whitespace-nowrap">
                               <div
                                 className="flex items-center justify-end gap-2"
                                 onClick={(e) => e.stopPropagation()}

@@ -114,7 +114,7 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
   return (
     <aside
       data-testid="desktop-pos-ticket"
-      className="w-96 lg:w-[420px] xl:w-[450px] shrink-0 h-full flex flex-col bg-[var(--bg-elevated)] border-l border-[var(--border-color)] select-none transition-colors duration-150 z-10 sticky top-0"
+      className="w-80 lg:w-96 xl:w-[400px] 2xl:w-[420px] shrink-0 h-full flex flex-col bg-[var(--bg-elevated)] border-l border-[var(--border-color)] dark:border-white/10 select-none transition-colors duration-150 z-10"
     >
       {/* 1. Header del Ticket: Título, consecutivo, contador de ítems y botón vaciar */}
       <div className="p-4 border-b border-[var(--border-color)] flex items-center justify-between shrink-0 bg-[var(--bg-elevated)]/90 backdrop-blur-md">
@@ -191,7 +191,7 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
       )}
 
       {/* 2. Cuerpo del Ticket: Lista con scroll independiente de productos */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-2.5">
         {cart.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[var(--text-secondary)]">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5 border border-dashed border-[var(--border-color)] mb-3 text-[var(--text-secondary)]">
