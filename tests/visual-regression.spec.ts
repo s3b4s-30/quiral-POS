@@ -207,4 +207,71 @@ test.describe("Quiral POS — Pruebas de Regresión Visual y UI/UX (Apple HIG)",
     // Navbar restaurada
     await expect(mobileNavbar).toBeVisible();
   });
+
+  test("7. Sistema de Temas y Paletas de Colores de Acento (Azul, Esmeralda, Púrpura, Naranja, Rosa)", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // 1. Validar que la paleta por defecto en :root sea "blue"
+    const htmlTag = page.locator("html");
+    await expect(htmlTag).toHaveAttribute("data-theme-palette", "blue");
+
+    // 2. Abrir menú de configuración superior (TopMenu) e ir a Perfil
+    const menuBtn = page.getByRole("button", { name: /Abrir configuración y menú/i });
+    await menuBtn.click();
+
+    const profileBtn = page
+      .locator("#top-menu-popover")
+      .getByRole("button", { name: "Perfil", exact: true });
+    await profileBtn.click();
+
+    await expect(page.getByRole("heading", { name: "Perfil de la tienda" })).toBeVisible();
+
+    // 3. Validar presencia del selector de paletas
+    const paletteSelector = page.locator('[data-testid="theme-palette-selector"]');
+    await expect(paletteSelector).toBeVisible();
+
+    const blueOpt = page.locator('[data-testid="theme-palette-blue"]');
+    const emeraldOpt = page.locator('[data-testid="theme-palette-emerald"]');
+    const purpleOpt = page.locator('[data-testid="theme-palette-purple"]');
+    const orangeOpt = page.locator('[data-testid="theme-palette-orange"]');
+    const roseOpt = page.locator('[data-testid="theme-palette-rose"]');
+
+    await expect(blueOpt).toHaveAttribute("aria-checked", "true");
+
+    // 4. Alternar a Verde Esmeralda en vivo
+    await emeraldOpt.click();
+    await expect(emeraldOpt).toHaveAttribute("aria-checked", "true");
+    await expect(htmlTag).toHaveAttribute("data-theme-palette", "emerald");
+
+    const storedEmerald = await page.evaluate(() =>
+      localStorage.getItem("quiral_accent_palette")
+    );
+    expect(storedEmerald).toBe("emerald");
+
+    // 5. Alternar a Púrpura Pro en vivo
+    await purpleOpt.click();
+    await expect(purpleOpt).toHaveAttribute("aria-checked", "true");
+    await expect(htmlTag).toHaveAttribute("data-theme-palette", "purple");
+
+    // 6. Alternar a Naranja Dinámico en vivo
+    await orangeOpt.click();
+    await expect(orangeOpt).toHaveAttribute("aria-checked", "true");
+    await expect(htmlTag).toHaveAttribute("data-theme-palette", "orange");
+
+    // 7. Alternar a Rosa / Magenta en vivo
+    await roseOpt.click();
+    await expect(roseOpt).toHaveAttribute("aria-checked", "true");
+    await expect(htmlTag).toHaveAttribute("data-theme-palette", "rose");
+
+    // 8. Volver a Azul Clásico (predeterminado) y guardar perfil
+    await blueOpt.click();
+    await expect(blueOpt).toHaveAttribute("aria-checked", "true");
+    await expect(htmlTag).toHaveAttribute("data-theme-palette", "blue");
+
+    const saveBtn = page.getByRole("button", { name: "Guardar perfil" });
+    await saveBtn.click();
+    await expect(page.getByText("Guardado con éxito")).toBeVisible();
+  });
 });

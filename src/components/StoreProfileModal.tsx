@@ -3,6 +3,7 @@ import {
   Check,
   KeyRound,
   MapPin,
+  Palette,
   Phone,
   ShieldCheck,
   Store,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { useInventory } from "../context/InventoryContext";
+import { AccentPaletteId, ACCENT_PALETTES } from "../utils/themePalettes";
 import ModalSheet from "./ModalSheet";
 
 interface StoreProfileModalProps {
@@ -36,13 +38,17 @@ export default function StoreProfileModal({
   onStartClose,
   onOpenSecurity,
 }: StoreProfileModalProps) {
-  const { userProfile, updateStoreProfile, isDemoUser } = useInventory();
+  const { userProfile, updateStoreProfile, isDemoUser, accentPalette, setAccentPalette } =
+    useInventory();
 
   const [storeName, setStoreName] = useState(userProfile?.storeName || "");
   const [storePhone, setStorePhone] = useState(userProfile?.storePhone || "");
   const [storeAddress, setStoreAddress] = useState(userProfile?.storeAddress || "");
   const [storeLogoUrl, setStoreLogoUrl] = useState<string | undefined>(
     userProfile?.storeLogoUrl
+  );
+  const [selectedPalette, setSelectedPalette] = useState<AccentPaletteId>(
+    accentPalette || userProfile?.accentPalette || "blue"
   );
 
   const [saving, setSaving] = useState(false);
@@ -97,6 +103,7 @@ export default function StoreProfileModal({
         storePhone: storePhone.trim() || undefined,
         storeAddress: storeAddress.trim() || undefined,
         storeLogoUrl,
+        accentPalette: selectedPalette,
       });
 
       setSuccess(true);
@@ -122,7 +129,7 @@ export default function StoreProfileModal({
           type="submit"
           form="store-profile-form"
           disabled={saving}
-          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#007aff] text-base font-bold text-white shadow-lg transition-transform active:scale-[0.98] hover:opacity-95 disabled:opacity-50"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent text-base font-bold text-white shadow-lg transition-transform active:scale-[0.98] hover:opacity-95 disabled:opacity-50"
         >
           {success ? (
             <>
@@ -266,6 +273,70 @@ export default function StoreProfileModal({
                 className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-3.5 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Paleta de Colores de Acento del Sistema */}
+        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3.5 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-accent-subtle text-accent">
+                <Palette size={15} />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[var(--text-primary)]">
+                  Paleta de colores del sistema
+                </label>
+                <p className="text-[10px] text-[var(--text-secondary)]">
+                  Personaliza los tonos de acento y estados activos de la app
+                </p>
+              </div>
+            </div>
+            <span className="rounded-full bg-accent-subtle px-2 py-0.5 text-[10px] font-extrabold text-accent">
+              {ACCENT_PALETTES.find((p) => p.id === selectedPalette)?.name || "Azul Clásico"}
+            </span>
+          </div>
+
+          <div
+            role="radiogroup"
+            aria-label="Paletas de color de acento"
+            data-testid="theme-palette-selector"
+            className="grid grid-cols-5 gap-1.5 pt-1"
+          >
+            {ACCENT_PALETTES.map((palette) => {
+              const isSelected = selectedPalette === palette.id;
+              return (
+                <button
+                  key={palette.id}
+                  type="button"
+                  data-testid={`theme-palette-${palette.id}`}
+                  aria-checked={isSelected}
+                  role="radio"
+                  onClick={() => {
+                    setSelectedPalette(palette.id);
+                    setAccentPalette(palette.id);
+                  }}
+                  className={`flex flex-col items-center gap-1.5 rounded-2xl p-2 border transition-all active:scale-95 ${
+                    isSelected
+                      ? "border-accent bg-accent-subtle shadow-sm ring-1 ring-accent"
+                      : "border-[var(--border-color)] bg-black/5 dark:bg-white/5 hover:border-[var(--text-secondary)]"
+                  }`}
+                  title={`${palette.name}: ${palette.description}`}
+                >
+                  <span
+                    className="flex h-7 w-7 items-center justify-center rounded-full shadow-sm transition-transform"
+                    style={{ backgroundColor: palette.previewColor }}
+                  >
+                    {isSelected && (
+                      <Check size={14} className="text-white stroke-[3]" />
+                    )}
+                  </span>
+                  <span className="text-[10px] font-bold text-[var(--text-primary)] truncate max-w-full">
+                    {palette.shortName}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

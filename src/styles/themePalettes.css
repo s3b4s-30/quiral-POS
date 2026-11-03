@@ -1,0 +1,154 @@
+/**
+ * themePalettes.css — Sistema de Variables CSS para Paletas de Acento Cromático
+ *
+ * Diseñado bajo Apple Human Interface Guidelines y compatible con temas Dual OLED.
+ * No altera la estructura de márgenes, scrolls ni safe areas existentes.
+ */
+
+:root {
+  --accent-primary: #007aff;
+  --accent-hover: #0062cc;
+  --accent-subtle: rgba(0, 122, 255, 0.12);
+  --accent-border: rgba(0, 122, 255, 0.3);
+  --accent-text: #007aff;
+  --accent-ring: rgba(0, 122, 255, 0.4);
+}
+
+.dark {
+  --accent-primary: #0a84ff;
+  --accent-hover: #409cff;
+  --accent-subtle: rgba(10, 132, 255, 0.18);
+  --accent-border: rgba(10, 132, 255, 0.35);
+  --accent-text: #0a84ff;
+  --accent-ring: rgba(10, 132, 255, 0.45);
+}
+
+/* 1. Azul Clásico (Quiral / Apple HIG) */
+[data-theme-palette="blue"] {
+  --accent-primary: #007aff;
+  --accent-hover: #0062cc;
+  --accent-subtle: rgba(0, 122, 255, 0.12);
+  --accent-border: rgba(0, 122, 255, 0.3);
+  --accent-text: #007aff;
+  --accent-ring: rgba(0, 122, 255, 0.4);
+}
+
+.dark[data-theme-palette="blue"],
+[data-theme-palette="blue"].dark,
+[data-theme-palette="blue"] .dark {
+  --accent-primary: #0a84ff;
+  --accent-hover: #409cff;
+  --accent-subtle: rgba(10, 132, 255, 0.18);
+  --accent-border: rgba(10, 132, 255, 0.35);
+  --accent-text: #0a84ff;
+  --accent-ring: rgba(10, 132, 255, 0.45);
+}
+
+/* 2. Verde Esmeralda (Fintech & Dinamismo) */
+[data-theme-palette="emerald"] {
+  --accent-primary: #10b981;
+  --accent-hover: #059669;
+  --accent-subtle: rgba(16, 185, 129, 0.14);
+  --accent-border: rgba(16, 185, 129, 0.32);
+  --accent-text: #059669;
+  --accent-ring: rgba(16, 185, 129, 0.4);
+}
+
+.dark[data-theme-palette="emerald"],
+[data-theme-palette="emerald"].dark,
+[data-theme-palette="emerald"] .dark {
+  --accent-primary: #30d158;
+  --accent-hover: #34d399;
+  --accent-subtle: rgba(48, 209, 88, 0.18);
+  --accent-border: rgba(48, 209, 88, 0.35);
+  --accent-text: #30d158;
+  --accent-ring: rgba(48, 209, 88, 0.45);
+}
+
+/* 3. Púrpura Pro (Creatividad & Elegancia) */
+[data-theme-palette="purple"] {
+  --accent-primary: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --accent-subtle: rgba(139, 92, 246, 0.14);
+  --accent-border: rgba(139, 92, 246, 0.32);
+  --accent-text: #7c3aed;
+  --accent-ring: rgba(139, 92, 246, 0.4);
+}
+
+.dark[data-theme-palette="purple"],
+[data-theme-palette="purple"].dark,
+[data-theme-palette="purple"] .dark {
+  --accent-primary: #af52de;
+  --accent-hover: #c084fc;
+  --accent-subtle: rgba(175, 82, 222, 0.18);
+  --accent-border: rgba(175, 82, 222, 0.35);
+  --accent-text: #af52de;
+  --accent-ring: rgba(175, 82, 222, 0.45);
+}
+
+/* 4. Naranja Ámbar (Retail & Vitalidad) */
+[data-theme-palette="orange"] {
+  --accent-primary: #ff9500;
+  --accent-hover: #ea580c;
+  --accent-subtle: rgba(255, 149, 0, 0.14);
+  --accent-border: rgba(255, 149, 0, 0.32);
+  --accent-text: #ea580c;
+  --accent-ring: rgba(255, 149, 0, 0.4);
+}
+
+.dark[data-theme-palette="orange"],
+[data-theme-palette="orange"].dark,
+[data-theme-palette="orange"] .dark {
+  --accent-primary: #ff9f0a;
+  --accent-hover: #fb923c;
+  --accent-subtle: rgba(255, 159, 10, 0.18);
+  --accent-border: rgba(255, 159, 10, 0.35);
+  --accent-text: #ff9f0a;
+  --accent-ring: rgba(255, 159, 10, 0.45);
+}
+
+/* 5. Rosa / Magenta Neón (Boutique & Distinción) */
+[data-theme-palette="rose"] {
+  --accent-primary: #ff2d55;
+  --accent-hover: #e11d48;
+  --accent-subtle: rgba(255, 45, 85, 0.14);
+  --accent-border: rgba(255, 45, 85, 0.32);
+  --accent-text: #e11d48;
+  --accent-ring: rgba(255, 45, 85, 0.4);
+}
+
+.dark[data-theme-palette="rose"],
+[data-theme-palette="rose"].dark,
+[data-theme-palette="rose"] .dark {
+  --accent-primary: #ff375f;
+  --accent-hover: #fb7185;
+  --accent-subtle: rgba(255, 55, 95, 0.18);
+  --accent-border: rgba(255, 55, 95, 0.35);
+  --accent-text: #ff375f;
+  --accent-ring: rgba(255, 55, 95, 0.45);
+}
+
+/* Clases de utilidad cromáticas semánticas */
+.bg-accent {
+  background-color: var(--accent-primary) !important;
+}
+
+.bg-accent-subtle {
+  background-color: var(--accent-subtle) !important;
+}
+
+.text-accent {
+  color: var(--accent-text) !important;
+}
+
+.border-accent {
+  border-color: var(--accent-primary) !important;
+}
+
+.border-accent-subtle {
+  border-color: var(--accent-border) !important;
+}
+
+.ring-accent {
+  --tw-ring-color: var(--accent-ring) !important;
+}

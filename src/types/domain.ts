@@ -138,6 +138,8 @@ export interface StoreProfile {
   address?: string;
 }
 
+export type AccentPaletteId = "blue" | "emerald" | "purple" | "orange" | "rose";
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -152,4 +154,5 @@ export interface UserProfile {
   logoUrl?: string;
   role: "owner" | "staff";
   isDemoUser?: boolean;
+  accentPalette?: AccentPaletteId;
 }

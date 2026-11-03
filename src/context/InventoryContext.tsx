@@ -3,7 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import { getStoreMembership, printSecurityWarning, signOutUser } from "../lib/authService";
 import { DEMO_STORE_ID, ensureFreshDemoStorage, generateDemoSeed } from "../lib/demoSeed";
 import { logDbEvent, supabase, SUPABASE_PAGE_SIZE, withDbTelemetry } from "../lib/supabase";
-import { Batch, CartItem, CatalogConfig, CategoryConfig, Closure, PaymentMethod, Product, ProductCategory, Sale, SaleItem, Supplier, UserProfile } from "../types/domain";
+import { AccentPaletteId, Batch, CartItem, CatalogConfig, CategoryConfig, Closure, PaymentMethod, Product, ProductCategory, Sale, SaleItem, Supplier, UserProfile } from "../types/domain";
 import {
   DEFAULT_CATALOG_CONFIG,
   FACTORY_BASE_CATEGORIES,
@@ -14,6 +14,7 @@ import {
   normalizeCatalogText,
   structuredCloneConfig,
 } from "../utils/catalogConfig";
+import { applyPalette, getStoredPalette } from "../utils/themePalettes";
 
 export const SUPPLIER_PALETTE = [
   "#007AFF", "#AF52DE", "#28CD41", "#FF9500", "#5AC8FA", "#FF3B30",
@@ -63,11 +64,14 @@ interface InventoryContextType {
   adjustMasterStock: (productId: string, delta: number) => void;
   addBatchToProduct: (productId: string, batch: Omit<Batch, "id">) => void;
   updateProductPrice: (productId: string, price: number) => void;
+  accentPalette: AccentPaletteId;
+  setAccentPalette: (palette: AccentPaletteId) => void;
   updateStoreProfile: (updates: {
     storeName: string;
     storePhone?: string;
     storeAddress?: string;
     storeLogoUrl?: string;
+    accentPalette?: AccentPaletteId;
   }) => Promise<void>;
   purgeOutOfStock: () => number;
   deleteMultipleProducts: (productIds: string[]) => Promise<number>;
@@ -169,6 +173,12 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
   const [lastSelectedSupplierId, setLastSelectedSupplierId] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [accentPalette, setAccentPaletteState] = useState<AccentPaletteId>(getStoredPalette);
+
+  const setAccentPalette = useCallback((palette: AccentPaletteId) => {
+    applyPalette(palette);
+    setAccentPaletteState(palette);
+  }, []);
 
   // Guardias y referencias de ciclo de vida (Anti-bucles y control de concurrencia)
   const syncInProgressRef = useRef(false);
@@ -1484,12 +1494,18 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     storePhone?: string;
     storeAddress?: string;
     storeLogoUrl?: string;
+    accentPalette?: AccentPaletteId;
   }) => {
     if (!userProfile) return;
     const cleanName = updates.storeName.trim() || userProfile.storeName;
     const cleanPhone = updates.storePhone?.trim();
     const cleanAddress = updates.storeAddress?.trim();
     const cleanLogo = updates.storeLogoUrl;
+    const cleanPalette = updates.accentPalette || accentPalette;
+
+    if (updates.accentPalette) {
+      setAccentPalette(updates.accentPalette);
+    }
 
     const updatedProfile: UserProfile = {
       ...userProfile,
@@ -1497,6 +1513,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       storePhone: cleanPhone,
       storeAddress: cleanAddress,
       storeLogoUrl: cleanLogo,
+      accentPalette: cleanPalette,
     };
 
     setUserProfile(updatedProfile);
@@ -1509,6 +1526,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
           storePhone: cleanPhone,
           storeAddress: cleanAddress,
           storeLogoUrl: cleanLogo,
+          accentPalette: cleanPalette,
         })
       );
     } catch (err) {
@@ -1593,6 +1611,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         adjustMasterStock,
         addBatchToProduct,
         updateProductPrice,
+        accentPalette,
+        setAccentPalette,
         updateStoreProfile,
         purgeOutOfStock,
         deleteMultipleProducts,
