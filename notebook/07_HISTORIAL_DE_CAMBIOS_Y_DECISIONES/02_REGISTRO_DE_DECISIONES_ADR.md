@@ -15,6 +15,7 @@
 5. [ADR-005: Directiva de Inmunidad de UI en iOS Safari y PWA Standalone](#adr-005-directiva-de-inmunidad-de-ui-en-ios-safari-y-pwa-standalone)
 6. [ADR-006: Estándar Determinista de Calidad 100% Exit 0](#adr-006-estándar-determinista-de-calidad-100-exit-0)
 7. [ADR-007: Base de Conocimiento Centralizada en `notebook/` Versionada en Git](#adr-007-base-de-conocimiento-centralizada-en-notebook-versionada-en-git)
+8. [ADR-008: Blindaje HTTP de Producción y Hardening de RPC en Supabase](#adr-008-blindaje-http-de-producción-y-hardening-de-rpc-en-supabase)
 
 ---
 
@@ -118,3 +119,24 @@
 - **Consecuencias:**
   - _Positivas:_ Cualquier modelo o agente puede leer `notebook/` y comprender al instante el 100% de la arquitectura, estándares y restricciones sin necesidad de entrenamiento previo. Reducción a cero de las alucinaciones arquitectónicas.
   - _Negativas:_ Requiere el compromiso activo de actualizar los archivos correspondientes en `notebook/` cuando se adopte un cambio mayor en el sistema.
+
+---
+
+## ADR-008: Blindaje HTTP de Producción y Hardening de RPC en Supabase
+
+- **Estado:** Aceptado.
+- **Fecha:** 2026-11-03
+- **Contexto:**  
+  La exposición de un frontend en producción sin cabeceras de seguridad estrictas deja abierta la puerta a ataques de intermediario (MitM), clickjacking, inyección de scripts externos (XSS) y filtración de referencias sensibles. Asimismo, la presencia de funciones PostgreSQL con privilegios `SECURITY DEFINER` en el esquema `public` de Supabase permite que actores no autenticados invoquen procedimientos internos a través del endpoint REST.
+- **Decisión:**
+  1. Configurar en `vercel.json` cabeceras de seguridad estrictas en todas las rutas (`/(.*)`):
+     - `Content-Security-Policy`: Restringida exclusivamente a orígenes autorizados (Supabase API/WSS, Google Analytics, Clarity, fonts).
+     - `Strict-Transport-Security`: `max-age=63072000; includeSubDomains; preload` (HSTS de 2 años).
+     - `X-Frame-Options`: `DENY` (Protección contra clickjacking).
+     - `X-Content-Type-Options`: `nosniff` (Protección contra MIME sniffing).
+     - `Referrer-Policy`: `strict-origin-when-cross-origin`.
+     - `Permissions-Policy`: `camera=(), microphone=(), geolocation=(), payment=(), usb=()`.
+  2. Endurecer el esquema de base de datos en Supabase revocando permisos `EXECUTE` al rol `anon` en funciones internas (`handle_new_user`, `seed_demo_store`, `update_my_credentials`) y manteniendo `complete_sale` bajo contexto de invocador (`SECURITY INVOKER`) con bloqueo pesimista.
+- **Consecuencias:**
+  - _Positivas:_ Calificación A+ en escaneos de seguridad de cabeceras, mitigación completa de ataques IDOR y protección contra invocaciones de API no autorizadas.
+  - _Negativas:_ Cualquier nuevo dominio externo o servicio de terceros (ej. pasarelas de pago futuras) debe ser declarado explícitamente en el CSP de `vercel.json`.

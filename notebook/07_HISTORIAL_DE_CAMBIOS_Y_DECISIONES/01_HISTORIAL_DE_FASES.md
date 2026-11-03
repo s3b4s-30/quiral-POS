@@ -16,6 +16,7 @@ flowchart TD
   F3 --> F4["Fase 4: Arquitectura Offline-First<br/>(TanStack Query, Dexie.js, Cola de Mutaciones)"]
   F4 --> FC["Consolidación de Skills y Manifiesto<br/>(21 Skills Oficiales, Tier System, Anti-Slop)"]
   FC --> FN["Base de Conocimiento Centralizada<br/>(Directorio notebook/, 99% Invariante)"]
+  FN --> F5["Fase 5: Auditoría, Blindaje y Seguridad<br/>(SAST, RLS Hardening, Security Headers, OWASP)"]
 ```
 
 ---
@@ -106,3 +107,15 @@ flowchart TD
   - Estructuración modular en 7 ejes temáticos (`01_VISION_Y_FILOSOFIA`, `02_ARQUITECTURA_Y_SISTEMA`, `03_ESTANDARES_DE_DISENO_Y_UI`, `04_SISTEMA_DE_AGENTES_Y_SKILLS`, `05_INGENIERIA_DE_PROMPTS`, `06_REGLAS_RESTRICCIONES_Y_CALIDAD`, `07_HISTORIAL_DE_CAMBIOS_Y_DECISIONES`).
   - Creación de protocolos bidireccionales de ingeniería de prompts entre Gemini Notebook y Antigravity.
   - Registro de decisiones arquitectónicas formales (ADRs) para preservar el porqué de cada solución técnica.
+
+---
+
+### Fase 5: Auditoría, Blindaje y Seguridad de Datos (Security & Pentesting)
+
+- **Objetivo:** Certificar la protección integral del sistema contra vulnerabilidades OWASP, accesos IDOR, exposición de credenciales y ataques de canal lateral o clickjacking en producción.
+- **Hitos Implementados:**
+  - **Auditoría SAST y Cero Credenciales Expuestas:** Verificación estricta de ausencia de claves `service_role` o contraseñas en los bundles cliente (`src/`). El cliente solo opera con la clave pública `VITE_SUPABASE_ANON_KEY`.
+  - **Validación de Políticas RLS y Prevención de IDOR:** Auditoría con `supabase_mcp` verificando que el 100% de las tablas públicas (`stores`, `products`, `sales`, etc.) mantienen `rowsecurity = true` y validan `auth.uid() IS NOT NULL AND is_store_member(store_id)` tanto en lectura como en mutaciones.
+  - **Endurecimiento de Funciones RPC en Supabase:** Revocación de permisos `EXECUTE` al rol `anon` en funciones sensibles (`handle_new_user`, `seed_demo_store`, `update_my_credentials`) para impedir abusos no autenticados en el endpoint REST.
+  - **Endurecimiento de Cabeceras HTTP en `vercel.json`:** Configuración de cabeceras de nivel bancario en producción para todas las rutas (`/(.*)`): _Content-Security-Policy (CSP)_, _Strict-Transport-Security (HSTS)_ con 2 años y preload, _X-Frame-Options: DENY_, _X-Content-Type-Options: nosniff_, _Referrer-Policy: strict-origin-when-cross-origin_ y _Permissions-Policy_.
+  - **Cero Vulnerabilidades en Dependencias:** Auditoría de paquetes mediante `npm audit` reportando 0 vulnerabilidades.

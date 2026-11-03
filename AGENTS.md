@@ -126,3 +126,8 @@ Los cuatro comandos deben finalizar con código de salida `0`:
 2. **Cero Exposición de Secretos o Credenciales de Servicio:**
    - En el código fuente de Quiral POS jamás deben incluirse claves secretas, tokens `service_role` de Supabase ni claves maestras privadas.
    - El cliente utiliza exclusivamente la clave anónima pública (`VITE_SUPABASE_ANON_KEY`) sujeta a las políticas de seguridad a nivel de fila (RLS).
+
+3. **Blindaje de Producción, Cabeceras HTTP y Hardening de Supabase (Fase 5):**
+   - En `vercel.json` es obligatorio mantener las cabeceras de endurecimiento HTTP en la ruta `/(.*)`: _Content-Security-Policy (CSP)_, _Strict-Transport-Security (HSTS)_, _X-Frame-Options: DENY_, _X-Content-Type-Options: nosniff_, _Referrer-Policy_ y _Permissions-Policy_.
+   - Todas las tablas de PostgreSQL en Supabase deben operar con `rowsecurity = true` y filtros `auth.uid() IS NOT NULL AND is_store_member(store_id)`.
+   - Queda prohibido otorgar permisos `EXECUTE` al rol `anon` en funciones RPC `SECURITY DEFINER` internas o de mutación (`handle_new_user`, `seed_demo_store`, `update_my_credentials`). La función `complete_sale` debe operar como `SECURITY INVOKER` con bloqueo pesimista (`FOR UPDATE`).
