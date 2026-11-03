@@ -29,19 +29,22 @@ El directorio `.agents/skills/` aloja las capacidades modulares que extienden el
 │ TIER 1: NÚCLEO ARQUITECTÓNICO QUIRAL (Específico del Proyecto)         │
 │  1. quiral-ui-hig       -> Apple HIG, Dual OLED, Inmunidad iOS SafeArea│
 │  2. quiral-pos-engine   -> Inventario Multi-Lote, CRUD Ventas, Supabase│
-│  3. google-stitch       -> Conexión MCP y Pipeline Google Stitch       │
-│  4. stitch-design       -> Traducción Visual Stitch -> Tailwind OLED   │
+│  3. ui-ux-modern-taste  -> Alta Densidad SaaS Desktop, Nitidez & Scroll │
+│  4. google-stitch       -> Conexión MCP y Pipeline Google Stitch       │
+│  5. stitch-design       -> Traducción Visual Stitch -> Tailwind OLED   │
 ├────────────────────────────────────────────────────────────────────────┤
-│ TIER 2: INTELIGENCIA TRANSVERSAL Y CRAFT (Diseño, Hooks y Seguridad)   │
-│  5. impeccable          -> Craft UI/UX, Auditoría Automática y Hooks   │
-│  6. ui-ux-pro-max       -> Inteligencia de Diseño UI/UX Multidisciplina│
-│  7. ui-styling          -> shadcn/ui, Radix UI & Primitivas Tailwind   │
-│  8. security-audit      -> Auditoría de Vulnerabilidades y RLS Supabase│
-│  9. design-system       -> Arquitectura de Tokens en 3 Capas           │
-│ 10. design              -> Hub Integral de Diseño, CIP, Logo e Iconos  │
-│ 11. brand               -> Identidad de Marca, Voz y Directrices       │
-│ 12. banner-design       -> Banners y Creativos Multiformato            │
-│ 13. slides              -> Presentaciones HTML Estratégicas (Chart.js) │
+│ TIER 2: INTELIGENCIA TRANSVERSAL, CRAFT Y TESTING RIGUROSO             │
+│  6. image-to-code       -> Visión de Mostrador -> React 18 + Tailwind  │
+│  7. playwright-cli      -> Automatización E2E (Chromium & Mobile Safari)│
+│  8. impeccable          -> Craft UI/UX, Auditoría Automática y Hooks   │
+│  9. ui-ux-pro-max       -> Inteligencia de Diseño UI/UX Multidisciplina│
+│ 10. ui-styling          -> shadcn/ui, Radix UI & Primitivas Tailwind   │
+│ 11. security-audit      -> Auditoría de Vulnerabilidades y RLS Supabase│
+│ 12. design-system       -> Arquitectura de Tokens en 3 Capas           │
+│ 13. design              -> Hub Integral de Diseño, CIP, Logo e Iconos  │
+│ 14. brand               -> Identidad de Marca, Voz y Directrices       │
+│ 15. banner-design       -> Banners y Creativos Multiformato            │
+│ 16. slides              -> Presentaciones HTML Estratégicas (Chart.js) │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -72,11 +75,31 @@ El directorio `.agents/skills/` aloja las capacidades modulares que extienden el
 
 ### Protocolo 3: Estación de Trabajo Desktop (`>= 768px`) y Platform Split
 
-1. **Activar:** [`quiral-ui-hig`](./skills/quiral-ui-hig/SKILL.md) y [`quiral-pos-engine`](./skills/quiral-pos-engine/SKILL.md).
+1. **Activar:** [`ui-ux-modern-taste`](./skills/ui-ux-modern-taste/SKILL.md), [`quiral-ui-hig`](./skills/quiral-ui-hig/SKILL.md) y [`quiral-pos-engine`](./skills/quiral-pos-engine/SKILL.md).
 2. **Consultar:** [`docs/DESKTOP_UI_RULES.md`](../docs/DESKTOP_UI_RULES.md) y [`AGENTS.md`](../AGENTS.md).
 3. **Aplicar Estándares:**
    - Desacoplamiento físico estricto mediante `useIsDesktop.ts` (`*Mobile.tsx` vs `*Desktop.tsx`).
    - Lista negra en PC: prohibido importar `ModalSheet`, `CheckoutSheet`, `CartSummaryBar` o `FloatingCartFAB` en archivos `*Desktop.tsx`.
    - Implementar experiencia Keyboard-First tipo Excel en `DesktopInventoryGrid.tsx` y tabla de auditoría en `HistoryViewDesktop.tsx`.
-   - Cero doble-scroll (`flex-1 min-h-0 overflow-y-auto`), ancho de columnas estricto y vistas administrativas completas (`DesktopStoreProfileView`, `DesktopSuppliersView`, `DesktopAttributeConfigView`).
+   - Cero doble-scroll (`flex-1 min-h-0 overflow-y-auto`), scrollbars minimalistas `.custom-scrollbar` y ancho de columnas estricto (`table-fixed`).
+   - Vistas administrativas completas (`DesktopStoreProfileView`, `DesktopSuppliersView`, `DesktopAttributeConfigView`).
 4. **Validar:** `npx tsc --noEmit`, `npm run test:unit`, `npm run build` y `npx playwright test`.
+
+### Protocolo 4: Traducción de Diseños y Capturas Visuales a Código
+
+1. **Activar:** [`image-to-code`](./skills/image-to-code/SKILL.md) y [`ui-ux-modern-taste`](./skills/ui-ux-modern-taste/SKILL.md).
+2. **Consultar:** [`DESIGN_GUIDELINES.md`](../DESIGN_GUIDELINES.md) y [`docs/DESKTOP_UI_RULES.md`](../docs/DESKTOP_UI_RULES.md).
+3. **Aplicar Estándares:**
+   - Pipeline de 5 fases: descomposición, tokens Dual OLED, Platform Split, maquetación React 18 + TS, y verificación Exit 0.
+   - Tipografía anti-aliased nítida, `.tabular-nums` en montos COP y contrastes profundos.
+4. **Validar:** `npx tsc --noEmit`, `npm run test:unit`, `npm run build` y `npx playwright test`.
+
+### Protocolo 5: Automatización, Diagnóstico y Ejecución E2E
+
+1. **Activar:** [`playwright-cli`](./skills/playwright-cli/SKILL.md).
+2. **Consultar:** [`playwright.config.ts`](../playwright.config.ts) y [`AGENTS.md`](../AGENTS.md).
+3. **Aplicar Estándares:**
+   - Ejecución autónoma con `npx playwright test` (52/52 tests pasando en Chromium y Mobile Safari).
+   - Filtrado preciso por proyecto (`--project="chromium"` o `--project="Mobile Safari iPhone 14 Standalone"`).
+   - Diagnóstico con `--debug`, `--trace on` y análisis de selectores ante cambios de layout.
+4. **Validar:** Salida 100% Exit 0 innegociable.

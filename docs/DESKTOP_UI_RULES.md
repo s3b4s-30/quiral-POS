@@ -171,3 +171,24 @@ En cualquier archivo con sufijo `*Desktop.tsx` o vistas exclusivas de escritorio
 4. **Componente de Estado de Conectividad (`NetworkStatusBadge.tsx`):**
    - Integrado en `DesktopSidebar.tsx` (escritorio) y en `AppInner` como toast sutil inferior (móvil).
    - Cero ruido visual: permanece oculto si el sistema está en línea con la cola vacía. Se activa automáticamente en color ámbar ante cortes de red o azul pulsante durante la sincronización de ventas acumuladas.
+
+---
+
+## 9. Habilidades Maestras Consolidadas (.agents/skills/)
+
+Para gobernar el desarrollo continuo de la estación de trabajo en escritorio y asegurar la máxima calidad estética y operativa, el repositorio consolida 3 Habilidades Maestras:
+
+1. **[`ui-ux-modern-taste`](../.agents/skills/ui-ux-modern-taste/SKILL.md):**
+   - Estándar visual Linear / Vercel para desktop.
+   - Tipografía anti-aliased nítida, peso de lectura a distancia y números tabulares universales (`.tabular-nums`).
+   - Scrollbars ultra-delgados (`.custom-scrollbar`) y contención de layout al 100% sin barras nativas toscas ni doble scroll.
+   - Aislamiento físico de la plataforma (cero modales móviles en PC).
+
+2. **[`image-to-code`](../.agents/skills/image-to-code/SKILL.md):**
+   - Pipeline de visión computacional en 5 fases (descomposición, tokens Dual OLED, Platform Split, React 18 + TS, validación Exit 0).
+   - Traducción fidedigna de capturas de mostrador o mockups hacia componentes y Tailwind CSS canónico.
+
+3. **[`playwright-cli`](../.agents/skills/playwright-cli/SKILL.md):**
+   - Automatización y ejecución autónoma de la suite completa de 52 pruebas E2E.
+   - Ejecución segmentada por proyectos (`chromium` y `Mobile Safari iPhone 14 Standalone`).
+   - Runbook de resolución de fallos y garantía innegociable de 100% Exit 0.
