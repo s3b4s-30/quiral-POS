@@ -74,6 +74,16 @@ export default function InventoryView({
   const [desktopViewMode, setDesktopViewMode] = useState<"table" | "cards">("table");
   const [quickCountMode, setQuickCountMode] = useState(false);
   const [inspectedProduct, setInspectedProduct] = useState<Product | null>(null);
+  const [selectedCardIds, setSelectedCardIds] = useState<Set<string>>(new Set());
+
+  const handleToggleCardSelect = (id: string) => {
+    setSelectedCardIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const focusQuickAddRef = useRef<(() => void) | null>(null);
@@ -829,6 +839,8 @@ export default function InventoryView({
                       mode="inventory"
                       product={product}
                       onSelectProduct={setSelectedProduct}
+                      onToggleSelect={handleToggleCardSelect}
+                      isSelected={selectedCardIds.has(product.id)}
                       supplierColors={supplierColors}
                       showCosts={showCosts}
                       avgCost={avgCost}

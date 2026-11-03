@@ -295,18 +295,28 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
                       .map((batch) => {
                         const sup = suppliers.find((s) => s.id === batch.supplierId);
                         const isCurrentBatch = batch.id === item.batchId;
+                        const supColor = sup?.color || "#007aff";
                         return (
                           <button
                             key={batch.id}
                             type="button"
                             onClick={() => updateCartItemBatch(product.id, batch.id)}
-                            className={`rounded-lg px-2 py-0.5 text-[10px] font-bold transition-all ${
+                            style={
                               isCurrentBatch
-                                ? "bg-accent text-white shadow-xs"
-                                : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/30"
+                                ? { backgroundColor: supColor, borderColor: supColor, color: "#ffffff" }
+                                : { borderColor: `${supColor}40` }
+                            }
+                            className={`rounded-lg px-2 py-0.5 text-[10px] font-bold transition-all shadow-xs flex items-center gap-1.5 ${
+                              isCurrentBatch
+                                ? "shadow-sm"
+                                : "border bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                             }`}
                           >
-                            {sup?.name || "Prov"} ({batch.stock} uds)
+                            <span
+                              className="h-1.5 w-1.5 rounded-full shrink-0"
+                              style={{ backgroundColor: isCurrentBatch ? "#ffffff" : supColor }}
+                            />
+                            <span>{sup?.name || "Prov"} ({batch.stock} uds)</span>
                           </button>
                         );
                       })}

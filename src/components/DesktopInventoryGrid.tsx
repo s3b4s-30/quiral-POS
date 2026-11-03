@@ -862,7 +862,12 @@ export default function DesktopInventoryGrid({
                   key={product.id}
                   data-testid={`desktop-grid-row-${rowIndex}`}
                   onDoubleClick={() => onInspectProduct(product)}
-                  className={`group transition-colors duration-150 ${
+                  onClick={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.closest('input, button, a, [contenteditable="true"]')) return;
+                    handleToggleRowSelect(product.id);
+                  }}
+                  className={`group transition-colors duration-150 cursor-pointer ${
                     isSelected
                       ? "bg-accent-subtle/60"
                       : "hover:bg-black/[0.035] dark:hover:bg-white/[0.045]"

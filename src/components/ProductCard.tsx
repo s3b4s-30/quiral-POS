@@ -8,6 +8,8 @@ export interface ProductCardProps {
   inCart?: number;
   onAddToCart?: (productId: string) => void;
   onSelectProduct?: (product: Product) => void;
+  onToggleSelect?: (productId: string) => void;
+  isSelected?: boolean;
   supplierColors?: Map<string, string>;
   showCosts?: boolean;
   avgCost?: number;
@@ -21,6 +23,8 @@ export const ProductCard = React.memo(function ProductCard({
   inCart = 0,
   onAddToCart,
   onSelectProduct,
+  onToggleSelect,
+  isSelected = false,
   supplierColors,
   showCosts = false,
   avgCost = 0,
@@ -30,12 +34,22 @@ export const ProductCard = React.memo(function ProductCard({
   const stock = product.batches.reduce((sum, batch) => sum + batch.stock, 0);
   const isAvailable = stock > 0;
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
     if (mode === "pos") {
       if (isAvailable && onAddToCart) {
         onAddToCart(product.id);
       }
-    } else if (onSelectProduct) {
+    } else {
+      // En modo inventario: hacer clic en el área general de la tarjeta selecciona/deselecciona el ítem
+      if (onToggleSelect) {
+        onToggleSelect(product.id);
+      }
+    }
+  };
+
+  const handleOpenDetail = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onSelectProduct) {
       onSelectProduct(product);
     }
   };
@@ -47,28 +61,43 @@ export const ProductCard = React.memo(function ProductCard({
       aria-label={
         mode === "pos"
           ? `Agregar ${product.name} al carrito`
-          : `Ver detalle de ${product.name}`
+          : `Seleccionar ${product.name}`
       }
       onClick={handleClick}
       onKeyDown={(event) => {
         if (event.target !== event.currentTarget) return;
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          handleClick();
+          handleClick(event as unknown as React.MouseEvent);
         }
       }}
-      className={`rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3.5 shadow-sm outline-none transition-colors duration-200 select-none focus-visible:ring-2 focus-visible:ring-accent ${
+      className={`rounded-2xl border bg-[var(--bg-elevated)] p-3.5 shadow-sm outline-none transition-all duration-200 select-none focus-visible:ring-2 focus-visible:ring-accent ${
+        isSelected
+          ? "border-accent ring-2 ring-accent/30 bg-accent-subtle/20"
+          : "border-[var(--border-color)] hover:border-accent/40"
+      } ${
         isAvailable || mode === "inventory"
-          ? "cursor-pointer active:scale-[0.99] hover:border-accent/40"
+          ? "cursor-pointer active:scale-[0.99]"
           : "opacity-50 cursor-not-allowed"
       } ${className}`}
     >
       {/* 1. Fila Superior: Título completo + subtítulo a la izquierda, Precio a la derecha con escala responsive */}
       <div className="flex items-center justify-between min-w-0 gap-2">
         <div className="flex-1 min-w-0 pr-1">
-          <h3 className="line-clamp-2 text-sm sm:text-[15px] font-semibold leading-snug text-[var(--text-primary)]">
-            {product.name}
-          </h3>
+          {mode === "inventory" ? (
+            <button
+              type="button"
+              onClick={handleOpenDetail}
+              className="text-left line-clamp-2 text-sm sm:text-[15px] font-semibold leading-snug text-[var(--text-primary)] hover:text-accent hover:underline transition-colors block cursor-pointer"
+              title="Clic para ver detalle y editar producto"
+            >
+              {product.name}
+            </button>
+          ) : (
+            <h3 className="line-clamp-2 text-sm sm:text-[15px] font-semibold leading-snug text-[var(--text-primary)]">
+              {product.name}
+            </h3>
+          )}
           {product.subtitle && (
             <p className="mt-0.5 truncate text-[11px] sm:text-xs text-[var(--text-secondary)]">
               {product.subtitle}

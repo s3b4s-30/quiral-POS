@@ -233,8 +233,8 @@ export default function HistoryViewDesktop({
                     <th className="py-3.5 px-4 sm:px-5 w-44">Fecha y Hora</th>
                     <th className="py-3.5 px-4 sm:px-5 min-w-[300px]">Cliente / Detalle de Artículos</th>
                     <th className="py-3.5 px-4 sm:px-5 w-36">Método</th>
-                    <th className="py-3.5 px-4 sm:px-5 w-36 text-right">Total</th>
-                    <th className="py-3.5 px-4 sm:px-5 w-44 text-right">Acciones</th>
+                    <th className="py-3.5 px-4 sm:px-5 w-44 text-right pr-6">Total</th>
+                    <th className="py-3.5 px-4 sm:px-5 w-60 min-w-[220px] text-right">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border-color)] text-sm font-medium">
@@ -276,14 +276,14 @@ export default function HistoryViewDesktop({
                               {sale.paymentMethod}
                             </span>
                           </td>
-                          <td className="py-4 px-4 sm:px-5 text-right whitespace-nowrap">
-                            <span className="tabular-nums font-black text-base sm:text-lg text-[var(--text-primary)] leading-none">
+                          <td className="py-4 px-4 sm:px-5 text-right whitespace-nowrap pr-6">
+                            <span className="tabular-nums font-black text-base sm:text-lg text-[var(--text-primary)] leading-none select-none">
                               {formatCOP(sale.totalAmount)}
                             </span>
                           </td>
-                          <td className="py-4 px-4 sm:px-5 text-right whitespace-nowrap">
+                          <td className="py-4 px-4 sm:px-5 text-right whitespace-nowrap w-60 min-w-[220px]">
                             <div
-                              className="flex items-center justify-end gap-2"
+                              className="flex items-center justify-end gap-2 shrink-0"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button
