@@ -19,6 +19,7 @@ import AdvancedFiltersModal, {
 } from "../components/AdvancedFiltersModal";
 import AttributeConfigModal from "../components/AttributeConfigModal";
 import CategoryManagerModal from "../components/CategoryManagerModal";
+import DesktopAttributeConfigView from "../components/DesktopAttributeConfigView";
 import DesktopInventoryGrid from "../components/DesktopInventoryGrid";
 import DesktopProductDrawer from "../components/DesktopProductDrawer";
 import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
@@ -106,7 +107,13 @@ export default function InventoryView({
     onFilterModalStateChange?.(open || isFilterModalOpen || isAttributeModalOpen);
   };
 
+  const [isDesktopAttributeView, setIsDesktopAttributeView] = useState(false);
+
   const handleOpenAttributeModal = (open: boolean) => {
+    if (open && isDesktopViewport) {
+      setIsDesktopAttributeView(true);
+      return;
+    }
     setIsAttributeModalOpen(open);
     onFilterModalStateChange?.(open || isFilterModalOpen || isCategoryModalOpen);
   };
@@ -405,6 +412,15 @@ export default function InventoryView({
     setSelectedAttributeTag("");
     setAdvancedFilters(DEFAULT_ADVANCED_FILTERS);
   };
+
+  if (isDesktopViewport && isDesktopAttributeView) {
+    return (
+      <DesktopAttributeConfigView
+        activeCategory={selectedCategory !== "Todos" ? selectedCategory : undefined}
+        onBack={() => setIsDesktopAttributeView(false)}
+      />
+    );
+  }
 
   return (
     /* Contenedor Principal: scroll vertical nativo Apple HIG */

@@ -1,10 +1,10 @@
-import { AlertTriangle, Check, Pencil, Search, Trash2, X } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import { AlertTriangle, Check, ChevronDown, ChevronUp, Pencil, Search, Trash2, X } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
 import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
 import ModalSheet from "../components/ModalSheet";
 import { useInventory } from "../context/InventoryContext";
 import { PaymentMethod, Sale, SaleItem } from "../types/domain";
-import { formatCOP, formatShortDate, getWarrantyStatus, parseCOPInput } from "../utils/formatters";
+import { formatCOP, formatDateWithTime, formatShortDate, getWarrantyStatus, parseCOPInput } from "../utils/formatters";
 
 const PAYMENT_METHODS: PaymentMethod[] = ["Efectivo", "Nequi", "Bancolombia", "Tarjeta"];
 
@@ -20,6 +20,21 @@ export default function HistoryView({
   const { sales, toggleItemWarranty, updateSale, deleteSale, loading } = useInventory();
   const [openSaleId, setOpenSaleId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+
+  // Detección reactiva de viewport escritorio (>= 768px)
+  const [isDesktopViewport, setIsDesktopViewport] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth >= 768;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(min-width: 768px)");
+    const syncViewport = () => setIsDesktopViewport(media.matches);
+    syncViewport();
+    media.addEventListener("change", syncViewport);
+    return () => media.removeEventListener("change", syncViewport);
+  }, []);
 
   // Estado para Eliminar Venta (con Modal de Confirmación obligatorio)
   const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
@@ -172,176 +187,382 @@ export default function HistoryView({
           </div>
         </div>
 
-        {/* Listado de Ventas en Historial */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-6">
-          {loading ? (
-            Array.from({ length: 4 }).map((_, idx) => (
-              <div
-                key={`hist-skeleton-${idx}`}
-                className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-sm animate-pulse space-y-3 h-28"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="h-4 w-32 rounded bg-black/5 dark:bg-white/10" />
-                  <div className="h-4 w-20 rounded-full bg-black/5 dark:bg-white/10" />
-                </div>
-                <div className="flex items-center justify-between pt-2 border-t border-[var(--border-color)]">
-                  <div className="h-6 w-28 rounded-lg bg-black/5 dark:bg-white/10" />
-                  <div className="h-4 w-24 rounded bg-black/5 dark:bg-white/10" />
-                </div>
+        {/* Listado de Ventas en Historial: Tabla Data Grid en Escritorio (>= 768px) o Tarjetas en Móvil (< 768px) */}
+        {isDesktopViewport ? (
+          <section className="pb-6">
+            {loading ? (
+              <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-8 shadow-xs animate-pulse space-y-4">
+                <div className="h-6 w-48 rounded-lg bg-black/5 dark:bg-white/10" />
+                <div className="h-10 w-full rounded-xl bg-black/5 dark:bg-white/10" />
+                <div className="h-10 w-full rounded-xl bg-black/5 dark:bg-white/10" />
+                <div className="h-10 w-full rounded-xl bg-black/5 dark:bg-white/10" />
               </div>
-            ))
-          ) : filteredSales.length === 0 ? (
-            <div className="col-span-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-8 sm:p-10 text-center shadow-sm select-none animate-in fade-in duration-150">
-              <LottiePlayer
-                animationData={EMPTY_BOX_ANIMATION}
-                className="w-32 h-32 mx-auto mb-2"
-                loop={true}
-              />
-              <h4 className="text-base font-bold text-[var(--text-primary)]">
-                {query ? "Sin coincidencias de venta" : "Historial vacío"}
-              </h4>
-              <p className="mt-1 text-xs sm:text-sm font-medium text-[var(--text-secondary)] max-w-sm mx-auto">
-                {query
-                  ? "No se encontraron ventas asociadas al cliente o número consultado."
-                  : "Aún no se han completado transacciones comerciales en este ciclo."}
-              </p>
-              {query && (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-all duration-200"
-                >
-                  Restablecer búsqueda
-                </button>
-              )}
-            </div>
-          ) : (
-            filteredSales.map((sale) => {
-              const isOpen = openSaleId === sale.id;
+            ) : filteredSales.length === 0 ? (
+              <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-12 text-center shadow-xs select-none max-w-md mx-auto my-8 animate-in fade-in duration-150">
+                <LottiePlayer
+                  animationData={EMPTY_BOX_ANIMATION}
+                  className="w-32 h-32 mx-auto mb-2"
+                  loop={true}
+                />
+                <h4 className="text-base font-bold text-[var(--text-primary)]">
+                  {query ? "Sin coincidencias de venta" : "Historial vacío"}
+                </h4>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                  {query
+                    ? "No se encontraron ventas asociadas al cliente o número consultado."
+                    : "Aún no se han completado transacciones comerciales en este ciclo."}
+                </p>
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    className="mt-4 inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-xs active:scale-95 transition-all"
+                  >
+                    Restablecer búsqueda
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div
+                data-testid="desktop-history-table-container"
+                className="overflow-hidden rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] shadow-xs"
+              >
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]/70 text-[11px] font-black uppercase tracking-wider text-[var(--text-secondary)]">
+                      <th className="py-3 px-4 w-24">Ticket</th>
+                      <th className="py-3 px-4 w-44">Fecha y Hora</th>
+                      <th className="py-3 px-4 min-w-[200px]">Cliente / Referencias</th>
+                      <th className="py-3 px-4 w-32">Método</th>
+                      <th className="py-3 px-4 w-36 text-right">Total</th>
+                      <th className="py-3 px-4 w-36 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border-color)] text-xs font-semibold">
+                    {filteredSales.map((sale) => {
+                      const isOpen = openSaleId === sale.id;
+                      const totalUnits = sale.items.reduce((s, it) => s + it.qty, 0);
 
-              return (
-                <article
-                  key={sale.id}
-                  onClick={() => setOpenSaleId(isOpen ? null : sale.id)}
-                  className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3.5 shadow-sm transition-colors duration-200 cursor-pointer select-none active:scale-[0.99] hover:border-accent/40"
-                >
-                  {/* Fila principal: Número de venta + Cliente | Total + Acciones rápidas */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0 pr-2">
-                      <h3 className="line-clamp-1 text-[15px] font-bold text-[var(--text-primary)]">
-                        #{sale.saleNumber} · {sale.customerName}
-                      </h3>
-                      <p className="mt-0.5 truncate text-xs text-[var(--text-secondary)]">
-                        {formatShortDate(sale.createdAt)}{" "}
-                        · {sale.paymentMethod}
-                        {sale.items.length > 0 && ` · ${sale.items.reduce((s, it) => s + it.qty, 0)} uds`}
-                      </p>
-                      {sale.note && (
-                        <p className="mt-1 line-clamp-1 text-[11px] italic text-[var(--text-secondary)]">
-                          Nota: {sale.note}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="shrink-0 text-right pl-2 flex flex-col items-end gap-1.5">
-                      <span className="tabular-nums whitespace-nowrap text-sm sm:text-base md:text-lg font-extrabold text-[var(--text-primary)]">
-                        {formatCOP(sale.totalAmount)}
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={(e) => openEditModal(sale, e)}
-                          aria-label={`Modificar venta #${sale.saleNumber}`}
-                          title="Modificar venta"
-                          className="inline-flex h-7 items-center gap-1 rounded-lg border border-transparent bg-accent-subtle px-2 text-[11px] font-bold text-accent hover:border-accent-subtle active:scale-95 transition-all duration-200"
-                        >
-                          <Pencil size={12} />
-                          <span>Modificar</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => openDeleteModal(sale, e)}
-                          aria-label={`Eliminar venta #${sale.saleNumber}`}
-                          title="Eliminar venta"
-                          className="inline-flex h-7 items-center gap-1 rounded-lg border border-transparent bg-red-500/10 px-2 text-[11px] font-bold text-red-500 hover:border-red-500/20 active:scale-95 transition-all duration-200"
-                        >
-                          <Trash2 size={12} />
-                          <span>Eliminar</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Detalle desplegable de productos y garantías */}
-                  {isOpen && (
-                    <div className="mt-3 pt-3 border-t border-[var(--border-color)] space-y-2.5 animate-in fade-in duration-150">
-                      {sale.items.map((item) => {
-                        const w = getWarrantyStatus(
-                          sale.createdAt,
-                          item.warrantyDays,
-                          item.warrantyClaimed
-                        );
-
-                        return (
-                          <div
-                            key={item.id}
-                            className="rounded-xl bg-black/[0.02] dark:bg-white/[0.03] p-3 border border-[var(--border-color)] space-y-2"
+                      return (
+                        <React.Fragment key={sale.id}>
+                          <tr
+                            data-testid={`desktop-history-row-${sale.id}`}
+                            onClick={() => setOpenSaleId(isOpen ? null : sale.id)}
+                            className="group hover:bg-black/[0.02] dark:hover:bg-white/[0.02] cursor-pointer transition-colors"
                           >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-semibold text-[var(--text-primary)] leading-tight">
-                                  {item.qty}x {item.productName}
-                                </p>
-                                <p className="tabular-nums text-[11px] text-[var(--text-secondary)] mt-0.5">
-                                  {formatCOP(item.unitPrice)} c/u
-                                </p>
-                              </div>
-                              <span className="tabular-nums text-xs font-bold text-[var(--text-primary)] shrink-0">
-                                {formatCOP(item.unitPrice * item.qty)}
+                            <td className="py-3.5 px-4">
+                              <span className="tabular-nums font-black text-accent bg-accent-subtle px-2 py-0.5 rounded-md">
+                                #{sale.saleNumber}
                               </span>
-                            </div>
-
-                            {/* Badge de garantía interactivo */}
-                            <div className="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-[var(--border-color)]/60 text-[11px]">
-                              <span
-                                className={`rounded-full px-2 py-0.5 font-bold ${
-                                  w.status === "claimed"
-                                    ? "bg-[#ff3b30]/15 text-[#ff3b30]"
-                                    : w.status === "expired"
-                                    ? "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)]"
-                                    : "bg-[#30d158]/15 text-[#30d158]"
-                                }`}
+                            </td>
+                            <td className="py-3.5 px-4 tabular-nums text-[var(--text-secondary)] whitespace-nowrap">
+                              {formatDateWithTime(sale.createdAt) || formatShortDate(sale.createdAt)}
+                            </td>
+                            <td className="py-3.5 px-4 min-w-[200px]">
+                              <p className="font-bold text-[var(--text-primary)]">
+                                {sale.customerName}
+                              </p>
+                              <p className="text-[11px] text-[var(--text-secondary)] truncate">
+                                {totalUnits} {totalUnits === 1 ? "artículo" : "artículos"}:{" "}
+                                {sale.items.map((it) => `${it.qty}x ${it.productName}`).join(", ")}
+                              </p>
+                              {sale.note && (
+                                <p className="text-[10px] italic text-[var(--text-secondary)] mt-0.5">
+                                  Nota: {sale.note}
+                                </p>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <span className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)]">
+                                {sale.paymentMethod}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4 text-right">
+                              <span className="tabular-nums font-black text-sm text-[var(--text-primary)]">
+                                {formatCOP(sale.totalAmount)}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                              <div
+                                className="flex items-center justify-end gap-1.5"
+                                onClick={(e) => e.stopPropagation()}
                               >
-                                {w.label}
-                              </span>
-
-                              {w.status !== "expired" && (
                                 <button
                                   type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleItemWarranty(sale.id, item.id);
-                                  }}
-                                  className={`rounded-lg px-2.5 py-1 text-xs font-bold active:scale-95 transition-transform ${
-                                    item.warrantyClaimed
-                                      ? "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                                      : "bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30]/25"
+                                  onClick={(e) => openEditModal(sale, e)}
+                                  aria-label={`Modificar venta #${sale.saleNumber}`}
+                                  title="Modificar venta"
+                                  className="inline-flex h-7 items-center gap-1 rounded-lg border border-transparent bg-accent-subtle px-2 text-[11px] font-bold text-accent hover:border-accent-subtle active:scale-95 transition-all"
+                                >
+                                  <Pencil size={12} />
+                                  <span>Modificar</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => openDeleteModal(sale, e)}
+                                  aria-label={`Eliminar venta #${sale.saleNumber}`}
+                                  title="Eliminar venta"
+                                  className="inline-flex h-7 items-center gap-1 rounded-lg border border-transparent bg-red-500/10 px-2 text-[11px] font-bold text-red-500 hover:border-red-500/20 active:scale-95 transition-all"
+                                >
+                                  <Trash2 size={12} />
+                                  <span>Eliminar</span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+
+                          {/* Detalle expandible de ítems y garantía en la fila siguiente */}
+                          {isOpen && (
+                            <tr className="bg-black/[0.015] dark:bg-white/[0.015]">
+                              <td colSpan={6} className="py-3 px-6">
+                                <div className="space-y-2 border-l-2 border-accent pl-4 py-1">
+                                  <p className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
+                                    Desglose del Ticket #{sale.saleNumber} ({sale.items.length}{" "}
+                                    {sale.items.length === 1 ? "referencia" : "referencias"})
+                                  </p>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                                    {sale.items.map((item) => {
+                                      const w = getWarrantyStatus(
+                                        sale.createdAt,
+                                        item.warrantyDays,
+                                        item.warrantyClaimed
+                                      );
+
+                                      return (
+                                        <div
+                                          key={item.id}
+                                          className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-2.5 space-y-1.5"
+                                        >
+                                          <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                              <p className="text-xs font-bold text-[var(--text-primary)] truncate">
+                                                {item.qty}x {item.productName}
+                                              </p>
+                                              <p className="tabular-nums text-[10px] text-[var(--text-secondary)]">
+                                                {formatCOP(item.unitPrice)} c/u
+                                              </p>
+                                            </div>
+                                            <span className="tabular-nums text-xs font-black text-[var(--text-primary)]">
+                                              {formatCOP(item.unitPrice * item.qty)}
+                                            </span>
+                                          </div>
+
+                                          <div className="flex items-center justify-between pt-1 border-t border-[var(--border-color)]/60 text-[10px]">
+                                            <span
+                                              className={`rounded-md px-1.5 py-0.5 font-bold ${
+                                                w.status === "claimed"
+                                                  ? "bg-[#ff3b30]/15 text-[#ff3b30]"
+                                                  : w.status === "expired"
+                                                  ? "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)]"
+                                                  : "bg-[#30d158]/15 text-[#30d158]"
+                                              }`}
+                                            >
+                                              {w.label}
+                                            </span>
+
+                                            {w.status !== "expired" && (
+                                              <button
+                                                type="button"
+                                                onClick={() => toggleItemWarranty(sale.id, item.id)}
+                                                className={`rounded-md px-2 py-0.5 text-[10px] font-bold active:scale-95 transition-all ${
+                                                  item.warrantyClaimed
+                                                    ? "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                                                    : "bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30]/25"
+                                                }`}
+                                              >
+                                                {item.warrantyClaimed
+                                                  ? "Revertir reclamo"
+                                                  : "Marcar reclamo"}
+                                              </button>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        ) : (
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-6">
+            {loading ? (
+              Array.from({ length: 4 }).map((_, idx) => (
+                <div
+                  key={`hist-skeleton-${idx}`}
+                  className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-sm animate-pulse space-y-3 h-28"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="h-4 w-32 rounded bg-black/5 dark:bg-white/10" />
+                    <div className="h-4 w-20 rounded-full bg-black/5 dark:bg-white/10" />
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-[var(--border-color)]">
+                    <div className="h-6 w-28 rounded-lg bg-black/5 dark:bg-white/10" />
+                    <div className="h-4 w-24 rounded bg-black/5 dark:bg-white/10" />
+                  </div>
+                </div>
+              ))
+            ) : filteredSales.length === 0 ? (
+              <div className="col-span-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-8 sm:p-10 text-center shadow-sm select-none animate-in fade-in duration-150">
+                <LottiePlayer
+                  animationData={EMPTY_BOX_ANIMATION}
+                  className="w-32 h-32 mx-auto mb-2"
+                  loop={true}
+                />
+                <h4 className="text-base font-bold text-[var(--text-primary)]">
+                  {query ? "Sin coincidencias de venta" : "Historial vacío"}
+                </h4>
+                <p className="mt-1 text-xs sm:text-sm font-medium text-[var(--text-secondary)] max-w-sm mx-auto">
+                  {query
+                    ? "No se encontraron ventas asociadas al cliente o número consultado."
+                    : "Aún no se han completado transacciones comerciales en este ciclo."}
+                </p>
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    className="mt-4 inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-all duration-200"
+                  >
+                    Restablecer búsqueda
+                  </button>
+                )}
+              </div>
+            ) : (
+              filteredSales.map((sale) => {
+                const isOpen = openSaleId === sale.id;
+
+                return (
+                  <article
+                    key={sale.id}
+                    onClick={() => setOpenSaleId(isOpen ? null : sale.id)}
+                    className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3.5 shadow-sm transition-colors duration-200 cursor-pointer select-none active:scale-[0.99] hover:border-accent/40"
+                  >
+                    {/* Fila principal: Número de venta + Cliente | Total + Acciones rápidas */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <h3 className="line-clamp-1 text-[15px] font-bold text-[var(--text-primary)]">
+                          #{sale.saleNumber} · {sale.customerName}
+                        </h3>
+                        <p className="mt-0.5 truncate text-xs text-[var(--text-secondary)]">
+                          {formatShortDate(sale.createdAt)}{" "}
+                          · {sale.paymentMethod}
+                          {sale.items.length > 0 && ` · ${sale.items.reduce((s, it) => s + it.qty, 0)} uds`}
+                        </p>
+                        {sale.note && (
+                          <p className="mt-1 line-clamp-1 text-[11px] italic text-[var(--text-secondary)]">
+                            Nota: {sale.note}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="shrink-0 text-right pl-2 flex flex-col items-end gap-1.5">
+                        <span className="tabular-nums whitespace-nowrap text-sm sm:text-base md:text-lg font-extrabold text-[var(--text-primary)]">
+                          {formatCOP(sale.totalAmount)}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={(e) => openEditModal(sale, e)}
+                            aria-label={`Modificar venta #${sale.saleNumber}`}
+                            title="Modificar venta"
+                            className="inline-flex h-7 items-center gap-1 rounded-lg border border-transparent bg-accent-subtle px-2 text-[11px] font-bold text-accent hover:border-accent-subtle active:scale-95 transition-all duration-200"
+                          >
+                            <Pencil size={12} />
+                            <span>Modificar</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => openDeleteModal(sale, e)}
+                            aria-label={`Eliminar venta #${sale.saleNumber}`}
+                            title="Eliminar venta"
+                            className="inline-flex h-7 items-center gap-1 rounded-lg border border-transparent bg-red-500/10 px-2 text-[11px] font-bold text-red-500 hover:border-red-500/20 active:scale-95 transition-all duration-200"
+                          >
+                            <Trash2 size={12} />
+                            <span>Eliminar</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Detalle desplegable de productos y garantías */}
+                    {isOpen && (
+                      <div className="mt-3 pt-3 border-t border-[var(--border-color)] space-y-2.5 animate-in fade-in duration-150">
+                        {sale.items.map((item) => {
+                          const w = getWarrantyStatus(
+                            sale.createdAt,
+                            item.warrantyDays,
+                            item.warrantyClaimed
+                          );
+
+                          return (
+                            <div
+                              key={item.id}
+                              className="rounded-xl bg-black/[0.02] dark:bg-white/[0.03] p-3 border border-[var(--border-color)] space-y-2"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-semibold text-[var(--text-primary)] leading-tight">
+                                    {item.qty}x {item.productName}
+                                  </p>
+                                  <p className="tabular-nums text-[11px] text-[var(--text-secondary)] mt-0.5">
+                                    {formatCOP(item.unitPrice)} c/u
+                                  </p>
+                                </div>
+                                <span className="tabular-nums text-xs font-bold text-[var(--text-primary)] shrink-0">
+                                  {formatCOP(item.unitPrice * item.qty)}
+                                </span>
+                              </div>
+
+                              {/* Badge de garantía interactivo */}
+                              <div className="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-[var(--border-color)]/60 text-[11px]">
+                                <span
+                                  className={`rounded-full px-2 py-0.5 font-bold ${
+                                    w.status === "claimed"
+                                      ? "bg-[#ff3b30]/15 text-[#ff3b30]"
+                                      : w.status === "expired"
+                                      ? "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)]"
+                                      : "bg-[#30d158]/15 text-[#30d158]"
                                   }`}
                                 >
-                                  {item.warrantyClaimed ? "Revertir reclamo" : "Marcar reclamo"}
-                                </button>
-                              )}
+                                  {w.label}
+                                </span>
+
+                                {w.status !== "expired" && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleItemWarranty(sale.id, item.id);
+                                    }}
+                                    className={`rounded-lg px-2.5 py-1 text-xs font-bold active:scale-95 transition-transform ${
+                                      item.warrantyClaimed
+                                        ? "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                                        : "bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30]/25"
+                                    }`}
+                                  >
+                                    {item.warrantyClaimed ? "Revertir reclamo" : "Marcar reclamo"}
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </article>
-              );
-            })
-          )}
-        </section>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </article>
+                );
+              })
+            )}
+          </section>
+        )}
       </div>
 
       {/* Modal Obligatorio de Confirmación para ELIMINAR Venta */}

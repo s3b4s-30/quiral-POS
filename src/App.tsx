@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import AuthScreen from "./components/AuthScreen";
 import DesktopSidebar from "./components/DesktopSidebar";
+import DesktopStoreProfileView from "./components/DesktopStoreProfileView";
 import FloatingCartFAB from "./components/FloatingCartFAB";
 import Navbar, { type NavbarVariant, type Tab } from "./components/Navbar";
 import NewProductModal from "./components/NewProductModal";
@@ -34,6 +35,7 @@ function AppInner() {
   const [isSuppliersModalOpen, setIsSuppliersModalOpen] = useState(false);
   const [isProfileSecurityOpen, setIsProfileSecurityOpen] = useState(false);
   const [isStoreProfileOpen, setIsStoreProfileOpen] = useState(false);
+  const [isDesktopStoreProfileView, setIsDesktopStoreProfileView] = useState(false);
   const [isInventoryFilterOpen, setIsInventoryFilterOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
@@ -73,7 +75,16 @@ function AppInner() {
     ) && !isModalClosing
   );
 
+  const handleOpenStoreProfile = () => {
+    if (typeof window !== "undefined" && window.innerWidth >= 768) {
+      setIsDesktopStoreProfileView(true);
+    } else {
+      setIsStoreProfileOpen(true);
+    }
+  };
+
   const handleTabChange = (tab: Tab) => {
+    setIsDesktopStoreProfileView(false);
     setActiveTab(tab);
     requestAnimationFrame(() => {
       if (tab === "inventory") {
@@ -142,7 +153,7 @@ function AppInner() {
         theme={theme}
         onThemeChange={setTheme}
         onOpenSuppliers={() => setIsSuppliersModalOpen(true)}
-        onOpenProfile={() => setIsStoreProfileOpen(true)}
+        onOpenProfile={handleOpenStoreProfile}
         onOpenProfileSecurity={() => setIsProfileSecurityOpen(true)}
         onLogout={signOut}
       />
@@ -156,14 +167,19 @@ function AppInner() {
           theme={theme}
           onThemeChange={setTheme}
           onOpenSuppliers={() => setIsSuppliersModalOpen(true)}
-          onOpenProfile={() => setIsStoreProfileOpen(true)}
+          onOpenProfile={handleOpenStoreProfile}
         onOpenProfileSecurity={() => setIsProfileSecurityOpen(true)}
           onLogout={signOut}
         />
 
         {/* Contenedor Principal: las vistas manejan su scroll con .quiral-scroll-container */}
         <main className="h-full w-full overflow-hidden relative">
-          {activeTab === "inventory" ? (
+          {isDesktopStoreProfileView ? (
+            <DesktopStoreProfileView
+              onBack={() => setIsDesktopStoreProfileView(false)}
+              onOpenSecurity={() => setIsProfileSecurityOpen(true)}
+            />
+          ) : activeTab === "inventory" ? (
             <InventoryView
               onOpenSuppliers={() => setIsSuppliersModalOpen(true)}
               onFilterModalStateChange={setIsInventoryFilterOpen}
