@@ -3,7 +3,7 @@
 **Proyecto:** Quiral POS (PWA v1.0.1)  
 **Entorno de Agentes:** Google Antigravity (AGY)  
 **Ubicación:** `.agents/skills/`  
-**Documentos Rectores:** [`AGENTS.md`](../AGENTS.md) · [`.cursorrules`](../.cursorrules) · [`DESIGN_GUIDELINES.md`](../DESIGN_GUIDELINES.md) · [`QUIRAL_V1.0.1_DOCS.md`](../QUIRAL_V1.0.1_DOCS.md) · [`PRODUCT.md`](../PRODUCT.md) · [`DESIGN.md`](../DESIGN.md) · [`docs/DESKTOP_UI_RULES.md`](../docs/DESKTOP_UI_RULES.md)
+**Documentos Rectores:** [`AGENTS.md`](../AGENTS.md) · [`docs/AGENTS_AND_SKILLS_MANIFESTO.md`](../docs/AGENTS_AND_SKILLS_MANIFESTO.md) · [`.cursorrules`](../.cursorrules) · [`DESIGN_GUIDELINES.md`](../DESIGN_GUIDELINES.md) · [`QUIRAL_V1.0.1_DOCS.md`](../QUIRAL_V1.0.1_DOCS.md) · [`PRODUCT.md`](../PRODUCT.md) · [`DESIGN.md`](../DESIGN.md) · [`docs/DESKTOP_UI_RULES.md`](../docs/DESKTOP_UI_RULES.md)
 
 ---
 
