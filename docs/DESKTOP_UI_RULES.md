@@ -71,13 +71,30 @@ En cualquier archivo con sufijo `*Desktop.tsx` o vistas exclusivas de escritorio
 
 ## 4. Matriz de Componentes por Plataforma
 
-| Componente / Funcionalidad | Móvil (`< 768px`) | Escritorio (`>= 768px`) |
-| :--- | :--- | :--- |
-| **Punto de Venta (POS)** | `PosViewMobile.tsx` | `PosViewDesktop.tsx` |
-| **Cobro de Carrito** | `CheckoutSheet.tsx` (Bottom Sheet) | `DesktopPosTicket.tsx` (Panel lateral fijo) |
-| **Inventario** | `InventoryView.tsx` (Cards verticales) | `DesktopInventoryGrid.tsx` (Tabla Excel) |
-| **Historial de Ventas** | `HistoryViewMobile.tsx` (Cards) | `HistoryViewDesktop.tsx` (Tabla 1440px) |
-| **Gestión de Proveedores**| `SuppliersModal.tsx` (ModalSheet) | `DesktopSuppliersView.tsx` (Full View) |
-| **Perfil de Tienda** | `StoreProfileModal.tsx` (ModalSheet) | `DesktopStoreProfileView.tsx` (Full View) |
-| **Configurar Atributos** | `AttributeConfigModal.tsx` | `DesktopAttributeConfigView.tsx` |
-| **Navegación Global** | `Navbar.tsx` + `FloatingCartFAB.tsx` | `DesktopSidebar.tsx` |
+| Componente / Funcionalidad | Móvil (`< 768px`) | Escritorio (`>= 768px`) | Módulo (`src/modules/`) |
+| :--- | :--- | :--- | :--- |
+| **Punto de Venta (POS)** | `PosViewMobile.tsx` | `PosViewDesktop.tsx` | `modules/pos/` |
+| **Cobro de Carrito** | `CheckoutSheet.tsx` (Bottom Sheet) | `DesktopPosTicket.tsx` (Panel lateral fijo) | `modules/pos/` |
+| **Inventario** | `InventoryView.tsx` (Cards verticales) | `DesktopInventoryGrid.tsx` (Tabla Excel) | `modules/inventory/` |
+| **Historial de Ventas** | `HistoryViewMobile.tsx` (Cards) | `HistoryViewDesktop.tsx` (Tabla 1440px) | `modules/history/` |
+| **Gestión de Proveedores**| `SuppliersModal.tsx` (ModalSheet) | `DesktopSuppliersView.tsx` (Full View) | `modules/inventory/` |
+| **Perfil de Tienda** | `StoreProfileModal.tsx` (ModalSheet) | `DesktopStoreProfileView.tsx` (Full View) | `modules/inventory/` |
+| **Configurar Atributos** | `AttributeConfigModal.tsx` | `DesktopAttributeConfigView.tsx` | `modules/inventory/` |
+| **Navegación Global** | `Navbar.tsx` + `FloatingCartFAB.tsx` | `DesktopSidebar.tsx` | `components/` |
+
+---
+
+## 5. Arquitectura Modular por Dominios y Capa de Servicios Supabase (Fase 1)
+
+1. **Capa de Servicios y Repositorios (`src/services/`):**
+   - `supabaseInventory.ts`: Centraliza consultas, inserciones, eliminaciones en lote y actualización de catálogos y atributos en Supabase.
+   - `supabaseSales.ts`: Centraliza la ejecución atómica del RPC `complete_sale`, reconciliación de inventario en modificaciones, eliminación con restitución y cierres de ciclo.
+   - `supabaseRealtime.ts`: Aísla las suscripciones por canales de Postgres (`realtime:store:{id}`) fuera de los componentes React.
+   - **Regla:** Los contextos de React (`InventoryContext`) jamás consultan directamente las tablas de Supabase; delegan el I/O asíncrono a la capa de servicios y se enfocan en coordinar el estado de React.
+
+2. **Organización por Dominios (`src/modules/`):**
+   - `src/modules/pos/`: Contiene `PosViewDesktop`, `PosViewMobile`, `DesktopPosTicket`, `PosProductCard`, `CartSummaryBar`, `CheckoutSheet`, `FloatingCartFAB` y hooks de punto de venta (`usePosShortcuts`).
+   - `src/modules/inventory/`: Contiene `DesktopInventoryGrid`, `DesktopProductDrawer`, `DesktopAttributeConfigView`, `DesktopSuppliersView`, `ProductCard`, filtros y modales de inventario.
+   - `src/modules/history/`: Contiene `HistoryViewDesktop`, `HistoryViewMobile`, `SalesPerformanceModal`, `CycleClosingModal`.
+   - **Enrutadores Semáforo:** Las vistas principales en `src/views/` (`PosView.tsx`, `HistoryView.tsx`, `InventoryView.tsx`) importan de `src/modules/` y aplican `useIsDesktop()` sin duplicación lógica.
+

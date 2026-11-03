@@ -2,7 +2,26 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import type { Session } from "@supabase/supabase-js";
 import { getStoreMembership, printSecurityWarning, signOutUser } from "../lib/authService";
 import { DEMO_STORE_ID, ensureFreshDemoStorage, generateDemoSeed } from "../lib/demoSeed";
-import { logDbEvent, supabase, SUPABASE_PAGE_SIZE, withDbTelemetry } from "../lib/supabase";
+import { supabase } from "../lib/supabase";
+import {
+  deleteAllProductsRecords,
+  deleteMultipleProductsRecords,
+  deleteProductRecord,
+  deleteSaleRecord,
+  deleteSupplierRecord,
+  executeCompleteSaleRpc,
+  fetchStoreInventoryBundle,
+  fetchStoreSalesBundle,
+  persistCatalogConfigRpc,
+  persistClosureRecord,
+  persistProductRecord,
+  persistSaleRecord,
+  persistSupplierRecord,
+  purgeLegacySeededSales,
+  purgeProductsRecords,
+  subscribeToStoreRealtime,
+  updateStoreNameRecord,
+} from "../services";
 import { AccentPaletteId, Batch, CartItem, CatalogConfig, CategoryConfig, Closure, PaymentMethod, Product, ProductCategory, Sale, SaleItem, Supplier, UserProfile } from "../types/domain";
 import {
   DEFAULT_CATALOG_CONFIG,
@@ -222,29 +241,22 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const [supRes, prodRes, salesRes, closuresRes, catConfRes] = await withDbTelemetry("load_store_bundle", activeStore, () => Promise.all([
-        supabase.from("suppliers").select("data").eq("store_id", activeStore).limit(SUPABASE_PAGE_SIZE),
-        supabase.from("products").select("data").eq("store_id", activeStore).order("updated_at", { ascending: false }).limit(SUPABASE_PAGE_SIZE),
-        supabase.from("sales").select("data").eq("store_id", activeStore).order("created_at", { ascending: false }).limit(SUPABASE_PAGE_SIZE),
-        supabase.from("cycle_closings").select("data").eq("store_id", activeStore).order("closed_at", { ascending: false }).limit(SUPABASE_PAGE_SIZE),
-        supabase.from("catalog_configs").select("config").eq("store_id", activeStore).maybeSingle(),
-      ]));
-
+      const [invData, salesData] = await Promise.all([
+        fetchStoreInventoryBundle(activeStore),
+        fetchStoreSalesBundle(activeStore),
+      ]);
 
       if (requestId !== activeStoreRequestIdRef.current) return;
-      const loadedSuppliers = supRes.data?.map((r) => r.data as Supplier) ?? [];
-      const loadedProducts = prodRes.data?.map((r) => r.data as Product) ?? [];
-      const rawSales = salesRes.data?.map((r) => r.data as Sale) ?? [];
-      const rawClosures = closuresRes.data?.map((r) => r.data as Closure) ?? [];
+
+      const loadedSuppliers = invData.suppliers;
+      const loadedProducts = invData.products;
+      const rawSales = salesData.sales;
+      const rawClosures = salesData.closures;
 
       // Si existen ventas semilla heredadas ("demo-sale-*") en la tienda de Supabase, purgarlas en background
       const hasLegacySeededSales = rawSales.some((s) => s?.id?.startsWith("demo-sale-"));
       if (hasLegacySeededSales) {
-        void supabase
-          .from("sales")
-          .delete()
-          .eq("store_id", activeStore)
-          .like("id", "demo-sale-%");
+        void purgeLegacySeededSales(activeStore);
       }
 
       const cleanSales = deduplicateSales(rawSales);
@@ -254,9 +266,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       setProducts(loadedProducts);
       setSales(cleanSales);
       setClosures(cleanClosures);
-      if (catConfRes?.data?.config) {
+
+      if (invData.catalogConfigRaw) {
         const mergedRemote = mergeWithDefaultCatalogConfig(
-          catConfRes.data.config as Partial<CatalogConfig>
+          invData.catalogConfigRaw as Partial<CatalogConfig>
         );
         setCatalogConfig(mergedRemote);
         try {
@@ -441,104 +454,47 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!storeId || isDemoUser) return;
 
-    const channel = supabase
-      .channel(`realtime:store:${storeId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "suppliers", filter: `store_id=eq.${storeId}` },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-            const rowData = payload.new?.data as Supplier;
-            if (rowData) {
-              setSuppliers((prev) => [rowData, ...prev.filter((s) => s.id !== rowData.id)]);
-            }
-          } else if (payload.eventType === "UPDATE") {
-            const rowData = payload.new?.data as Supplier;
-            if (rowData) {
-              setSuppliers((prev) => prev.map((s) => (s.id === rowData.id ? rowData : s)));
-            }
-          } else if (payload.eventType === "DELETE") {
-            const oldId = (payload.old as { id?: string })?.id;
-            if (oldId) {
-              setSuppliers((prev) => prev.filter((s) => s.id !== oldId));
-            }
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "products", filter: `store_id=eq.${storeId}` },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-            const rowData = payload.new?.data as Product;
-            if (rowData) {
-              setProducts((prev) => [rowData, ...prev.filter((p) => p.id !== rowData.id)]);
-            }
-          } else if (payload.eventType === "UPDATE") {
-            const rowData = payload.new?.data as Product;
-            if (rowData) {
-              setProducts((prev) => prev.map((p) => (p.id === rowData.id ? rowData : p)));
-            }
-          } else if (payload.eventType === "DELETE") {
-            const oldId = (payload.old as { id?: string })?.id;
-            if (oldId) {
-              setProducts((prev) => prev.filter((p) => p.id !== oldId));
-            }
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "sales", filter: `store_id=eq.${storeId}` },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-            const rowData = payload.new?.data as Sale;
-            if (rowData && !rowData.id?.startsWith("demo-sale-")) {
-              setSales((prev) => deduplicateSales([rowData, ...prev]));
-            }
-          } else if (payload.eventType === "UPDATE") {
-            const rowData = payload.new?.data as Sale;
-            if (rowData) {
-              setSales((prev) => prev.map((s) => (s.id === rowData.id ? rowData : s)));
-            }
-          } else if (payload.eventType === "DELETE") {
-            const oldId = (payload.old as { id?: string })?.id;
-            if (oldId) {
-              setSales((prev) => prev.filter((s) => s.id !== oldId));
-            }
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "cycle_closings", filter: `store_id=eq.${storeId}` },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-            const rowData = payload.new?.data as Closure;
-            if (rowData) {
-              setClosures((prev) => [rowData, ...prev.filter((c) => c.id !== rowData.id)]);
-            }
-          } else if (payload.eventType === "UPDATE") {
-            const rowData = payload.new?.data as Closure;
-            if (rowData) {
-              setClosures((prev) => prev.map((c) => (c.id === rowData.id ? rowData : c)));
-            }
-          } else if (payload.eventType === "DELETE") {
-            const oldId = (payload.old as { id?: string })?.id;
-            if (oldId) {
-              setClosures((prev) => prev.filter((c) => c.id !== oldId));
-            }
-          }
-        }
-      )
-      .subscribe((status, err) => {
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          logDbEvent("warn", `realtime_${status.toLowerCase()}`, { storeId, details: err ? String(err) : status });
-        }
-      });
+    const unsubscribe = subscribeToStoreRealtime(storeId, {
+      onSupplierInsert: (rowData) => {
+        setSuppliers((prev) => [rowData, ...prev.filter((s) => s.id !== rowData.id)]);
+      },
+      onSupplierUpdate: (rowData) => {
+        setSuppliers((prev) => prev.map((s) => (s.id === rowData.id ? rowData : s)));
+      },
+      onSupplierDelete: (oldId) => {
+        setSuppliers((prev) => prev.filter((s) => s.id !== oldId));
+      },
+      onProductInsert: (rowData) => {
+        setProducts((prev) => [rowData, ...prev.filter((p) => p.id !== rowData.id)]);
+      },
+      onProductUpdate: (rowData) => {
+        setProducts((prev) => prev.map((p) => (p.id === rowData.id ? rowData : p)));
+      },
+      onProductDelete: (oldId) => {
+        setProducts((prev) => prev.filter((p) => p.id !== oldId));
+      },
+      onSaleInsert: (rowData) => {
+        setSales((prev) => deduplicateSales([rowData, ...prev]));
+      },
+      onSaleUpdate: (rowData) => {
+        setSales((prev) => prev.map((s) => (s.id === rowData.id ? rowData : s)));
+      },
+      onSaleDelete: (oldId) => {
+        setSales((prev) => prev.filter((s) => s.id !== oldId));
+      },
+      onClosureInsert: (rowData) => {
+        setClosures((prev) => [rowData, ...prev.filter((c) => c.id !== rowData.id)]);
+      },
+      onClosureUpdate: (rowData) => {
+        setClosures((prev) => prev.map((c) => (c.id === rowData.id ? rowData : c)));
+      },
+      onClosureDelete: (oldId) => {
+        setClosures((prev) => prev.filter((c) => c.id !== oldId));
+      },
+    });
 
     return () => {
-      void supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [storeId, isDemoUser]);
 
@@ -553,30 +509,19 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     [storeId, isDemoUser]
   );
 
-  // Persistencia segura en Supabase respetando columnas NOT NULL de cada tabla
+  // Persistencia segura en Supabase mediante la capa de servicios
   const persist = useCallback(
     async (table: string, entity: { id: string }) => {
       if (!storeId || isDemoUser) return;
-      const payload: Record<string, unknown> = {
-        store_id: storeId,
-        id: entity.id,
-        data: entity,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (table === "sales") {
-        const s = entity as unknown as Sale;
-        payload.sale_number = s.saleNumber;
-        payload.created_at = s.createdAt;
+      if (table === "suppliers") {
+        await persistSupplierRecord(storeId, entity as unknown as Supplier);
+      } else if (table === "products") {
+        await persistProductRecord(storeId, entity as unknown as Product);
+      } else if (table === "sales") {
+        await persistSaleRecord(storeId, entity as unknown as Sale);
       } else if (table === "cycle_closings") {
-        const c = entity as unknown as Closure;
-        payload.closed_at = c.closedAt;
+        await persistClosureRecord(storeId, entity as unknown as Closure);
       }
-
-      const { error: err } = await withDbTelemetry(`upsert_${table}`, storeId, () =>
-        supabase.from(table).upsert(payload)
-      );
-      if (err) throw err;
     },
     [storeId, isDemoUser]
   );
@@ -603,20 +548,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const deleteSupplier = (id: string) => {
     setSuppliers((prev) => prev.filter((s) => s.id !== id));
     if (storeId && !isDemoUser) {
-      void supabase
-        .from("suppliers")
-        .delete()
-        .eq("store_id", storeId)
-        .eq("id", id)
-        .then(
-          ({ error: delErr }) => {
-            if (delErr) report(`Error al eliminar proveedor: ${delErr.message}`);
-          },
-          (err: unknown) => {
-            const msg = err instanceof Error ? err.message : String(err);
-            report(`Fallo al eliminar proveedor: ${msg}`);
-          }
-        );
+      void deleteSupplierRecord(storeId, id).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        report(`Fallo al eliminar proveedor: ${msg}`);
+      });
     }
   };
 
@@ -647,20 +582,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const deleteProduct = (id: string) => {
     setProducts((prev) => prev.filter((p) => p.id !== id));
     if (storeId && !isDemoUser) {
-      void supabase
-        .from("products")
-        .delete()
-        .eq("store_id", storeId)
-        .eq("id", id)
-        .then(
-          ({ error: delErr }) => {
-            if (delErr) report(`Error al eliminar producto: ${delErr.message}`);
-          },
-          (err: unknown) => {
-            const msg = err instanceof Error ? err.message : String(err);
-            report(`Fallo al eliminar producto: ${msg}`);
-          }
-        );
+      void deleteProductRecord(storeId, id).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        report(`Fallo al eliminar producto: ${msg}`);
+      });
     }
   };
 
@@ -726,19 +651,13 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     const removed = products.filter((p) => p.batches.every((b) => b.stock === 0));
     setProducts((prev) => prev.filter((p) => !removed.some((r) => r.id === p.id)));
     if (storeId && !isDemoUser && removed.length > 0) {
-      void Promise.all(
-        removed.map((p) =>
-          supabase.from("products").delete().eq("store_id", storeId).eq("id", p.id)
-        )
-      )
-        .then((results) => {
-          const firstErr = results.find((r) => r.error)?.error;
-          if (firstErr) report(`Error al purgar productos: ${firstErr.message}`);
-        })
-        .catch((err: unknown) => {
-          const msg = err instanceof Error ? err.message : String(err);
-          report(`Fallo al purgar productos agotados: ${msg}`);
-        });
+      void purgeProductsRecords(
+        storeId,
+        removed.map((p) => p.id)
+      ).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        report(`Fallo al purgar productos agotados: ${msg}`);
+      });
     }
     return removed.length;
   };
@@ -750,14 +669,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
     if (storeId && !isDemoUser) {
       try {
-        const { error: delErr } = await supabase
-          .from("products")
-          .delete()
-          .eq("store_id", storeId)
-          .in("id", productIds);
-        if (delErr) {
-          report(`Error al eliminar productos seleccionados: ${delErr.message}`);
-        }
+        await deleteMultipleProductsRecords(storeId, productIds);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         report(`Fallo al eliminar productos seleccionados: ${msg}`);
@@ -773,13 +685,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
     if (storeId && !isDemoUser) {
       try {
-        const { error: delErr } = await supabase
-          .from("products")
-          .delete()
-          .eq("store_id", storeId);
-        if (delErr) {
-          report(`Error al vaciar catálogo en Supabase: ${delErr.message}`);
-        }
+        await deleteAllProductsRecords(storeId);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         report(`Fallo al vaciar catálogo: ${msg}`);
@@ -802,16 +708,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (storeId && !isDemoUser) {
-        void withDbTelemetry("upsert_catalog_config", storeId, () =>
-          supabase.rpc("upsert_catalog_config", {
-            target_store: storeId,
-            config_payload: nextConfig,
-          })
-        ).catch(() => {
-          void supabase.auth
-            .updateUser({ data: { catalog_config: nextConfig } })
-            .catch(() => {});
-        });
+        void persistCatalogConfigRpc(storeId, nextConfig);
       }
     },
     [storeId, isDemoUser]
@@ -1295,26 +1192,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
       // Transacción atómica en Supabase si está conectado
       if (storeId && !isDemoUser) {
-        void supabase
-          .rpc("complete_sale", {
-            target_store: storeId,
-            sale_id: newSale.id,
-            sale_number: newSale.saleNumber,
-            sale_created_at: newSale.createdAt,
-            sale_data: newSale,
-            lines: cartSnapshot,
-          })
-          .then(
-            ({ error: rpcErr }) => {
-              if (rpcErr) {
-                report(`Aviso de sincronización en venta: ${rpcErr.message}`);
-              }
-            },
-            (err: unknown) => {
-              const msg = err instanceof Error ? err.message : String(err);
-              report(`Fallo de red en venta: ${msg}`);
-            }
-          );
+        void executeCompleteSaleRpc(storeId, newSale, cartSnapshot).catch((err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err);
+          report(`Aviso de sincronización en venta: ${msg}`);
+        });
       }
 
       return true;
@@ -1431,20 +1312,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (storeId && !isDemoUser) {
-      void supabase
-        .from("sales")
-        .delete()
-        .eq("store_id", storeId)
-        .eq("id", saleId)
-        .then(
-          ({ error: delErr }) => {
-            if (delErr) report(`Error al eliminar venta: ${delErr.message}`);
-          },
-          (err: unknown) => {
-            const msg = err instanceof Error ? err.message : String(err);
-            report(`Fallo al eliminar venta: ${msg}`);
-          }
-        );
+      void deleteSaleRecord(storeId, saleId).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        report(`Fallo al eliminar venta: ${msg}`);
+      });
     }
   };
 
@@ -1535,10 +1406,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
     if (!isDemoUser && userProfile.storeId) {
       try {
-        await supabase
-          .from("stores")
-          .update({ name: cleanName })
-          .eq("id", userProfile.storeId);
+        await updateStoreNameRecord(userProfile.storeId, cleanName);
       } catch (dbErr) {
         console.warn("Aviso al actualizar tabla stores:", dbErr);
       }

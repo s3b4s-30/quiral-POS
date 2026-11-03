@@ -1,7 +1,6 @@
 import React from "react";
 import { useIsDesktop } from "../hooks/useIsDesktop";
-import HistoryViewDesktop from "./HistoryViewDesktop";
-import HistoryViewMobile from "./HistoryViewMobile";
+import { HistoryViewDesktop, HistoryViewMobile } from "../modules/history";
 
 export interface HistoryViewProps {
   onGoToPOS?: () => void;
@@ -11,7 +10,7 @@ export interface HistoryViewProps {
 /**
  * Semáforo Arquitectónico "Platform Split" para el Historial de Ventas.
  * Conmuta entre HistoryViewDesktop e HistoryViewMobile según el viewport
- * garantizando cero modales táctiles en escritorio y cero interferencia en móvil.
+ * delegando la renderización al módulo domain-driven `modules/history`.
  */
 export default function HistoryView(props: HistoryViewProps) {
   const isDesktop = useIsDesktop();

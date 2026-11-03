@@ -12,18 +12,19 @@ import {
   X,
 } from "lucide-react";
 import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import AdvancedFiltersModal, {
-  AdvancedFilterValues,
+import {
+  AdvancedFiltersModal,
+  type AdvancedFilterValues,
+  type InventoryPageSize,
   DEFAULT_ADVANCED_FILTERS,
-  InventoryPageSize,
-} from "../components/AdvancedFiltersModal";
-import AttributeConfigModal from "../components/AttributeConfigModal";
-import CategoryManagerModal from "../components/CategoryManagerModal";
-import DesktopAttributeConfigView from "../components/DesktopAttributeConfigView";
-import DesktopInventoryGrid from "../components/DesktopInventoryGrid";
-import DesktopProductDrawer from "../components/DesktopProductDrawer";
+  AttributeConfigModal,
+  CategoryManagerModal,
+  DesktopAttributeConfigView,
+  DesktopInventoryGrid,
+  DesktopProductDrawer,
+  ProductCard,
+} from "../modules/inventory";
 import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
-import ProductCard from "../components/ProductCard";
 import { useInventory } from "../context/InventoryContext";
 import { Product, ProductCategory } from "../types/domain";
 import { isSameCatalogText } from "../utils/catalogConfig";
