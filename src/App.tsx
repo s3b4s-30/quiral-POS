@@ -37,6 +37,7 @@ function AppInner() {
   const [isInventoryFilterOpen, setIsInventoryFilterOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isModalClosing, setIsModalClosing] = useState(false);
 
   const {
@@ -56,7 +57,7 @@ function AppInner() {
   } = useInventory();
 
   // Ocultar Navbar cuando cualquier modal o vista secundaria esté activa
-  // Se restaura inmediatamente al iniciar la animación de cierre (<=180ms ease-out)
+  // Se restaura inmediatamente al iniciar la animación de cierre (0ms de retraso percibido)
   const hasActiveModal = Boolean(
     (
       selectedProduct ||
@@ -67,7 +68,8 @@ function AppInner() {
       isStoreProfileOpen ||
       isInventoryFilterOpen ||
       isCheckoutOpen ||
-      isSummaryModalOpen
+      isSummaryModalOpen ||
+      isHistoryModalOpen
     ) && !isModalClosing
   );
 
@@ -169,7 +171,10 @@ function AppInner() {
           ) : activeTab === "sell" ? (
             <PosView onCheckoutStateChange={setIsCheckoutOpen} />
           ) : activeTab === "history" ? (
-            <HistoryView onGoToPOS={() => handleTabChange("sell")} />
+            <HistoryView
+              onGoToPOS={() => handleTabChange("sell")}
+              onModalStateChange={setIsHistoryModalOpen}
+            />
           ) : activeTab === "summary" ? (
             <SummaryView onModalStateChange={setIsSummaryModalOpen} />
           ) : (
@@ -188,25 +193,24 @@ function AppInner() {
       </div>
 
       {/* Botón flotante de acceso rápido a Vender en todas las pantallas distintas a Vender */}
-      {!hasActiveModal && activeTab !== "sell" && (
-        <FloatingCartFAB
-          cartCount={cartUnits}
-          onClick={() => handleTabChange("sell")}
-        />
-      )}
+      <FloatingCartFAB
+        cartCount={cartUnits}
+        onClick={() => handleTabChange("sell")}
+        isVisible={!hasActiveModal && activeTab !== "sell"}
+      />
 
       {/* 
         Barra de Navegación Inferior Flotante:
-        Se oculta dinámicamente cuando un modal está abierto para evitar solapamientos.
+        Permanece en el árbol DOM para mantener caliente la superficie GPU con backdrop-blur (42px).
+        Se oculta y restaura instantáneamente (0ms reflow) mediante transformaciones de hardware.
       */}
-      {!hasActiveModal && (
-        <Navbar
-          activeTab={activeTab}
-          cartCount={cartUnits}
-          onTabChange={handleTabChange}
-          variant={navbarVariant}
-        />
-      )}
+      <Navbar
+        activeTab={activeTab}
+        cartCount={cartUnits}
+        onTabChange={handleTabChange}
+        variant={navbarVariant}
+        isVisible={!hasActiveModal}
+      />
 
       {/* 
         Modales Globales a nivel raíz:
@@ -238,6 +242,7 @@ function AppInner() {
 
       {isPurgeModalOpen && (
         <PurgeConfirmModal
+          onStartClose={() => setIsModalClosing(true)}
           onClose={() => {
             setIsPurgeModalOpen(false);
             setIsModalClosing(false);
@@ -247,6 +252,7 @@ function AppInner() {
 
       {isSuppliersModalOpen && (
         <SuppliersModal
+          onStartClose={() => setIsModalClosing(true)}
           onClose={() => {
             setIsSuppliersModalOpen(false);
             setIsModalClosing(false);

@@ -10,9 +10,13 @@ const PAYMENT_METHODS: PaymentMethod[] = ["Efectivo", "Nequi", "Bancolombia", "T
 
 interface HistoryViewProps {
   onGoToPOS?: () => void;
+  onModalStateChange?: (open: boolean) => void;
 }
 
-export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps) {
+export default function HistoryView({
+  onGoToPOS: _onGoToPOS,
+  onModalStateChange,
+}: HistoryViewProps) {
   const { sales, toggleItemWarranty, updateSale, deleteSale, loading } = useInventory();
   const [openSaleId, setOpenSaleId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -52,21 +56,25 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
     setEditTotalInput(String(sale.totalAmount));
     setEditNote(sale.note ?? "");
     setConfirmSaveEdit(false);
+    onModalStateChange?.(true);
   };
 
   const closeEditModal = () => {
     setEditingSale(null);
     setConfirmSaveEdit(false);
+    onModalStateChange?.(false);
   };
 
   const openDeleteModal = (sale: Sale, e: React.MouseEvent) => {
     e.stopPropagation();
     setRestoreStockOnDelete(true);
     setSaleToDelete(sale);
+    onModalStateChange?.(true);
   };
 
   const closeDeleteModal = () => {
     setSaleToDelete(null);
+    onModalStateChange?.(false);
   };
 
   const handleConfirmDelete = () => {
@@ -341,6 +349,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
         <ModalSheet
           title={`Eliminar Venta #${saleToDelete.saleNumber}`}
           onClose={closeDeleteModal}
+          onStartClose={() => onModalStateChange?.(false)}
           footer={
             <div className="grid grid-cols-2 gap-2.5">
               <button
@@ -403,6 +412,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
               : `Modificar Venta #${editingSale.saleNumber}`
           }
           onClose={closeEditModal}
+          onStartClose={() => onModalStateChange?.(false)}
           footer={
             confirmSaveEdit ? (
               <div className="grid grid-cols-2 gap-2.5">

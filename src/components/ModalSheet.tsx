@@ -37,14 +37,14 @@ export default function ModalSheet({
   const startTimeRef = useRef(0);
   const isDraggingRef = useRef(false);
 
-  // Cerrar con animación fluida (máximo 180ms ease-out, sincronizando restauración de interfaz)
+  // Cerrar con animación fluida e instantánea (140ms ease-out, sincronizando restauración inmediata de interfaz)
   const handleClose = () => {
     if (isClosing) return;
     setIsClosing(true);
     onStartClose?.();
     setTimeout(() => {
       onClose();
-    }, 180);
+    }, 140);
   };
 
   // Bloqueo de scroll del body y restauración limpia al desmontar
@@ -106,8 +106,8 @@ export default function ModalSheet({
     const duration = Math.max(Date.now() - startTimeRef.current, 1);
     const velocity = deltaY / duration; // px por milisegundo
 
-    // Criterio de despido: arrastre > 90px o swipe rápido hacia abajo
-    if (deltaY > 90 || (velocity > 0.35 && deltaY > 30)) {
+    // Criterio de despido: arrastre > 80px o swipe rápido hacia abajo
+    if (deltaY > 80 || (velocity > 0.35 && deltaY > 25)) {
       handleClose();
     } else {
       setDragY(0);
@@ -146,7 +146,7 @@ export default function ModalSheet({
       const duration = Math.max(Date.now() - startTimeRef.current, 1);
       const velocity = deltaY / duration;
 
-      if (deltaY > 90 || (velocity > 0.35 && deltaY > 30)) {
+      if (deltaY > 80 || (velocity > 0.35 && deltaY > 25)) {
         handleClose();
       } else {
         setDragY(0);
@@ -159,8 +159,8 @@ export default function ModalSheet({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col justify-end bg-black/60 dark:bg-black/75 sm:items-center sm:justify-center p-0 sm:p-4 touch-none overscroll-none select-none transition-opacity duration-[180ms] ease-out ${
-        isClosing ? "opacity-0" : "opacity-100 animate-in fade-in"
+      className={`fixed inset-0 z-50 flex flex-col justify-end bg-black/60 dark:bg-black/75 sm:items-center sm:justify-center p-0 sm:p-4 touch-none overscroll-none select-none transition-opacity duration-150 ease-out will-change-[opacity] ${
+        isClosing ? "opacity-0 pointer-events-none" : "opacity-100 animate-in fade-in"
       }`}
       onTouchMove={(e) => {
         if (e.target === e.currentTarget) {
@@ -187,8 +187,9 @@ export default function ModalSheet({
           transition: isDragging
             ? "none"
             : isClosing
-            ? "transform 0.18s cubic-bezier(0.32, 0.72, 0, 1)"
-            : "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+            ? "transform 0.14s cubic-bezier(0.32, 0.72, 0, 1)"
+            : "transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)",
+          willChange: isDragging || isClosing ? "transform" : "auto",
         }}
         onClick={(e) => e.stopPropagation()}
       >

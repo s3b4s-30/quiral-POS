@@ -254,6 +254,7 @@ export default function SummaryView({ onModalStateChange }: SummaryViewProps) {
       {/* Modal 1: Rendimiento de Ventas */}
       <SalesPerformanceModal
         isOpen={isPerformanceOpen}
+        onStartClose={() => onModalStateChange?.(false)}
         onClose={handleClosePerformance}
         closures={closures}
         sales={sales}
@@ -264,6 +265,7 @@ export default function SummaryView({ onModalStateChange }: SummaryViewProps) {
       {/* Modal 2: Cierre de Ciclo */}
       <CycleClosingModal
         isOpen={isClosingCycleOpen}
+        onStartClose={() => onModalStateChange?.(false)}
         onClose={handleCloseCycleClose}
         sales={sales}
         products={products}

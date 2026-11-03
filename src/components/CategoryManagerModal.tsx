@@ -24,9 +24,13 @@ import {
 
 interface CategoryManagerModalProps {
   onClose: () => void;
+  onStartClose?: () => void;
 }
 
-export default function CategoryManagerModal({ onClose }: CategoryManagerModalProps) {
+export default function CategoryManagerModal({
+  onClose,
+  onStartClose,
+}: CategoryManagerModalProps) {
   const {
     products,
     catalogConfig,
@@ -251,6 +255,7 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
   // Guardar el orden actual y cerrar instantáneamente (Check ✓ en cabecera)
   const handleSaveAndClose = () => {
     updateCategoryOrder(draftOrder);
+    onStartClose?.();
     onClose();
   };
 
@@ -264,6 +269,7 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
       <ModalSheet
         title="Organizar Categorías"
         onClose={onClose}
+        onStartClose={onStartClose}
         enableDragToDismiss={false}
         headerRight={
           <button

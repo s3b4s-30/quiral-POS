@@ -599,6 +599,7 @@ export default function InventoryView({
       {isFilterModalOpen && (
         <AdvancedFiltersModal
           isOpen={isFilterModalOpen}
+          onStartClose={() => onFilterModalStateChange?.(false)}
           onClose={() => handleOpenFilterModal(false)}
           filters={advancedFilters}
           onApply={(newFilters) => setAdvancedFilters(newFilters)}
@@ -613,7 +614,10 @@ export default function InventoryView({
 
       {/* Hoja Modal de Gestión y Reordenamiento de Categorías (Long-Press) */}
       {isCategoryModalOpen && (
-        <CategoryManagerModal onClose={() => handleOpenCategoryModal(false)} />
+        <CategoryManagerModal
+          onStartClose={() => onFilterModalStateChange?.(false)}
+          onClose={() => handleOpenCategoryModal(false)}
+        />
       )}
     </div>
   );

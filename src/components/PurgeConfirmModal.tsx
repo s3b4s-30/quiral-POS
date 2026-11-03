@@ -6,13 +6,17 @@ import { formatCOP } from "../utils/formatters";
 
 interface PurgeConfirmModalProps {
   onClose: () => void;
+  onStartClose?: () => void;
 }
 
 type ManagementTab = "selective" | "clear_all";
 
 const CONFIRMATION_PHRASE = "vaciar inventario";
 
-export default function PurgeConfirmModal({ onClose }: PurgeConfirmModalProps) {
+export default function PurgeConfirmModal({
+  onClose,
+  onStartClose,
+}: PurgeConfirmModalProps) {
   const { products, deleteMultipleProducts, clearAllProducts } = useInventory();
 
   const [activeTab, setActiveTab] = useState<ManagementTab>("selective");
@@ -88,6 +92,7 @@ export default function PurgeConfirmModal({ onClose }: PurgeConfirmModalProps) {
     <ModalSheet
       title="Gestión y Vaciado de Catálogo"
       onClose={onClose}
+      onStartClose={onStartClose}
       footer={
         activeTab === "selective" ? (
           <div className="grid grid-cols-2 gap-2.5">

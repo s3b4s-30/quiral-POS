@@ -291,7 +291,10 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
 
       {/* Modal de Gestión y Reordenamiento de Categorías (Long-Press) */}
       {isCategoryModalOpen && (
-        <CategoryManagerModal onClose={() => handleOpenCategoryModal(false)} />
+        <CategoryManagerModal
+          onStartClose={() => onCheckoutStateChange(false)}
+          onClose={() => handleOpenCategoryModal(false)}
+        />
       )}
     </>
   );
