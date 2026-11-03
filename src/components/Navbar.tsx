@@ -45,7 +45,7 @@ export default function Navbar({
               onClick={() => onTabChange(id)}
               className={`relative flex min-h-[50px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1.5 text-xs font-semibold transition-colors duration-200 active:scale-95 ${
                 isActive
-                  ? "bg-accent text-white shadow-sm dark:bg-[var(--bg-elevated)] dark:text-accent dark:border dark:border-accent/30 dark:shadow-md"
+                  ? "bg-accent text-white shadow-md shadow-accent/25 dark:shadow-[0_4px_16px_var(--accent-ring)]"
                   : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >

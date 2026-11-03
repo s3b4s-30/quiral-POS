@@ -245,7 +245,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                           onClick={(e) => openEditModal(sale, e)}
                           aria-label={`Modificar venta #${sale.saleNumber}`}
                           title="Modificar venta"
-                          className="inline-flex h-7 items-center gap-1 rounded-lg border border-accent/25 bg-accent-subtle px-2 text-[11px] font-bold text-accent active:scale-95 transition-all duration-200"
+                          className="inline-flex h-7 items-center gap-1 rounded-lg border border-transparent bg-accent-subtle px-2 text-[11px] font-bold text-accent hover:border-accent-subtle active:scale-95 transition-all duration-200"
                         >
                           <Pencil size={12} />
                           <span>Modificar</span>
@@ -255,7 +255,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                           onClick={(e) => openDeleteModal(sale, e)}
                           aria-label={`Eliminar venta #${sale.saleNumber}`}
                           title="Eliminar venta"
-                          className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#ff3b30]/25 bg-[#ff3b30]/10 px-2 text-[11px] font-bold text-[#ff3b30] active:scale-95 transition-transform"
+                          className="inline-flex h-7 items-center gap-1 rounded-lg border border-transparent bg-red-500/10 px-2 text-[11px] font-bold text-red-500 hover:border-red-500/20 active:scale-95 transition-all duration-200"
                         >
                           <Trash2 size={12} />
                           <span>Eliminar</span>
