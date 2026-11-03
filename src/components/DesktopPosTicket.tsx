@@ -284,9 +284,9 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
                   </div>
                 </div>
 
-                {/* Subfila Lotes / Proveedor si hay múltiples lotes disponibles */}
+                {/* Subfila Lotes / Proveedor si hay múltiples lotes disponibles (Ergonomía de Mouse: flex-wrap completo) */}
                 {product.batches.filter((b) => b.stock > 0).length > 1 && (
-                  <div className="pt-1 border-t border-[var(--border-color)]/40 flex items-center gap-1 overflow-x-auto no-scrollbar">
+                  <div className="pt-1.5 border-t border-[var(--border-color)]/40 flex flex-wrap items-center gap-1.5">
                     <span className="text-[10px] text-[var(--text-secondary)] shrink-0 font-medium mr-1">
                       Lote:
                     </span>
@@ -300,10 +300,10 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
                             key={batch.id}
                             type="button"
                             onClick={() => updateCartItemBatch(product.id, batch.id)}
-                            className={`whitespace-nowrap rounded-lg px-2 py-0.5 text-[10px] font-bold transition-all ${
+                            className={`rounded-lg px-2 py-0.5 text-[10px] font-bold transition-all ${
                               isCurrentBatch
                                 ? "bg-accent text-white shadow-xs"
-                                : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                                : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/30"
                             }`}
                           >
                             {sup?.name || "Prov"} ({batch.stock} uds)

@@ -28,6 +28,7 @@ import { useInventory } from "../context/InventoryContext";
 import { Product, ProductCategory } from "../types/domain";
 import { isSameCatalogText } from "../utils/catalogConfig";
 import { formatCOP, parseCOPInput } from "../utils/formatters";
+import { useIsDesktop } from "../hooks/useIsDesktop";
 
 interface InventoryViewProps {
   onOpenSuppliers: () => void;
@@ -69,25 +70,13 @@ export default function InventoryView({
   const [isAttributeModalOpen, setIsAttributeModalOpen] = useState(false);
 
   // Estados exclusivos de la Estación de Trabajo de Escritorio (Data Grid / Excel)
-  const [isDesktopViewport, setIsDesktopViewport] = useState<boolean>(() =>
-    typeof window !== "undefined" ? window.innerWidth >= 768 : false
-  );
+  const isDesktopViewport = useIsDesktop();
   const [desktopViewMode, setDesktopViewMode] = useState<"table" | "cards">("table");
   const [quickCountMode, setQuickCountMode] = useState(false);
   const [inspectedProduct, setInspectedProduct] = useState<Product | null>(null);
 
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const focusQuickAddRef = useRef<(() => void) | null>(null);
-
-  useEffect(() => {
-    const mql = window.matchMedia("(min-width: 768px)");
-    const handleViewportChange = (e: MediaQueryListEvent) => {
-      setIsDesktopViewport(e.matches);
-    };
-    setIsDesktopViewport(mql.matches);
-    mql.addEventListener("change", handleViewportChange);
-    return () => mql.removeEventListener("change", handleViewportChange);
-  }, []);
 
   // Paginación controlada: por defecto estrictamente 10 productos para carga instantánea en móvil (iPhone)
   const [pageSize, setPageSize] = useState<InventoryPageSize>(10);
