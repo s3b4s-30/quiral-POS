@@ -219,4 +219,50 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     await page.locator("#inventory-scroll").getByRole("button", { name: "Todos", exact: true }).click();
     await expect(page.getByText(/Apple Watch Series 9/)).toBeVisible();
   });
+
+  test("3. Paginación controlada por defecto en 10 productos (iPhone), botón Ver más productos y reinicio al filtrar", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const mobileNavbar = page.locator("nav.liquid-glass-surface");
+    await expect(mobileNavbar).toBeVisible({ timeout: 10000 });
+
+    // Ir a Inventario
+    await mobileNavbar.locator("button").filter({ hasText: "Inventario" }).click();
+    await expect(page.locator("#inventory-scroll")).toBeVisible();
+
+    // 1. Validar que el límite por defecto en móvil sea estrictamente 10 productos
+    const opt10Btn = page.locator('[data-testid="page-size-opt-10"]');
+    await expect(opt10Btn).toBeVisible();
+    await expect(opt10Btn).toHaveAttribute("aria-pressed", "true");
+
+    const productCards = page.locator("#inventory-scroll section article");
+    await expect(productCards).toHaveCount(10);
+
+    // 2. Validar que el botón "Ver más productos" aparece y suma +10 productos al hacer clic
+    const loadMoreBtn = page.locator('[data-testid="load-more-products-btn"]');
+    await expect(loadMoreBtn).toBeVisible();
+    await loadMoreBtn.click();
+
+    await expect(productCards).toHaveCount(20);
+
+    // 3. Cambiar el selector a "Todos" debe mostrar el catálogo completo y ocultar "Ver más productos"
+    const optAllBtn = page.locator('[data-testid="page-size-opt-all"]');
+    await optAllBtn.click();
+    await expect(optAllBtn).toHaveAttribute("aria-pressed", "true");
+    await expect(productCards).toHaveCount(32);
+    await expect(loadMoreBtn).not.toBeVisible();
+
+    // 4. Volver a 10 y filtrar por categoría o atributo reinicia el paginador al primer bloque
+    await opt10Btn.click();
+    await expect(productCards).toHaveCount(10);
+
+    await page
+      .locator("#inventory-scroll")
+      .getByRole("button", { name: "Cargadores y Cables", exact: true })
+      .click();
+    await expect(page.locator('[data-testid="category-attribute-subfilters"]')).toBeVisible();
+    await expect(productCards).toHaveCount(9);
+  });
 });

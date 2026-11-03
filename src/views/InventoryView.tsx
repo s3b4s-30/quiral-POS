@@ -1,5 +1,5 @@
-import { Filter, Search, SlidersHorizontal, X } from "lucide-react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, Filter, Layers, Search, SlidersHorizontal, X } from "lucide-react";
+import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import AdvancedFiltersModal, {
   AdvancedFilterValues,
   DEFAULT_ADVANCED_FILTERS,
@@ -11,6 +11,16 @@ import { useInventory } from "../context/InventoryContext";
 import { ProductCategory } from "../types/domain";
 import { isSameCatalogText } from "../utils/catalogConfig";
 import { formatCOP, parseCOPInput } from "../utils/formatters";
+
+export type InventoryPageSize = 10 | 20 | 50 | 100 | "all";
+
+const PAGE_SIZE_OPTIONS: Array<{ value: InventoryPageSize; label: string }> = [
+  { value: 10, label: "10" },
+  { value: 20, label: "20" },
+  { value: 50, label: "50" },
+  { value: 100, label: "100" },
+  { value: "all", label: "Todos" },
+];
 
 interface InventoryViewProps {
   onOpenSuppliers: () => void;
@@ -30,14 +40,20 @@ export default function InventoryView({
     catalogConfig,
   } = useInventory();
 
-  // Filtros
+  // Filtros y búsqueda diferida sin bloqueo del hilo principal (60fps en iPhone)
   const [query, setQuery] = useState("");
+  const deferredQuery = useDeferredValue(query);
   const [selectedCategory, setSelectedCategory] = useState<"Todos" | ProductCategory>("Todos");
+  const [selectedAttributeTag, setSelectedAttributeTag] = useState<string>("");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterValues>(
     DEFAULT_ADVANCED_FILTERS
   );
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+
+  // Paginación controlada: por defecto estrictamente 10 productos para carga instantánea en móvil (iPhone)
+  const [pageSize, setPageSize] = useState<InventoryPageSize>(10);
+  const [visibleCount, setVisibleCount] = useState<number>(10);
 
   // Gestor de Long-Press para píldoras de categorías (Estilo WhatsApp / iOS)
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -126,32 +142,85 @@ export default function InventoryView({
       !sortedCategories.some((c) => isSameCatalogText(c, selectedCategory))
     ) {
       setSelectedCategory("Todos");
+      setSelectedAttributeTag("");
     }
   }, [sortedCategories, selectedCategory]);
 
-  // Listado filtrado de productos con combinación multifiltro
+  // Índice precalculado en memoria para búsquedas instantáneas por nombre, categoría y atributos
+  const productSearchIndex = useMemo(() => {
+    const indexMap = new Map<string, string>();
+    for (const p of products) {
+      const searchableBlob = `${p.name} ${p.category} ${p.subtitle || ""}`.toLowerCase();
+      indexMap.set(p.id, searchableBlob);
+    }
+    return indexMap;
+  }, [products]);
+
+  // Etiquetas dinámicas de atributos/subtipos disponibles cuando se filtra una categoría específica
+  const availableAttributeTags = useMemo(() => {
+    if (selectedCategory === "Todos") return [];
+    const tagSet = new Set<string>();
+    for (const p of products) {
+      if (!isSameCatalogText(p.category, selectedCategory)) continue;
+      if (!p.subtitle) continue;
+      const parts = p.subtitle
+        .split("·")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0 && !isSameCatalogText(s, selectedCategory));
+      for (const part of parts) {
+        tagSet.add(part);
+      }
+    }
+    return Array.from(tagSet).slice(0, 12);
+  }, [products, selectedCategory]);
+
+  // Reiniciar paginación al primer bloque cuando cambian filtros, búsqueda, categoría o límite por vista
+  useEffect(() => {
+    if (pageSize === "all") {
+      setVisibleCount(products.length || 100);
+    } else {
+      setVisibleCount(pageSize);
+    }
+  }, [selectedCategory, selectedAttributeTag, deferredQuery, advancedFilters, pageSize, products.length]);
+
+  // Listado filtrado de productos con combinación multifiltro e índice de atributos
   const filteredProducts = useMemo(() => {
     const minP = parseCOPInput(advancedFilters.minPrice);
     const maxP = parseCOPInput(advancedFilters.maxPrice);
     const minW = parseInt(advancedFilters.minWarranty, 10) || 0;
+    const qTerms = deferredQuery
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
+    const attrTagLower = selectedAttributeTag.trim().toLowerCase();
 
     return products.filter((p) => {
-      // Filtro de categoría
+      // 1. Filtro de categoría
       const matchesCategory =
         selectedCategory === "Todos" || isSameCatalogText(p.category, selectedCategory);
+      if (!matchesCategory) return false;
 
-      // Filtro de búsqueda por texto
-      const q = query.trim().toLowerCase();
-      const matchesQuery =
-        !q ||
-        p.name.toLowerCase().includes(q) ||
-        (p.subtitle && p.subtitle.toLowerCase().includes(q));
+      // 2. Filtro rápido por etiqueta de atributo / subtipo de la categoría activa
+      if (attrTagLower) {
+        const sub = (p.subtitle || "").toLowerCase();
+        const nm = p.name.toLowerCase();
+        if (!sub.includes(attrTagLower) && !nm.includes(attrTagLower)) {
+          return false;
+        }
+      }
 
-      if (!matchesCategory || !matchesQuery) return false;
+      // 3. Filtro de búsqueda multi-término indexada (nombre, categoría y atributos)
+      if (qTerms.length > 0) {
+        const blob = productSearchIndex.get(p.id) || "";
+        for (const term of qTerms) {
+          if (!blob.includes(term)) return false;
+        }
+      }
 
       const totalStock = p.batches.reduce((sum, b) => sum + b.stock, 0);
 
-      // Filtro de Proveedor
+      // 4. Filtro de Proveedor
       if (advancedFilters.supplierId) {
         const hasSupplier = p.batches.some(
           (b) => b.supplierId === advancedFilters.supplierId
@@ -159,7 +228,7 @@ export default function InventoryView({
         if (!hasSupplier) return false;
       }
 
-      // Filtro de Estado de Stock
+      // 5. Filtro de Estado de Stock
       if (advancedFilters.stockStatus === "in_stock" && totalStock <= 0) return false;
       if (
         advancedFilters.stockStatus === "low_stock" &&
@@ -169,16 +238,53 @@ export default function InventoryView({
       }
       if (advancedFilters.stockStatus === "out_of_stock" && totalStock > 0) return false;
 
-      // Filtro de Rango de Precio
+      // 6. Filtro de Rango de Precio
       if (minP > 0 && p.price < minP) return false;
       if (maxP > 0 && p.price > maxP) return false;
 
-      // Filtro de Garantía mínima
+      // 7. Filtro de Garantía mínima
       if (minW > 0 && p.warrantyDays < minW) return false;
 
       return true;
     });
-  }, [products, selectedCategory, query, advancedFilters]);
+  }, [
+    products,
+    selectedCategory,
+    selectedAttributeTag,
+    deferredQuery,
+    advancedFilters,
+    productSearchIndex,
+  ]);
+
+  // Subconjunto visible según la paginación activa
+  const paginatedProducts = useMemo(() => {
+    if (pageSize === "all") return filteredProducts;
+    return filteredProducts.slice(0, visibleCount);
+  }, [filteredProducts, pageSize, visibleCount]);
+
+  const remainingProductsCount = Math.max(
+    0,
+    filteredProducts.length - paginatedProducts.length
+  );
+
+  const nextIncrementCount =
+    pageSize === "all"
+      ? remainingProductsCount
+      : Math.min(pageSize, remainingProductsCount);
+
+  const handleLoadMore = () => {
+    if (pageSize === "all") return;
+    setVisibleCount((prev) => Math.min(filteredProducts.length, prev + pageSize));
+  };
+
+  const handleSelectPageSize = (nextSize: InventoryPageSize) => {
+    setPageSize(nextSize);
+    if (nextSize === "all") {
+      setVisibleCount(filteredProducts.length);
+    } else {
+      setVisibleCount(nextSize);
+    }
+  };
 
   // Métricas financieras del inventario cuando Modo Costos está activo
   const inventoryStats = useMemo(() => {
@@ -205,6 +311,7 @@ export default function InventoryView({
   const handleResetAllFilters = () => {
     setQuery("");
     setSelectedCategory("Todos");
+    setSelectedAttributeTag("");
     setAdvancedFilters(DEFAULT_ADVANCED_FILTERS);
   };
 
@@ -212,9 +319,9 @@ export default function InventoryView({
     /* Contenedor Principal: scroll vertical nativo Apple HIG */
     <div id="inventory-scroll" className="quiral-scroll-container transition-colors duration-75">
       <div className="mx-auto max-w-xl md:max-w-4xl lg:max-w-5xl px-4">
-        {/* 1. Buscador, Embudo Multifiltro y Categorías Fijas con Fondo Sólido Opaco */}
-        <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
-          <div className="flex items-center gap-2 mb-3">
+        {/* 1. Buscador Instantáneo, Embudo Multifiltro y Categorías Modulares Fijas */}
+        <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-3 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
+          <div className="flex items-center gap-2 mb-2.5">
             <div className="relative flex-1">
               <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm transition-colors duration-75 focus-within:border-[#007aff]">
                 <Search size={18} className="text-[var(--text-secondary)] shrink-0" />
@@ -222,7 +329,8 @@ export default function InventoryView({
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Buscar en catálogo..."
+                  placeholder="Buscar por nombre, categoría o atributo..."
+                  aria-label="Buscar en catálogo"
                   className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)] transition-colors duration-75"
                 />
                 {query && (
@@ -282,6 +390,7 @@ export default function InventoryView({
                       return;
                     }
                     setSelectedCategory(cat);
+                    setSelectedAttributeTag("");
                   }}
                   title="Toca para filtrar · Mantén presionado para organizar categorías"
                   className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-all duration-75 select-none ${
@@ -306,9 +415,99 @@ export default function InventoryView({
               <SlidersHorizontal size={14} />
             </button>
           </div>
+
+          {/* Subfiltros rápidos de atributos/subtipos cuando hay una categoría activa */}
+          {selectedCategory !== "Todos" && availableAttributeTags.length > 0 && (
+            <div
+              data-testid="category-attribute-subfilters"
+              className="mt-2 flex items-center gap-1.5 overflow-x-auto pt-1.5 border-t border-[var(--border-color)]/60 no-scrollbar"
+            >
+              <button
+                type="button"
+                onClick={() => setSelectedAttributeTag("")}
+                className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                  selectedAttributeTag === ""
+                    ? "bg-[#007aff]/15 text-[#007aff] dark:text-[#0a84ff] border border-[#007aff]/30"
+                    : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]"
+                }`}
+              >
+                Todos en {selectedCategory}
+              </button>
+              {availableAttributeTags.map((tag) => {
+                const isTagActive = isSameCatalogText(selectedAttributeTag, tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() =>
+                      setSelectedAttributeTag(isTagActive ? "" : tag)
+                    }
+                    className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                      isTagActive
+                        ? "bg-[#007aff] text-white shadow-sm"
+                        : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* 3. Resumen de Costos y Valor cuando Modo Costos está Activo */}
+        {/* 3. Barra de Control de Vista: Contador de Resultados y Selector de Límite (10, 20, 50, 100, Todos) */}
+        <div
+          data-testid="inventory-pagination-bar"
+          className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-2 shadow-sm"
+        >
+          <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-secondary)]">
+            <Layers size={14} className="text-[#007aff] shrink-0" />
+            <span className="tabular-nums">
+              Mostrando{" "}
+              <strong className="font-bold text-[var(--text-primary)]">
+                {paginatedProducts.length}
+              </strong>{" "}
+              de{" "}
+              <strong className="font-bold text-[var(--text-primary)]">
+                {filteredProducts.length}
+              </strong>
+            </span>
+          </div>
+
+          <div
+            role="group"
+            aria-label="Cantidad de productos por vista"
+            data-testid="page-size-selector"
+            className="flex items-center gap-1"
+          >
+            <span className="mr-1 hidden min-[380px]:inline text-[11px] font-semibold text-[var(--text-secondary)]">
+              Ver:
+            </span>
+            {PAGE_SIZE_OPTIONS.map((opt) => {
+              const isSelected = pageSize === opt.value;
+              return (
+                <button
+                  key={String(opt.value)}
+                  type="button"
+                  data-testid={`page-size-opt-${opt.value}`}
+                  aria-label={`Mostrar ${opt.label} productos`}
+                  aria-pressed={isSelected}
+                  onClick={() => handleSelectPageSize(opt.value)}
+                  className={`rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums transition-colors ${
+                    isSelected
+                      ? "bg-[#007aff] text-white shadow-sm"
+                      : "bg-black/5 dark:bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 4. Resumen de Costos y Valor cuando Modo Costos está Activo */}
         {showCosts && (
           <section className="mb-4 overflow-hidden rounded-2xl border border-[#007aff]/30 bg-[#007aff]/5 p-3.5 animate-in fade-in duration-200">
             <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[#007aff] dark:text-[#0a84ff]">
@@ -352,79 +551,103 @@ export default function InventoryView({
           </section>
         )}
 
-        {/* 4. Listado de Tarjetas de Productos */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-6">
-          {loading ? (
-            Array.from({ length: 6 }).map((_, idx) => (
-              <div
-                key={`inv-skeleton-${idx}`}
-                className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-sm animate-pulse flex flex-col justify-between h-40"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="h-4 w-24 rounded-full bg-black/5 dark:bg-white/10" />
-                    <div className="h-5 w-16 rounded-full bg-black/5 dark:bg-white/10" />
+        {/* 5. Listado Paginado de Tarjetas de Productos + Botón "Ver más productos" */}
+        <div className="pb-6 space-y-4">
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {loading ? (
+              Array.from({ length: 6 }).map((_, idx) => (
+                <div
+                  key={`inv-skeleton-${idx}`}
+                  className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-sm animate-pulse flex flex-col justify-between h-40"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="h-4 w-24 rounded-full bg-black/5 dark:bg-white/10" />
+                      <div className="h-5 w-16 rounded-full bg-black/5 dark:bg-white/10" />
+                    </div>
+                    <div className="h-5 w-4/5 rounded-lg bg-black/5 dark:bg-white/10" />
+                    <div className="h-3 w-1/3 rounded bg-black/5 dark:bg-white/10" />
                   </div>
-                  <div className="h-5 w-4/5 rounded-lg bg-black/5 dark:bg-white/10" />
-                  <div className="h-3 w-1/3 rounded bg-black/5 dark:bg-white/10" />
+                  <div className="flex items-center justify-between pt-3 border-t border-[var(--border-color)]">
+                    <div className="h-6 w-28 rounded-lg bg-black/5 dark:bg-white/10" />
+                    <div className="h-7 w-20 rounded-xl bg-black/5 dark:bg-white/10" />
+                  </div>
                 </div>
-                <div className="flex items-center justify-between pt-3 border-t border-[var(--border-color)]">
-                  <div className="h-6 w-28 rounded-lg bg-black/5 dark:bg-white/10" />
-                  <div className="h-7 w-20 rounded-xl bg-black/5 dark:bg-white/10" />
-                </div>
+              ))
+            ) : filteredProducts.length === 0 ? (
+              <div className="col-span-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-8 sm:p-10 text-center shadow-sm select-none animate-in fade-in duration-150">
+                <LottiePlayer
+                  animationData={EMPTY_BOX_ANIMATION}
+                  className="w-32 h-32 mx-auto mb-2"
+                  loop={true}
+                />
+                <h4 className="text-base font-bold text-[var(--text-primary)]">
+                  Catálogo sin resultados
+                </h4>
+                <p className="mt-1 text-xs sm:text-sm font-medium text-[var(--text-secondary)] max-w-sm mx-auto">
+                  No se encontraron productos que coincidan con la búsqueda o los filtros activos.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleResetAllFilters}
+                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#007aff] px-4 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-transform"
+                >
+                  Restablecer todos los filtros
+                </button>
               </div>
-            ))
-          ) : filteredProducts.length === 0 ? (
-            <div className="col-span-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-8 sm:p-10 text-center shadow-sm select-none animate-in fade-in duration-150">
-              <LottiePlayer
-                animationData={EMPTY_BOX_ANIMATION}
-                className="w-32 h-32 mx-auto mb-2"
-                loop={true}
-              />
-              <h4 className="text-base font-bold text-[var(--text-primary)]">
-                Catálogo sin resultados
-              </h4>
-              <p className="mt-1 text-xs sm:text-sm font-medium text-[var(--text-secondary)] max-w-sm mx-auto">
-                No se encontraron productos que coincidan con la búsqueda o los filtros activos.
-              </p>
+            ) : (
+              paginatedProducts.map((product) => {
+                const totalStock = product.batches.reduce((sum, b) => sum + b.stock, 0);
+
+                const supplierColors = new Map(
+                  product.batches.map((b) => [
+                    b.supplierId,
+                    getSupplier(b.supplierId)?.color ?? "#007aff",
+                  ])
+                );
+
+                const totalBatchCost = product.batches.reduce(
+                  (sum, b) => sum + b.cost * b.stock,
+                  0
+                );
+                const avgCost = totalStock > 0 ? Math.round(totalBatchCost / totalStock) : 0;
+                const profitPerUnit = product.price - avgCost;
+
+                return (
+                  <ProductCard
+                    key={product.id}
+                    mode="inventory"
+                    product={product}
+                    onSelectProduct={setSelectedProduct}
+                    supplierColors={supplierColors}
+                    showCosts={showCosts}
+                    avgCost={avgCost}
+                    profitPerUnit={profitPerUnit}
+                  />
+                );
+              })
+            )}
+          </section>
+
+          {/* Botón "Ver más productos" cuando existen más elementos por cargar */}
+          {!loading && remainingProductsCount > 0 && pageSize !== "all" && (
+            <div className="flex flex-col items-center justify-center pt-1">
               <button
                 type="button"
-                onClick={handleResetAllFilters}
-                className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#007aff] px-4 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-transform"
+                data-testid="load-more-products-btn"
+                aria-label="Ver más productos"
+                onClick={handleLoadMore}
+                className="flex min-h-12 w-full sm:w-auto sm:min-w-[260px] items-center justify-center gap-2 rounded-2xl border border-[#007aff]/35 bg-[#007aff]/10 dark:bg-[#007aff]/15 px-5 py-3 text-sm font-bold text-[#007aff] dark:text-[#0a84ff] shadow-sm transition-all hover:bg-[#007aff] hover:text-white active:scale-[0.98]"
               >
-                Restablecer todos los filtros
+                <ChevronDown size={18} strokeWidth={2.5} className="shrink-0" />
+                <span>Ver más productos (+{nextIncrementCount})</span>
+                <span className="rounded-full bg-[#007aff]/20 px-2 py-0.5 text-[11px] font-extrabold tabular-nums">
+                  Restan {remainingProductsCount}
+                </span>
               </button>
             </div>
-          ) : (
-            filteredProducts.map((product) => {
-              const totalStock = product.batches.reduce((sum, b) => sum + b.stock, 0);
-
-              const supplierColors = new Map(
-                product.batches.map((b) => [b.supplierId, getSupplier(b.supplierId)?.color ?? "#007aff"])
-              );
-
-              const totalBatchCost = product.batches.reduce(
-                (sum, b) => sum + b.cost * b.stock,
-                0
-              );
-              const avgCost = totalStock > 0 ? Math.round(totalBatchCost / totalStock) : 0;
-              const profitPerUnit = product.price - avgCost;
-
-              return (
-                <ProductCard
-                  key={product.id}
-                  mode="inventory"
-                  product={product}
-                  onSelectProduct={setSelectedProduct}
-                  supplierColors={supplierColors}
-                  showCosts={showCosts}
-                  avgCost={avgCost}
-                  profitPerUnit={profitPerUnit}
-                />
-              );
-            })
           )}
-        </section>
+        </div>
       </div>
 
       {/* Hoja Modal de Filtros Avanzados */}
