@@ -1,10 +1,25 @@
-import { Check, Filter, RotateCcw, SlidersHorizontal, Tag, Truck, Shield, DollarSign } from "lucide-react";
+import { Check, Filter, RotateCcw, SlidersHorizontal, Tag, Truck, Shield, DollarSign, Layers } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { useInventory } from "../context/InventoryContext";
 import { formatCOP, parseCOPInput } from "../utils/formatters";
 import ModalSheet from "./ModalSheet";
 
 export type StockStatusFilter = "all" | "in_stock" | "low_stock" | "out_of_stock";
+
+export type InventoryPageSize = 10 | 20 | 50 | 100 | "all";
+
+export interface PageSizeOption {
+  label: string;
+  value: InventoryPageSize;
+}
+
+export const PAGE_SIZE_OPTIONS: PageSizeOption[] = [
+  { label: "10", value: 10 },
+  { label: "20", value: 20 },
+  { label: "50", value: 50 },
+  { label: "100", value: 100 },
+  { label: "Todos", value: "all" },
+];
 
 export interface AdvancedFilterValues {
   supplierId: string;
@@ -29,6 +44,8 @@ interface AdvancedFiltersModalProps {
   filters: AdvancedFilterValues;
   onApply: (filters: AdvancedFilterValues) => void;
   onReset: () => void;
+  pageSize?: InventoryPageSize;
+  onPageSizeChange?: (size: InventoryPageSize) => void;
 }
 
 const STOCK_STATUS_OPTIONS: Array<{ id: StockStatusFilter; label: string; desc: string }> = [
@@ -52,9 +69,12 @@ export default function AdvancedFiltersModal({
   filters,
   onApply,
   onReset,
+  pageSize = 10,
+  onPageSizeChange,
 }: AdvancedFiltersModalProps) {
   const { suppliers, products } = useInventory();
 
+  const [selectedPageSize, setSelectedPageSize] = useState<InventoryPageSize>(pageSize);
   const [supplierId, setSupplierId] = useState(filters.supplierId);
   const [stockStatus, setStockStatus] = useState<StockStatusFilter>(filters.stockStatus);
   const [minPrice, setMinPrice] = useState(filters.minPrice);
@@ -91,6 +111,7 @@ export default function AdvancedFiltersModal({
 
   const handleApply = (e: React.FormEvent) => {
     e.preventDefault();
+    onPageSizeChange?.(selectedPageSize);
     onApply({
       supplierId,
       stockStatus,
@@ -107,6 +128,8 @@ export default function AdvancedFiltersModal({
     setMinPrice("");
     setMaxPrice("");
     setMinWarranty("");
+    setSelectedPageSize(10);
+    onPageSizeChange?.(10);
     onReset();
     onClose();
   };
@@ -138,6 +161,52 @@ export default function AdvancedFiltersModal({
       }
     >
       <form id="advanced-filters-form" onSubmit={handleApply} className="space-y-5">
+        {/* 0. Límite de Productos por Vista (Paginación Móvil) */}
+        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+              <Layers size={14} className="text-[#007aff]" />
+              <span>Productos por vista</span>
+            </label>
+            <span className="text-[11px] font-semibold text-[var(--text-secondary)] tabular-nums">
+              {selectedPageSize === "all" ? "Todos los productos" : `Bloques de ${selectedPageSize}`}
+            </span>
+          </div>
+          <div
+            role="group"
+            aria-label="Cantidad de productos por vista"
+            data-testid="page-size-selector"
+            className="grid grid-cols-5 gap-1.5"
+          >
+            {PAGE_SIZE_OPTIONS.map((opt) => {
+              const isSelected = selectedPageSize === opt.value;
+              return (
+                <button
+                  key={String(opt.value)}
+                  type="button"
+                  data-testid={`page-size-opt-${opt.value}`}
+                  aria-label={`Mostrar ${opt.label} productos`}
+                  aria-pressed={isSelected}
+                  onClick={() => {
+                    setSelectedPageSize(opt.value);
+                    onPageSizeChange?.(opt.value);
+                  }}
+                  className={`rounded-xl py-2 text-xs font-bold tabular-nums transition-all ${
+                    isSelected
+                      ? "bg-[#007aff] text-white shadow-sm ring-1 ring-[#007aff]"
+                      : "border border-[var(--border-color)] bg-black/5 dark:bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-[10px] text-[var(--text-secondary)]">
+            Configuración de carga progresiva para dispositivos móviles. Valor inicial recomendado: 10 productos.
+          </p>
+        </div>
+
         {/* 1. Proveedor */}
         <div>
           <label className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">

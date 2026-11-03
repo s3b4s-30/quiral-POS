@@ -1,8 +1,9 @@
-import { ChevronDown, Filter, Layers, Search, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, Filter, Search, SlidersHorizontal, X } from "lucide-react";
 import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import AdvancedFiltersModal, {
   AdvancedFilterValues,
   DEFAULT_ADVANCED_FILTERS,
+  InventoryPageSize,
 } from "../components/AdvancedFiltersModal";
 import CategoryManagerModal from "../components/CategoryManagerModal";
 import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
@@ -11,16 +12,6 @@ import { useInventory } from "../context/InventoryContext";
 import { ProductCategory } from "../types/domain";
 import { isSameCatalogText } from "../utils/catalogConfig";
 import { formatCOP, parseCOPInput } from "../utils/formatters";
-
-export type InventoryPageSize = 10 | 20 | 50 | 100 | "all";
-
-const PAGE_SIZE_OPTIONS: Array<{ value: InventoryPageSize; label: string }> = [
-  { value: 10, label: "10" },
-  { value: 20, label: "20" },
-  { value: 50, label: "50" },
-  { value: 100, label: "100" },
-  { value: "all", label: "Todos" },
-];
 
 interface InventoryViewProps {
   onOpenSuppliers: () => void;
@@ -349,6 +340,7 @@ export default function InventoryView({
             {/* Botón Embudo Multifiltro */}
             <button
               type="button"
+              data-testid="open-advanced-filters-btn"
               onClick={() => handleOpenFilterModal(true)}
               aria-label="Filtros avanzados de inventario"
               title="Filtros avanzados"
@@ -456,58 +448,7 @@ export default function InventoryView({
           )}
         </div>
 
-        {/* 3. Barra de Control de Vista: Contador de Resultados y Selector de Límite (10, 20, 50, 100, Todos) */}
-        <div
-          data-testid="inventory-pagination-bar"
-          className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-2 shadow-sm"
-        >
-          <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-secondary)]">
-            <Layers size={14} className="text-[#007aff] shrink-0" />
-            <span className="tabular-nums">
-              Mostrando{" "}
-              <strong className="font-bold text-[var(--text-primary)]">
-                {paginatedProducts.length}
-              </strong>{" "}
-              de{" "}
-              <strong className="font-bold text-[var(--text-primary)]">
-                {filteredProducts.length}
-              </strong>
-            </span>
-          </div>
-
-          <div
-            role="group"
-            aria-label="Cantidad de productos por vista"
-            data-testid="page-size-selector"
-            className="flex items-center gap-1"
-          >
-            <span className="mr-1 hidden min-[380px]:inline text-[11px] font-semibold text-[var(--text-secondary)]">
-              Ver:
-            </span>
-            {PAGE_SIZE_OPTIONS.map((opt) => {
-              const isSelected = pageSize === opt.value;
-              return (
-                <button
-                  key={String(opt.value)}
-                  type="button"
-                  data-testid={`page-size-opt-${opt.value}`}
-                  aria-label={`Mostrar ${opt.label} productos`}
-                  aria-pressed={isSelected}
-                  onClick={() => handleSelectPageSize(opt.value)}
-                  className={`rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums transition-colors ${
-                    isSelected
-                      ? "bg-[#007aff] text-white shadow-sm"
-                      : "bg-black/5 dark:bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 4. Resumen de Costos y Valor cuando Modo Costos está Activo */}
+        {/* Resumen de Costos y Valor cuando Modo Costos está Activo */}
         {showCosts && (
           <section className="mb-4 overflow-hidden rounded-2xl border border-[#007aff]/30 bg-[#007aff]/5 p-3.5 animate-in fade-in duration-200">
             <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[#007aff] dark:text-[#0a84ff]">
@@ -631,16 +572,20 @@ export default function InventoryView({
 
           {/* Botón "Ver más productos" cuando existen más elementos por cargar */}
           {!loading && remainingProductsCount > 0 && pageSize !== "all" && (
-            <div className="flex flex-col items-center justify-center pt-1">
+            <div className="flex flex-col items-center justify-center pt-2">
               <button
                 type="button"
                 data-testid="load-more-products-btn"
-                aria-label="Ver más productos"
+                aria-label={`Ver ${nextIncrementCount} productos más`}
                 onClick={handleLoadMore}
                 className="flex min-h-12 w-full sm:w-auto sm:min-w-[260px] items-center justify-center gap-2 rounded-2xl border border-[#007aff]/35 bg-[#007aff]/10 dark:bg-[#007aff]/15 px-5 py-3 text-sm font-bold text-[#007aff] dark:text-[#0a84ff] shadow-sm transition-all hover:bg-[#007aff] hover:text-white active:scale-[0.98]"
               >
                 <ChevronDown size={18} strokeWidth={2.5} className="shrink-0" />
-                <span>Ver más productos (+{nextIncrementCount})</span>
+                <span>
+                  {nextIncrementCount === 1
+                    ? "Ver 1 producto más"
+                    : `Ver ${nextIncrementCount} productos más`}
+                </span>
                 <span className="rounded-full bg-[#007aff]/20 px-2 py-0.5 text-[11px] font-extrabold tabular-nums">
                   Restan {remainingProductsCount}
                 </span>
@@ -657,7 +602,12 @@ export default function InventoryView({
           onClose={() => handleOpenFilterModal(false)}
           filters={advancedFilters}
           onApply={(newFilters) => setAdvancedFilters(newFilters)}
-          onReset={() => setAdvancedFilters(DEFAULT_ADVANCED_FILTERS)}
+          onReset={() => {
+            setAdvancedFilters(DEFAULT_ADVANCED_FILTERS);
+            handleSelectPageSize(10);
+          }}
+          pageSize={pageSize}
+          onPageSizeChange={handleSelectPageSize}
         />
       )}
 

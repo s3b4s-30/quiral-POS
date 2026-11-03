@@ -220,7 +220,7 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     await expect(page.getByText(/Apple Watch Series 9/)).toBeVisible();
   });
 
-  test("3. Paginación controlada por defecto en 10 productos (iPhone), botón Ver más productos y reinicio al filtrar", async ({
+  test("3. Limpieza de vista principal, paginación en Filtros Avanzados (10 por defecto en iPhone) y botón progresivo Ver más", async ({
     page,
   }) => {
     await page.goto("/");
@@ -232,32 +232,53 @@ test.describe("Quiral POS — Sistema Modular de Catálogo, Reordenamiento y Atr
     await mobileNavbar.locator("button").filter({ hasText: "Inventario" }).click();
     await expect(page.locator("#inventory-scroll")).toBeVisible();
 
-    // 1. Validar que el límite por defecto en móvil sea estrictamente 10 productos
-    const opt10Btn = page.locator('[data-testid="page-size-opt-10"]');
-    await expect(opt10Btn).toBeVisible();
-    await expect(opt10Btn).toHaveAttribute("aria-pressed", "true");
+    // 1. Validar limpieza de la pantalla principal: no debe tener selector de cantidad en la vista principal
+    await expect(page.locator('[data-testid="inventory-pagination-bar"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="page-size-selector"]')).not.toBeVisible();
 
     const productCards = page.locator("#inventory-scroll section article");
     await expect(productCards).toHaveCount(10);
 
-    // 2. Validar que el botón "Ver más productos" aparece y suma +10 productos al hacer clic
+    // 2. Validar que el botón dinámico "Ver 10 productos más" aparece y suma +10 productos al hacer clic
     const loadMoreBtn = page.locator('[data-testid="load-more-products-btn"]');
     await expect(loadMoreBtn).toBeVisible();
+    await expect(loadMoreBtn).toContainText("Ver 10 productos más");
     await loadMoreBtn.click();
 
     await expect(productCards).toHaveCount(20);
 
-    // 3. Cambiar el selector a "Todos" debe mostrar el catálogo completo y ocultar "Ver más productos"
+    // 3. Abrir modal de Filtros Avanzados (embudo) para verificar selector y cambiar a "Todos"
+    const openFiltersBtn = page.locator('[data-testid="open-advanced-filters-btn"]');
+    await expect(openFiltersBtn).toBeVisible();
+    await openFiltersBtn.click();
+
+    const filterModalHeading = page.getByRole("heading", { name: "Filtros avanzados" });
+    await expect(filterModalHeading).toBeVisible();
+
+    const opt10Btn = page.locator('[data-testid="page-size-opt-10"]');
+    await expect(opt10Btn).toBeVisible();
+    await expect(opt10Btn).toHaveAttribute("aria-pressed", "true");
+
     const optAllBtn = page.locator('[data-testid="page-size-opt-all"]');
     await optAllBtn.click();
     await expect(optAllBtn).toHaveAttribute("aria-pressed", "true");
+
+    const applyBtn = page.getByRole("button", { name: /Aplicar/ });
+    await applyBtn.click();
+    await expect(filterModalHeading).not.toBeVisible();
+
     await expect(productCards).toHaveCount(32);
     await expect(loadMoreBtn).not.toBeVisible();
 
-    // 4. Volver a 10 y filtrar por categoría o atributo reinicia el paginador al primer bloque
+    // 4. Volver a configurar límite en 10 desde el modal de filtros
+    await openFiltersBtn.click();
+    await expect(filterModalHeading).toBeVisible();
     await opt10Btn.click();
+    await applyBtn.click();
+    await expect(filterModalHeading).not.toBeVisible();
     await expect(productCards).toHaveCount(10);
 
+    // 5. Filtrar por categoría reinicia el paginador al bloque inicial
     await page
       .locator("#inventory-scroll")
       .getByRole("button", { name: "Cargadores y Cables", exact: true })
