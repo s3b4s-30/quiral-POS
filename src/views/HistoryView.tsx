@@ -229,16 +229,16 @@ export default function HistoryView({
               >
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]/70 text-[11px] font-black uppercase tracking-wider text-[var(--text-secondary)]">
-                      <th className="py-3 px-4 w-24">Ticket</th>
-                      <th className="py-3 px-4 w-44">Fecha y Hora</th>
-                      <th className="py-3 px-4 min-w-[200px]">Cliente / Referencias</th>
-                      <th className="py-3 px-4 w-32">Método</th>
-                      <th className="py-3 px-4 w-36 text-right">Total</th>
-                      <th className="py-3 px-4 w-36 text-right">Acciones</th>
+                    <tr className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]/80 text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
+                      <th className="py-3.5 px-5 w-28">Ticket</th>
+                      <th className="py-3.5 px-5 w-48">Fecha y Hora</th>
+                      <th className="py-3.5 px-5 min-w-[240px]">Cliente / Referencias</th>
+                      <th className="py-3.5 px-5 w-36">Método</th>
+                      <th className="py-3.5 px-5 w-40 text-right">Total</th>
+                      <th className="py-3.5 px-5 w-40 text-right">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[var(--border-color)] text-xs font-semibold">
+                  <tbody className="divide-y divide-[var(--border-color)] text-sm font-medium">
                     {filteredSales.map((sale) => {
                       const isOpen = openSaleId === sale.id;
                       const totalUnits = sale.items.reduce((s, it) => s + it.qty, 0);
@@ -250,41 +250,41 @@ export default function HistoryView({
                             onClick={() => setOpenSaleId(isOpen ? null : sale.id)}
                             className="group hover:bg-black/[0.02] dark:hover:bg-white/[0.02] cursor-pointer transition-colors"
                           >
-                            <td className="py-3.5 px-4">
-                              <span className="tabular-nums font-black text-accent bg-accent-subtle px-2 py-0.5 rounded-md">
+                            <td className="py-4 px-5">
+                              <span className="tabular-nums font-black text-sm text-accent bg-accent-subtle px-2.5 py-1 rounded-lg">
                                 #{sale.saleNumber}
                               </span>
                             </td>
-                            <td className="py-3.5 px-4 tabular-nums text-[var(--text-secondary)] whitespace-nowrap">
+                            <td className="py-4 px-5 tabular-nums text-xs sm:text-sm font-semibold text-[var(--text-secondary)] whitespace-nowrap">
                               {formatDateWithTime(sale.createdAt) || formatShortDate(sale.createdAt)}
                             </td>
-                            <td className="py-3.5 px-4 min-w-[200px]">
-                              <p className="font-bold text-[var(--text-primary)]">
+                            <td className="py-4 px-5 min-w-[240px]">
+                              <p className="text-base sm:text-[17px] font-bold text-[var(--text-primary)] leading-snug">
                                 {sale.customerName}
                               </p>
-                              <p className="text-[11px] text-[var(--text-secondary)] truncate">
+                              <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] mt-0.5">
                                 {totalUnits} {totalUnits === 1 ? "artículo" : "artículos"}:{" "}
                                 {sale.items.map((it) => `${it.qty}x ${it.productName}`).join(", ")}
                               </p>
                               {sale.note && (
-                                <p className="text-[10px] italic text-[var(--text-secondary)] mt-0.5">
+                                <p className="text-xs italic text-[var(--text-secondary)] mt-1">
                                   Nota: {sale.note}
                                 </p>
                               )}
                             </td>
-                            <td className="py-3.5 px-4 whitespace-nowrap">
-                              <span className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)]">
+                            <td className="py-4 px-5 whitespace-nowrap">
+                              <span className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs sm:text-sm font-bold text-[var(--text-primary)]">
                                 {sale.paymentMethod}
                               </span>
                             </td>
-                            <td className="py-3.5 px-4 text-right">
-                              <span className="tabular-nums font-black text-sm text-[var(--text-primary)]">
+                            <td className="py-4 px-5 text-right">
+                              <span className="tabular-nums font-black text-base sm:text-lg text-[var(--text-primary)] leading-none">
                                 {formatCOP(sale.totalAmount)}
                               </span>
                             </td>
-                            <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                            <td className="py-4 px-5 text-right whitespace-nowrap">
                               <div
-                                className="flex items-center justify-end gap-1.5"
+                                className="flex items-center justify-end gap-2"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <button
@@ -292,9 +292,9 @@ export default function HistoryView({
                                   onClick={(e) => openEditModal(sale, e)}
                                   aria-label={`Modificar venta #${sale.saleNumber}`}
                                   title="Modificar venta"
-                                  className="inline-flex h-7 items-center gap-1 rounded-lg border border-transparent bg-accent-subtle px-2 text-[11px] font-bold text-accent hover:border-accent-subtle active:scale-95 transition-all"
+                                  className="inline-flex h-8 sm:h-9 items-center gap-1.5 rounded-xl border border-transparent bg-accent-subtle px-3 text-xs font-bold text-accent hover:border-accent-subtle active:scale-95 transition-all"
                                 >
-                                  <Pencil size={12} />
+                                  <Pencil size={13} />
                                   <span>Modificar</span>
                                 </button>
                                 <button
@@ -302,9 +302,9 @@ export default function HistoryView({
                                   onClick={(e) => openDeleteModal(sale, e)}
                                   aria-label={`Eliminar venta #${sale.saleNumber}`}
                                   title="Eliminar venta"
-                                  className="inline-flex h-7 items-center gap-1 rounded-lg border border-transparent bg-red-500/10 px-2 text-[11px] font-bold text-red-500 hover:border-red-500/20 active:scale-95 transition-all"
+                                  className="inline-flex h-8 sm:h-9 items-center gap-1.5 rounded-xl border border-transparent bg-red-500/10 px-3 text-xs font-bold text-red-500 hover:border-red-500/20 active:scale-95 transition-all"
                                 >
-                                  <Trash2 size={12} />
+                                  <Trash2 size={13} />
                                   <span>Eliminar</span>
                                 </button>
                               </div>
@@ -314,13 +314,13 @@ export default function HistoryView({
                           {/* Detalle expandible de ítems y garantía en la fila siguiente */}
                           {isOpen && (
                             <tr className="bg-black/[0.015] dark:bg-white/[0.015]">
-                              <td colSpan={6} className="py-3 px-6">
-                                <div className="space-y-2 border-l-2 border-accent pl-4 py-1">
-                                  <p className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
+                              <td colSpan={6} className="py-4 px-6">
+                                <div className="space-y-3 border-l-2 border-accent pl-4 py-1">
+                                  <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
                                     Desglose del Ticket #{sale.saleNumber} ({sale.items.length}{" "}
-                                    {sale.items.length === 1 ? "referencia" : "referencias"})
+                                    {sale.items.length === 1 ? "referencia" : "referencias"} · {totalUnits} unidades)
                                   </p>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                     {sale.items.map((item) => {
                                       const w = getWarrantyStatus(
                                         sale.createdAt,
@@ -331,25 +331,25 @@ export default function HistoryView({
                                       return (
                                         <div
                                           key={item.id}
-                                          className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-2.5 space-y-1.5"
+                                          className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3 space-y-2 shadow-xs"
                                         >
                                           <div className="flex items-start justify-between gap-2">
                                             <div className="min-w-0 flex-1">
-                                              <p className="text-xs font-bold text-[var(--text-primary)] truncate">
+                                              <p className="text-sm font-bold text-[var(--text-primary)] truncate">
                                                 {item.qty}x {item.productName}
                                               </p>
-                                              <p className="tabular-nums text-[10px] text-[var(--text-secondary)]">
+                                              <p className="tabular-nums text-xs font-semibold text-[var(--text-secondary)] mt-0.5">
                                                 {formatCOP(item.unitPrice)} c/u
                                               </p>
                                             </div>
-                                            <span className="tabular-nums text-xs font-black text-[var(--text-primary)]">
+                                            <span className="tabular-nums text-sm font-black text-[var(--text-primary)]">
                                               {formatCOP(item.unitPrice * item.qty)}
                                             </span>
                                           </div>
 
-                                          <div className="flex items-center justify-between pt-1 border-t border-[var(--border-color)]/60 text-[10px]">
+                                          <div className="flex items-center justify-between pt-1.5 border-t border-[var(--border-color)]/60 text-xs">
                                             <span
-                                              className={`rounded-md px-1.5 py-0.5 font-bold ${
+                                              className={`rounded-md px-2 py-0.5 font-bold ${
                                                 w.status === "claimed"
                                                   ? "bg-[#ff3b30]/15 text-[#ff3b30]"
                                                   : w.status === "expired"
@@ -364,7 +364,7 @@ export default function HistoryView({
                                               <button
                                                 type="button"
                                                 onClick={() => toggleItemWarranty(sale.id, item.id)}
-                                                className={`rounded-md px-2 py-0.5 text-[10px] font-bold active:scale-95 transition-all ${
+                                                className={`rounded-lg px-2.5 py-1 text-xs font-bold active:scale-95 transition-all ${
                                                   item.warrantyClaimed
                                                     ? "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                                                     : "bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30]/25"

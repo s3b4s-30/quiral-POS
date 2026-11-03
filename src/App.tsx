@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AuthScreen from "./components/AuthScreen";
 import DesktopSidebar from "./components/DesktopSidebar";
 import DesktopStoreProfileView from "./components/DesktopStoreProfileView";
+import DesktopSuppliersView from "./components/DesktopSuppliersView";
 import FloatingCartFAB from "./components/FloatingCartFAB";
 import Navbar, { type NavbarVariant, type Tab } from "./components/Navbar";
 import NewProductModal from "./components/NewProductModal";
@@ -33,6 +34,7 @@ function AppInner() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [navbarVariant] = useState<NavbarVariant>("floating");
   const [isSuppliersModalOpen, setIsSuppliersModalOpen] = useState(false);
+  const [isDesktopSuppliersView, setIsDesktopSuppliersView] = useState(false);
   const [isProfileSecurityOpen, setIsProfileSecurityOpen] = useState(false);
   const [isStoreProfileOpen, setIsStoreProfileOpen] = useState(false);
   const [isDesktopStoreProfileView, setIsDesktopStoreProfileView] = useState(false);
@@ -78,13 +80,24 @@ function AppInner() {
   const handleOpenStoreProfile = () => {
     if (typeof window !== "undefined" && window.innerWidth >= 768) {
       setIsDesktopStoreProfileView(true);
+      setIsDesktopSuppliersView(false);
     } else {
       setIsStoreProfileOpen(true);
     }
   };
 
+  const handleOpenSuppliers = () => {
+    if (typeof window !== "undefined" && window.innerWidth >= 768) {
+      setIsDesktopSuppliersView(true);
+      setIsDesktopStoreProfileView(false);
+    } else {
+      setIsSuppliersModalOpen(true);
+    }
+  };
+
   const handleTabChange = (tab: Tab) => {
     setIsDesktopStoreProfileView(false);
+    setIsDesktopSuppliersView(false);
     setActiveTab(tab);
     requestAnimationFrame(() => {
       if (tab === "inventory") {
@@ -152,7 +165,7 @@ function AppInner() {
         cartCount={cartUnits}
         theme={theme}
         onThemeChange={setTheme}
-        onOpenSuppliers={() => setIsSuppliersModalOpen(true)}
+        onOpenSuppliers={handleOpenSuppliers}
         onOpenProfile={handleOpenStoreProfile}
         onOpenProfileSecurity={() => setIsProfileSecurityOpen(true)}
         onLogout={signOut}
@@ -166,7 +179,7 @@ function AppInner() {
           onTabChange={handleTabChange}
           theme={theme}
           onThemeChange={setTheme}
-          onOpenSuppliers={() => setIsSuppliersModalOpen(true)}
+          onOpenSuppliers={handleOpenSuppliers}
           onOpenProfile={handleOpenStoreProfile}
         onOpenProfileSecurity={() => setIsProfileSecurityOpen(true)}
           onLogout={signOut}
@@ -174,14 +187,16 @@ function AppInner() {
 
         {/* Contenedor Principal: las vistas manejan su scroll con .quiral-scroll-container */}
         <main className="h-full w-full overflow-hidden relative">
-          {isDesktopStoreProfileView ? (
+          {isDesktopSuppliersView ? (
+            <DesktopSuppliersView onBack={() => setIsDesktopSuppliersView(false)} />
+          ) : isDesktopStoreProfileView ? (
             <DesktopStoreProfileView
               onBack={() => setIsDesktopStoreProfileView(false)}
               onOpenSecurity={() => setIsProfileSecurityOpen(true)}
             />
           ) : activeTab === "inventory" ? (
             <InventoryView
-              onOpenSuppliers={() => setIsSuppliersModalOpen(true)}
+              onOpenSuppliers={handleOpenSuppliers}
               onFilterModalStateChange={setIsInventoryFilterOpen}
             />
           ) : activeTab === "sell" ? (

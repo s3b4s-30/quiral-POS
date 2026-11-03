@@ -114,7 +114,7 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
   return (
     <aside
       data-testid="desktop-pos-ticket"
-      className="w-96 lg:w-[420px] shrink-0 h-full flex flex-col bg-[var(--bg-elevated)] border-l border-[var(--border-color)] select-none transition-colors duration-150 z-10"
+      className="w-96 lg:w-[420px] xl:w-[450px] shrink-0 h-full flex flex-col bg-[var(--bg-elevated)] border-l border-[var(--border-color)] select-none transition-colors duration-150 z-10 sticky top-0"
     >
       {/* 1. Header del Ticket: Título, consecutivo, contador de ítems y botón vaciar */}
       <div className="p-4 border-b border-[var(--border-color)] flex items-center justify-between shrink-0 bg-[var(--bg-elevated)]/90 backdrop-blur-md">
