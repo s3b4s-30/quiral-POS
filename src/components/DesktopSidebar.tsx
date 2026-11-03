@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import React from "react";
 import { useInventory } from "../context/InventoryContext";
+import { NetworkStatusBadge } from "./NetworkStatusBadge";
 import { Tab } from "./Navbar";
 import { Theme } from "./TopMenu";
 
@@ -94,9 +95,16 @@ export default function DesktopSidebar({
         {isDemoUser && (
           <div className="mt-3 mx-1 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
             <span className="font-bold">Modo Demo 30/30</span>
-            <p className="text-[10px] opacity-85 mt-0.5 leading-tight">Datos de prueba (4 meses)</p>
+            <p className="text-[10px] opacity-85 mt-0.5 leading-tight">
+              Datos de prueba (4 meses)
+            </p>
           </div>
         )}
+
+        {/* Indicador de Estado de Conexión y Cola Offline */}
+        <div className="mt-2.5 mx-1">
+          <NetworkStatusBadge storeId={userProfile?.storeId} />
+        </div>
 
         {/* 2. Menú de Navegación Vertical */}
         <nav className="mt-6 space-y-1.5">
@@ -115,14 +123,20 @@ export default function DesktopSidebar({
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon size={19} strokeWidth={isActive ? 2.5 : 2} className="shrink-0" />
+                  <Icon
+                    size={19}
+                    strokeWidth={isActive ? 2.5 : 2}
+                    className="shrink-0"
+                  />
                   <span>{label}</span>
                 </div>
 
                 {id === "sell" && cartCount > 0 && (
                   <span
                     className={`tabular-nums rounded-full px-2 py-0.5 text-xs font-black shadow-sm ${
-                      isActive ? "bg-white text-accent" : "bg-[#ff3b30] text-white"
+                      isActive
+                        ? "bg-white text-accent"
+                        : "bg-[#ff3b30] text-white"
                     }`}
                   >
                     {cartCount}
@@ -150,7 +164,9 @@ export default function DesktopSidebar({
             {showCosts ? <Eye size={16} /> : <EyeOff size={16} />}
             <span>Modo Administrador</span>
           </div>
-          <span className="text-[10px] font-bold uppercase">{showCosts ? "On" : "Off"}</span>
+          <span className="text-[10px] font-bold uppercase">
+            {showCosts ? "On" : "Off"}
+          </span>
         </button>
 
         {/* Acceso a Proveedores */}
@@ -216,4 +232,3 @@ export default function DesktopSidebar({
     </aside>
   );
 }
-

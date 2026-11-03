@@ -1,7 +1,23 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { Session } from "@supabase/supabase-js";
-import { getStoreMembership, printSecurityWarning, signOutUser } from "../lib/authService";
-import { DEMO_STORE_ID, ensureFreshDemoStorage, generateDemoSeed } from "../lib/demoSeed";
+import {
+  getStoreMembership,
+  printSecurityWarning,
+  signOutUser,
+} from "../lib/authService";
+import {
+  DEMO_STORE_ID,
+  ensureFreshDemoStorage,
+  generateDemoSeed,
+} from "../lib/demoSeed";
 import { supabase } from "../lib/supabase";
 import {
   deleteAllProductsRecords,
@@ -22,7 +38,29 @@ import {
   subscribeToStoreRealtime,
   updateStoreNameRecord,
 } from "../services";
-import { AccentPaletteId, Batch, CartItem, CatalogConfig, CategoryConfig, Closure, PaymentMethod, Product, ProductCategory, Sale, SaleItem, Supplier, UserProfile } from "../types/domain";
+import {
+  cacheCatalogSnapshot,
+  cacheSuppliersSnapshot,
+  enqueueOfflineSale,
+  getCachedCatalogSnapshot,
+  getCachedSuppliersSnapshot,
+} from "../services/offlineDb";
+import { flushSalesQueue } from "../services/offlineSyncService";
+import {
+  AccentPaletteId,
+  Batch,
+  CartItem,
+  CatalogConfig,
+  CategoryConfig,
+  Closure,
+  PaymentMethod,
+  Product,
+  ProductCategory,
+  Sale,
+  SaleItem,
+  Supplier,
+  UserProfile,
+} from "../types/domain";
 import {
   DEFAULT_CATALOG_CONFIG,
   FACTORY_BASE_CATEGORIES,
@@ -36,8 +74,19 @@ import {
 import { applyPalette, getStoredPalette } from "../utils/themePalettes";
 
 export const SUPPLIER_PALETTE = [
-  "#007AFF", "#AF52DE", "#28CD41", "#FF9500", "#5AC8FA", "#FF3B30",
-  "#00A3BF", "#0051D5", "#FFCC00", "#FF6B22", "#FF2D55", "#8E8E93", "#5856D6"
+  "#007AFF",
+  "#AF52DE",
+  "#28CD41",
+  "#FF9500",
+  "#5AC8FA",
+  "#FF3B30",
+  "#00A3BF",
+  "#0051D5",
+  "#FFCC00",
+  "#FF6B22",
+  "#FF2D55",
+  "#8E8E93",
+  "#5856D6",
 ];
 
 interface InventoryContextType {
@@ -67,10 +116,16 @@ interface InventoryContextType {
   updateCartItemBatch: (productId: string, batchId: string) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
-  completeSale: (paymentMethod: PaymentMethod, total: number, customerName?: string) => boolean;
+  completeSale: (
+    paymentMethod: PaymentMethod,
+    total: number,
+    customerName?: string
+  ) => boolean;
   updateSale: (updatedSale: Sale) => void;
   deleteSale: (saleId: string, restoreStock?: boolean) => void;
-  createClosure: (data: Omit<Closure, "id" | "closedAt"> & { id?: string; closedAt?: string }) => void;
+  createClosure: (
+    data: Omit<Closure, "id" | "closedAt"> & { id?: string; closedAt?: string }
+  ) => void;
   toggleItemWarranty: (saleId: string, itemId: string, note?: string) => void;
   addSupplier: (data: Omit<Supplier, "id">) => Supplier;
   updateSupplier: (supplier: Supplier) => void;
@@ -97,20 +152,41 @@ interface InventoryContextType {
   clearAllProducts: () => Promise<number>;
   catalogConfig: CatalogConfig;
   updateCategoryOrder: (newOrder: ProductCategory[]) => void;
-  addCategory: (name: string, attributeKeys?: string[]) => CategoryConfig | null;
-  deleteCategory: (categoryName: ProductCategory, fallbackCategory?: ProductCategory) => Promise<number>;
-  updateCategoryAttributes: (categoryName: ProductCategory, attributeKeys: string[]) => void;
-  addAttributeOption: (attributeKey: string, newOption: string) => string | null;
-  renameAttributeOption: (attributeKey: string, oldOption: string, newOption: string) => boolean;
+  addCategory: (
+    name: string,
+    attributeKeys?: string[]
+  ) => CategoryConfig | null;
+  deleteCategory: (
+    categoryName: ProductCategory,
+    fallbackCategory?: ProductCategory
+  ) => Promise<number>;
+  updateCategoryAttributes: (
+    categoryName: ProductCategory,
+    attributeKeys: string[]
+  ) => void;
+  addAttributeOption: (
+    attributeKey: string,
+    newOption: string
+  ) => string | null;
+  renameAttributeOption: (
+    attributeKey: string,
+    oldOption: string,
+    newOption: string
+  ) => boolean;
   deleteAttributeOption: (attributeKey: string, optionToRemove: string) => void;
   reorderAttributeOptions: (attributeKey: string, newOptions: string[]) => void;
-  createCustomAttribute: (label: string, initialOptions?: string[]) => string | null;
+  createCustomAttribute: (
+    label: string,
+    initialOptions?: string[]
+  ) => string | null;
   resetCatalogConfigToDefault: () => void;
   signOut: () => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
-const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
+const InventoryContext = createContext<InventoryContextType | undefined>(
+  undefined
+);
 
 const getStoredStoreProfile = (storeId: string): Partial<UserProfile> => {
   try {
@@ -123,15 +199,20 @@ const getStoredStoreProfile = (storeId: string): Partial<UserProfile> => {
 const getStoredCatalogConfig = (targetStoreId: string): CatalogConfig => {
   ensureFreshDemoStorage();
   try {
-    const raw = localStorage.getItem(`quiral_catalog_config_v3_${targetStoreId}`);
+    const raw = localStorage.getItem(
+      `quiral_catalog_config_v3_${targetStoreId}`
+    );
     if (raw) {
-      return mergeWithDefaultCatalogConfig(JSON.parse(raw) as Partial<CatalogConfig>);
+      return mergeWithDefaultCatalogConfig(
+        JSON.parse(raw) as Partial<CatalogConfig>
+      );
     }
   } catch {}
   return mergeWithDefaultCatalogConfig(null);
 };
 
-const makeId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+const makeId = (prefix: string) =>
+  `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
 const normalizedProduct = (p: Product): Product => ({
   ...p,
@@ -155,7 +236,8 @@ function deduplicateSales(list: Sale[]): Sale[] {
     // Ignorar semillas artificiales masivas heredadas (demo-sale-1..118)
     if (s.id.startsWith("demo-sale-")) continue;
     if (seenIds.has(s.id)) continue;
-    if (typeof s.saleNumber === "number" && seenNumbers.has(s.saleNumber)) continue;
+    if (typeof s.saleNumber === "number" && seenNumbers.has(s.saleNumber))
+      continue;
 
     seenIds.add(s.id);
     if (typeof s.saleNumber === "number") {
@@ -190,9 +272,12 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
   const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
-  const [lastSelectedSupplierId, setLastSelectedSupplierId] = useState<string | null>(null);
+  const [lastSelectedSupplierId, setLastSelectedSupplierId] = useState<
+    string | null
+  >(null);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [accentPalette, setAccentPaletteState] = useState<AccentPaletteId>(getStoredPalette);
+  const [accentPalette, setAccentPaletteState] =
+    useState<AccentPaletteId>(getStoredPalette);
 
   const setAccentPalette = useCallback((palette: AccentPaletteId) => {
     applyPalette(palette);
@@ -212,89 +297,123 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Carga de datos de la tienda desde Supabase con respaldo local aislado para demo
-  const loadData = useCallback(async (activeStore: string, isDemo = false) => {
-    const requestId = ++activeStoreRequestIdRef.current;
-    setLoading(true);
+  const loadData = useCallback(
+    async (activeStore: string, isDemo = false) => {
+      const requestId = ++activeStoreRequestIdRef.current;
+      setLoading(true);
 
-    if (isDemo) {
-      printSecurityWarning();
-      ensureFreshDemoStorage();
-      const demoData = generateDemoSeed();
-      try {
-        const storedSalesRaw = localStorage.getItem(`quiral_demo_sales_v3_${activeStore}`);
-        const storedSales = storedSalesRaw ? (JSON.parse(storedSalesRaw) as Sale[]) : demoData.sales;
-        setSuppliers(demoData.suppliers);
-        setProducts(demoData.products);
-        setSales(deduplicateSales(storedSales));
-        setClosures(demoData.closures);
-        setCatalogConfig(getStoredCatalogConfig(activeStore));
-      } catch {
-        setSuppliers(demoData.suppliers);
-        setProducts(demoData.products);
-        setSales([]);
-        setClosures([]);
-      }
-      setError(null);
-      lastLoadedStoreIdRef.current = activeStore;
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const [invData, salesData] = await Promise.all([
-        fetchStoreInventoryBundle(activeStore),
-        fetchStoreSalesBundle(activeStore),
-      ]);
-
-      if (requestId !== activeStoreRequestIdRef.current) return;
-
-      const loadedSuppliers = invData.suppliers;
-      const loadedProducts = invData.products;
-      const rawSales = salesData.sales;
-      const rawClosures = salesData.closures;
-
-      // Si existen ventas semilla heredadas ("demo-sale-*") en la tienda de Supabase, purgarlas en background
-      const hasLegacySeededSales = rawSales.some((s) => s?.id?.startsWith("demo-sale-"));
-      if (hasLegacySeededSales) {
-        void purgeLegacySeededSales(activeStore);
-      }
-
-      const cleanSales = deduplicateSales(rawSales);
-      const cleanClosures = rawClosures.filter((c) => !c?.id?.startsWith("demo-cycle-"));
-
-      setSuppliers(loadedSuppliers);
-      setProducts(loadedProducts);
-      setSales(cleanSales);
-      setClosures(cleanClosures);
-
-      if (invData.catalogConfigRaw) {
-        const mergedRemote = mergeWithDefaultCatalogConfig(
-          invData.catalogConfigRaw as Partial<CatalogConfig>
-        );
-        setCatalogConfig(mergedRemote);
+      if (isDemo) {
+        printSecurityWarning();
+        ensureFreshDemoStorage();
+        const demoData = generateDemoSeed();
         try {
-          localStorage.setItem(
-            `quiral_catalog_config_v3_${activeStore}`,
-            JSON.stringify(mergedRemote)
+          const storedSalesRaw = localStorage.getItem(
+            `quiral_demo_sales_v3_${activeStore}`
           );
-        } catch {}
-      } else {
-        setCatalogConfig(getStoredCatalogConfig(activeStore));
+          const storedSales = storedSalesRaw
+            ? (JSON.parse(storedSalesRaw) as Sale[])
+            : demoData.sales;
+          setSuppliers(demoData.suppliers);
+          setProducts(demoData.products);
+          setSales(deduplicateSales(storedSales));
+          setClosures(demoData.closures);
+          setCatalogConfig(getStoredCatalogConfig(activeStore));
+        } catch {
+          setSuppliers(demoData.suppliers);
+          setProducts(demoData.products);
+          setSales([]);
+          setClosures([]);
+        }
+        setError(null);
+        lastLoadedStoreIdRef.current = activeStore;
+        setLoading(false);
+        return;
       }
 
-      setError(null);
-      lastLoadedStoreIdRef.current = activeStore;
-    } catch (fetchErr: unknown) {
-      if (requestId !== activeStoreRequestIdRef.current) return;
-      const errMsg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
-      console.warn("Fallo al conectar con Supabase:", fetchErr);
-      report(`Error de conexión: ${errMsg || "Sin red"}`);
-    } finally {
-      if (requestId === activeStoreRequestIdRef.current) {
-        setLoading(false);
+      try {
+        const [invData, salesData] = await Promise.all([
+          fetchStoreInventoryBundle(activeStore),
+          fetchStoreSalesBundle(activeStore),
+        ]);
+
+        if (requestId !== activeStoreRequestIdRef.current) return;
+
+        const loadedSuppliers = invData.suppliers;
+        const loadedProducts = invData.products;
+        const rawSales = salesData.sales;
+        const rawClosures = salesData.closures;
+
+        // Si existen ventas semilla heredadas ("demo-sale-*") en la tienda de Supabase, purgarlas en background
+        const hasLegacySeededSales = rawSales.some((s) =>
+          s?.id?.startsWith("demo-sale-")
+        );
+        if (hasLegacySeededSales) {
+          void purgeLegacySeededSales(activeStore);
+        }
+
+        const cleanSales = deduplicateSales(rawSales);
+        const cleanClosures = rawClosures.filter(
+          (c) => !c?.id?.startsWith("demo-cycle-")
+        );
+
+        setSuppliers(loadedSuppliers);
+        setProducts(loadedProducts);
+        setSales(cleanSales);
+        setClosures(cleanClosures);
+
+        // Cachear instantánea local en IndexedDB (Dexie) para disponibilidad offline
+        void cacheCatalogSnapshot(activeStore, loadedProducts);
+        void cacheSuppliersSnapshot(activeStore, loadedSuppliers);
+        // Sincronizar automáticamente cualquier venta pendiente acumulada en la cola offline
+        void flushSalesQueue(activeStore);
+
+        if (invData.catalogConfigRaw) {
+          const mergedRemote = mergeWithDefaultCatalogConfig(
+            invData.catalogConfigRaw as Partial<CatalogConfig>
+          );
+          setCatalogConfig(mergedRemote);
+          try {
+            localStorage.setItem(
+              `quiral_catalog_config_v3_${activeStore}`,
+              JSON.stringify(mergedRemote)
+            );
+          } catch {}
+        } else {
+          setCatalogConfig(getStoredCatalogConfig(activeStore));
+        }
+
+        setError(null);
+        lastLoadedStoreIdRef.current = activeStore;
+      } catch (fetchErr: unknown) {
+        if (requestId !== activeStoreRequestIdRef.current) return;
+        const errMsg =
+          fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+        console.warn("Fallo al conectar con Supabase:", fetchErr);
+
+        // Si no hay red, recuperar catálogo e inventario local desde IndexedDB (Dexie)
+        try {
+          const [cachedProds, cachedSups] = await Promise.all([
+            getCachedCatalogSnapshot(activeStore),
+            getCachedSuppliersSnapshot(activeStore),
+          ]);
+          if (cachedProds.length > 0) {
+            setProducts(cachedProds);
+            setSuppliers(cachedSups);
+            report("Modo Offline: catálogo cargado desde la memoria local");
+          } else {
+            report(`Error de conexión: ${errMsg || "Sin red"}`);
+          }
+        } catch {
+          report(`Error de conexión: ${errMsg || "Sin red"}`);
+        }
+      } finally {
+        if (requestId === activeStoreRequestIdRef.current) {
+          setLoading(false);
+        }
       }
-    }
-  }, [report]);
+    },
+    [report]
+  );
 
   // Sincronización atómica e inmediata de sesión y perfil de tienda
   const syncUserSession = useCallback(
@@ -304,7 +423,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
       setLoading(true);
       try {
-        const hasDemoBypass = localStorage.getItem("quiral_demo_bypass") === "true";
+        const hasDemoBypass =
+          localStorage.getItem("quiral_demo_bypass") === "true";
 
         if (hasDemoBypass) {
           printSecurityWarning();
@@ -363,10 +483,14 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
             await loadData(membership.storeId, false);
           } else {
             const meta = session.user.user_metadata || {};
-            const fallbackStoreId = (meta.store_id as string) || session.user.id;
-            const fallbackStoreName = (meta.store_name as string) || "Mi tienda";
+            const fallbackStoreId =
+              (meta.store_id as string) || session.user.id;
+            const fallbackStoreName =
+              (meta.store_name as string) || "Mi tienda";
             const fallbackUsername =
-              (meta.username as string) || session.user.email?.split("@")[0] || "Usuario";
+              (meta.username as string) ||
+              session.user.email?.split("@")[0] ||
+              "Usuario";
 
             const localStore = getStoredStoreProfile(fallbackStoreId);
             const profile: UserProfile = {
@@ -408,42 +532,44 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void syncUserSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_OUT") {
-        setUserProfile(null);
-        setStoreId(null);
-        setSuppliers([]);
-        setProducts([]);
-        setSales([]);
-        setClosures([]);
-        setLoading(false);
-        localStorage.removeItem("quiral_demo_bypass");
-        setIsDemoUser(false);
-        lastLoadedUserIdRef.current = null;
-        lastLoadedStoreIdRef.current = null;
-        return;
-      }
-
-      if (event === "TOKEN_REFRESHED") {
-        if (
-          session?.user &&
-          lastLoadedUserIdRef.current === session.user.id &&
-          lastLoadedStoreIdRef.current !== null
-        ) {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_OUT") {
+          setUserProfile(null);
+          setStoreId(null);
+          setSuppliers([]);
+          setProducts([]);
+          setSales([]);
+          setClosures([]);
+          setLoading(false);
+          localStorage.removeItem("quiral_demo_bypass");
+          setIsDemoUser(false);
+          lastLoadedUserIdRef.current = null;
+          lastLoadedStoreIdRef.current = null;
           return;
         }
-      }
 
-      if (
-        event === "SIGNED_IN" ||
-        event === "USER_UPDATED" ||
-        event === "INITIAL_SESSION"
-      ) {
-        if (session) {
-          await syncUserSession(session);
+        if (event === "TOKEN_REFRESHED") {
+          if (
+            session?.user &&
+            lastLoadedUserIdRef.current === session.user.id &&
+            lastLoadedStoreIdRef.current !== null
+          ) {
+            return;
+          }
+        }
+
+        if (
+          event === "SIGNED_IN" ||
+          event === "USER_UPDATED" ||
+          event === "INITIAL_SESSION"
+        ) {
+          if (session) {
+            await syncUserSession(session);
+          }
         }
       }
-    });
+    );
 
     return () => {
       authListener.subscription.unsubscribe();
@@ -456,19 +582,29 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
     const unsubscribe = subscribeToStoreRealtime(storeId, {
       onSupplierInsert: (rowData) => {
-        setSuppliers((prev) => [rowData, ...prev.filter((s) => s.id !== rowData.id)]);
+        setSuppliers((prev) => [
+          rowData,
+          ...prev.filter((s) => s.id !== rowData.id),
+        ]);
       },
       onSupplierUpdate: (rowData) => {
-        setSuppliers((prev) => prev.map((s) => (s.id === rowData.id ? rowData : s)));
+        setSuppliers((prev) =>
+          prev.map((s) => (s.id === rowData.id ? rowData : s))
+        );
       },
       onSupplierDelete: (oldId) => {
         setSuppliers((prev) => prev.filter((s) => s.id !== oldId));
       },
       onProductInsert: (rowData) => {
-        setProducts((prev) => [rowData, ...prev.filter((p) => p.id !== rowData.id)]);
+        setProducts((prev) => [
+          rowData,
+          ...prev.filter((p) => p.id !== rowData.id),
+        ]);
       },
       onProductUpdate: (rowData) => {
-        setProducts((prev) => prev.map((p) => (p.id === rowData.id ? rowData : p)));
+        setProducts((prev) =>
+          prev.map((p) => (p.id === rowData.id ? rowData : p))
+        );
       },
       onProductDelete: (oldId) => {
         setProducts((prev) => prev.filter((p) => p.id !== oldId));
@@ -477,16 +613,23 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         setSales((prev) => deduplicateSales([rowData, ...prev]));
       },
       onSaleUpdate: (rowData) => {
-        setSales((prev) => prev.map((s) => (s.id === rowData.id ? rowData : s)));
+        setSales((prev) =>
+          prev.map((s) => (s.id === rowData.id ? rowData : s))
+        );
       },
       onSaleDelete: (oldId) => {
         setSales((prev) => prev.filter((s) => s.id !== oldId));
       },
       onClosureInsert: (rowData) => {
-        setClosures((prev) => [rowData, ...prev.filter((c) => c.id !== rowData.id)]);
+        setClosures((prev) => [
+          rowData,
+          ...prev.filter((c) => c.id !== rowData.id),
+        ]);
       },
       onClosureUpdate: (rowData) => {
-        setClosures((prev) => prev.map((c) => (c.id === rowData.id ? rowData : c)));
+        setClosures((prev) =>
+          prev.map((c) => (c.id === rowData.id ? rowData : c))
+        );
       },
       onClosureDelete: (oldId) => {
         setClosures((prev) => prev.filter((c) => c.id !== oldId));
@@ -503,7 +646,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     (nextSales: Sale[]) => {
       if (!storeId || !isDemoUser) return;
       try {
-        localStorage.setItem(`quiral_demo_sales_v3_${storeId}`, JSON.stringify(nextSales));
+        localStorage.setItem(
+          `quiral_demo_sales_v3_${storeId}`,
+          JSON.stringify(nextSales)
+        );
       } catch {}
     },
     [storeId, isDemoUser]
@@ -526,7 +672,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     [storeId, isDemoUser]
   );
 
-  const cartUnits = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
+  const cartUnits = useMemo(
+    () => cart.reduce((sum, item) => sum + item.quantity, 0),
+    [cart]
+  );
 
   // Proveedores
   const addSupplier = (data: Omit<Supplier, "id">) => {
@@ -589,18 +738,27 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const mutateProduct = (productId: string, mutator: (p: Product) => Product) => {
+  const mutateProduct = (
+    productId: string,
+    mutator: (p: Product) => Product
+  ) => {
     const current = products.find((p) => p.id === productId);
     if (current) {
       updateProduct(mutator(current));
     }
   };
 
-  const adjustBatchStock = (productId: string, batchId: string, delta: number) => {
+  const adjustBatchStock = (
+    productId: string,
+    batchId: string,
+    delta: number
+  ) => {
     mutateProduct(productId, (p) => ({
       ...p,
       batches: p.batches.map((b) =>
-        b.id === batchId ? { ...b, stock: Math.max(0, b.stock + Math.trunc(delta)) } : b
+        b.id === batchId
+          ? { ...b, stock: Math.max(0, b.stock + Math.trunc(delta)) }
+          : b
       ),
     }));
   };
@@ -648,8 +806,12 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   };
 
   const purgeOutOfStock = () => {
-    const removed = products.filter((p) => p.batches.every((b) => b.stock === 0));
-    setProducts((prev) => prev.filter((p) => !removed.some((r) => r.id === p.id)));
+    const removed = products.filter((p) =>
+      p.batches.every((b) => b.stock === 0)
+    );
+    setProducts((prev) =>
+      prev.filter((p) => !removed.some((r) => r.id === p.id))
+    );
     if (storeId && !isDemoUser && removed.length > 0) {
       void purgeProductsRecords(
         storeId,
@@ -661,7 +823,9 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
     return removed.length;
   };
-  const deleteMultipleProducts = async (productIds: string[]): Promise<number> => {
+  const deleteMultipleProducts = async (
+    productIds: string[]
+  ): Promise<number> => {
     if (!productIds || productIds.length === 0) return 0;
     const idsSet = new Set(productIds);
     setProducts((prev) => prev.filter((p) => !idsSet.has(p.id)));
@@ -738,7 +902,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const addCategory = (name: string, attributeKeys?: string[]): CategoryConfig | null => {
+  const addCategory = (
+    name: string,
+    attributeKeys?: string[]
+  ): CategoryConfig | null => {
     const cleanName = normalizeCatalogText(name);
     if (!cleanName || cleanName.toLowerCase() === "todos") return null;
 
@@ -749,7 +916,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     const keys =
       attributeKeys && attributeKeys.length > 0
         ? [...attributeKeys]
-        : existing?.attributeKeys ?? inferAttributeKeysForCategory(cleanName);
+        : (existing?.attributeKeys ?? inferAttributeKeysForCategory(cleanName));
 
     if (existing) {
       const updatedExisting: CategoryConfig = {
@@ -807,7 +974,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     const affectedProducts = products.filter((p) =>
       isSameCatalogText(p.category, categoryName)
     );
-    const cleanFallback = normalizeCatalogText(fallbackCategory) || FALLBACK_ORPHAN_CATEGORY;
+    const cleanFallback =
+      normalizeCatalogText(fallbackCategory) || FALLBACK_ORPHAN_CATEGORY;
 
     if (affectedProducts.length > 0) {
       const updatedList: Product[] = [];
@@ -831,7 +999,9 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       // Si es categoría base de fábrica, se conserva su definición en `categories` (Respaldo) y solo sale de `categoryOrder`
       const nextCategories = isFactory
         ? [...prev.categories]
-        : prev.categories.filter((c) => !isSameCatalogText(c.name, categoryName));
+        : prev.categories.filter(
+            (c) => !isSameCatalogText(c.name, categoryName)
+          );
 
       const nextOrder = prev.categoryOrder.filter(
         (c) => !isSameCatalogText(c, categoryName)
@@ -887,7 +1057,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const addAttributeOption = (attributeKey: string, newOption: string): string | null => {
+  const addAttributeOption = (
+    attributeKey: string,
+    newOption: string
+  ): string | null => {
     const cleanOpt = normalizeCatalogText(newOption);
     if (!cleanOpt) return null;
 
@@ -929,7 +1102,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     if (!currentAttr) return false;
 
     const duplicate = currentAttr.options.find(
-      (opt) => !isSameCatalogText(opt, oldOption) && isSameCatalogText(opt, cleanNew)
+      (opt) =>
+        !isSameCatalogText(opt, oldOption) && isSameCatalogText(opt, cleanNew)
     );
     if (duplicate) return false;
 
@@ -953,7 +1127,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const deleteAttributeOption = (attributeKey: string, optionToRemove: string) => {
+  const deleteAttributeOption = (
+    attributeKey: string,
+    optionToRemove: string
+  ) => {
     const currentAttr = catalogConfig.attributes[attributeKey];
     if (!currentAttr || currentAttr.options.length <= 1) return;
 
@@ -977,7 +1154,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     persistCatalogConfig(nextConfig);
   };
 
-  const reorderAttributeOptions = (attributeKey: string, newOptions: string[]) => {
+  const reorderAttributeOptions = (
+    attributeKey: string,
+    newOptions: string[]
+  ) => {
     const currentAttr = catalogConfig.attributes[attributeKey];
     if (!currentAttr) return;
 
@@ -1067,21 +1247,24 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     const product = products.find((p) => p.id === productId);
     if (!product) return false;
     const existing = cart.find((i) => i.productId === productId);
-    const batch = product.batches.filter((b) => b.stock > 0).sort((a, b) => b.stock - a.stock)[0];
+    const batch = product.batches
+      .filter((b) => b.stock > 0)
+      .sort((a, b) => b.stock - a.stock)[0];
     if (!batch) return false;
 
     if (existing) {
       const active = product.batches.find((b) => b.id === existing.batchId);
       if (!active || existing.quantity >= active.stock) return false;
       setCart((prev) =>
-        prev.map((i) => (i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i))
+        prev.map((i) =>
+          i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i
+        )
       );
     } else {
       setCart((prev) => [
         ...prev,
         { productId, batchId: batch.id, quantity: 1, unitPrice: product.price },
       ]);
-
     }
     return true;
   };
@@ -1089,19 +1272,26 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const updateCartQuantity = (productId: string, quantity: number) => {
     const item = cart.find((i) => i.productId === productId);
     const product = products.find((p) => p.id === productId);
-    const stock = product?.batches.find((b) => b.id === item?.batchId)?.stock ?? 0;
+    const stock =
+      product?.batches.find((b) => b.id === item?.batchId)?.stock ?? 0;
     const next = Math.min(Math.max(0, Math.floor(quantity)), stock);
     setCart((prev) =>
       next === 0
         ? prev.filter((i) => i.productId !== productId)
-        : prev.map((i) => (i.productId === productId ? { ...i, quantity: next } : i))
+        : prev.map((i) =>
+            i.productId === productId ? { ...i, quantity: next } : i
+          )
     );
   };
 
   const updateCartItemPrice = (productId: string, unitPrice: number) => {
     if (Number.isFinite(unitPrice) && unitPrice >= 0) {
       setCart((prev) =>
-        prev.map((i) => (i.productId === productId ? { ...i, unitPrice: Math.round(unitPrice) } : i))
+        prev.map((i) =>
+          i.productId === productId
+            ? { ...i, unitPrice: Math.round(unitPrice) }
+            : i
+        )
       );
     }
   };
@@ -1127,18 +1317,31 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const clearCart = () => setCart([]);
 
   // Ventas: Concurrencia, Candado Anti-Duplicados y RPC Atómico
-  const completeSale = (paymentMethod: PaymentMethod, total: number, customerName?: string) => {
+  const completeSale = (
+    paymentMethod: PaymentMethod,
+    total: number,
+    customerName?: string
+  ) => {
     if (saleInFlightRef.current) return false;
     const cartSnapshot = [...cart];
-    const subtotal = cartSnapshot.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-    if (!cartSnapshot.length || !Number.isFinite(total) || total < 0 || total > subtotal) {
+    const subtotal = cartSnapshot.reduce(
+      (sum, item) => sum + item.quantity * item.unitPrice,
+      0
+    );
+    if (
+      !cartSnapshot.length ||
+      !Number.isFinite(total) ||
+      total < 0 ||
+      total > subtotal
+    ) {
       return false;
     }
 
     saleInFlightRef.current = true;
     try {
       const maxSaleNumber = sales.reduce(
-        (max, s) => Math.max(max, typeof s.saleNumber === "number" ? s.saleNumber : 0),
+        (max, s) =>
+          Math.max(max, typeof s.saleNumber === "number" ? s.saleNumber : 0),
         0
       );
       const nextNumber = maxSaleNumber > 0 ? maxSaleNumber + 1 : 1;
@@ -1183,19 +1386,32 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
           return {
             ...p,
             batches: p.batches.map((b) =>
-              b.id === item.batchId ? { ...b, stock: Math.max(0, b.stock - item.quantity) } : b
+              b.id === item.batchId
+                ? { ...b, stock: Math.max(0, b.stock - item.quantity) }
+                : b
             ),
           };
         })
       );
       setCart([]);
 
-      // Transacción atómica en Supabase si está conectado
+      // Transacción atómica en Supabase si está conectado (con fallback a Dexie IndexedDB si está offline)
       if (storeId && !isDemoUser) {
-        void executeCompleteSaleRpc(storeId, newSale, cartSnapshot).catch((err: unknown) => {
-          const msg = err instanceof Error ? err.message : String(err);
-          report(`Aviso de sincronización en venta: ${msg}`);
-        });
+        if (typeof navigator !== "undefined" && !navigator.onLine) {
+          void enqueueOfflineSale(storeId, newSale, cartSnapshot);
+          report(
+            "Venta registrada localmente (Modo Offline). Se sincronizará automáticamente al volver la red."
+          );
+        } else {
+          void executeCompleteSaleRpc(storeId, newSale, cartSnapshot).catch(
+            (err: unknown) => {
+              // Si el RPC falla por corte de red o timeout, encolar en Dexie para sincronización idempotente
+              void enqueueOfflineSale(storeId, newSale, cartSnapshot);
+              const msg = err instanceof Error ? err.message : String(err);
+              report(`Venta guardada localmente (Modo Offline): ${msg}`);
+            }
+          );
+        }
       }
 
       return true;
@@ -1246,7 +1462,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
           return b;
         });
         if (changed) {
-          const updatedProd = normalizedProduct({ ...prod, batches: nextBatches });
+          const updatedProd = normalizedProduct({
+            ...prod,
+            batches: nextBatches,
+          });
           modifiedProducts.push(updatedProd);
           return updatedProd;
         }
@@ -1280,7 +1499,9 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       const modifiedProducts: Product[] = [];
       setProducts((prev) =>
         prev.map((prod) => {
-          const matchingItems = targetSale.items.filter((it) => it.productId === prod.id);
+          const matchingItems = targetSale.items.filter(
+            (it) => it.productId === prod.id
+          );
           if (matchingItems.length === 0) return prod;
 
           const nextBatches = prod.batches.map((b) => ({ ...b }));
@@ -1292,7 +1513,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
             }
           }
 
-          const updatedProd = normalizedProduct({ ...prod, batches: nextBatches });
+          const updatedProd = normalizedProduct({
+            ...prod,
+            batches: nextBatches,
+          });
           modifiedProducts.push(updatedProd);
           return updatedProd;
         })
@@ -1319,7 +1543,11 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const toggleItemWarranty = (saleId: string, itemId: string, note?: string) => {
+  const toggleItemWarranty = (
+    saleId: string,
+    itemId: string,
+    note?: string
+  ) => {
     const sale = sales.find((s) => s.id === saleId);
     if (!sale) return;
 
@@ -1330,7 +1558,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
           ? {
               ...i,
               warrantyClaimed: !i.warrantyClaimed,
-              warrantyClaimNote: note !== undefined ? note : i.warrantyClaimNote,
+              warrantyClaimNote:
+                note !== undefined ? note : i.warrantyClaimNote,
             }
           : i
       ),
@@ -1508,7 +1737,9 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 export function useInventory() {
   const ctx = useContext(InventoryContext);
   if (!ctx) {
-    throw new Error("useInventory debe utilizarse dentro de un InventoryProvider");
+    throw new Error(
+      "useInventory debe utilizarse dentro de un InventoryProvider"
+    );
   }
   return ctx;
 }

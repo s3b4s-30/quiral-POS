@@ -147,3 +147,27 @@ En cualquier archivo con sufijo `*Desktop.tsx` o vistas exclusivas de escritorio
    - `npm run test:unit` (`vitest run`): 100% pruebas unitarias pasando.
    - `npm run build` (`tsc -b && vite build`): Compilación limpia de producción.
    - `npm run test:e2e` (`playwright test`): 52/52 pruebas de integración y regresión visual en verde.
+
+---
+
+## 8. Arquitectura Offline-First, Sincronización en Segundo Plano y Caché (Fase 4)
+
+1. **Almacenamiento Local Persistente con Dexie.js (`src/services/offlineDb.ts`):**
+   - Base de datos IndexedDB `QuiralPOS_Offline_DB` estructurada en 3 tablas de alta disponibilidad:
+     - `salesQueue`: Cola transaccional FIFO de ventas completadas offline (`queueId`, `id`, `storeId`, `sale`, `lines`, `status`, `attempts`).
+     - `cachedProducts`: Instantánea local del catálogo maestro y existencias de lotes para permitir búsquedas y ventas sin conexión.
+     - `cachedSuppliers`: Respaldo local de proveedores y canales de abastecimiento.
+   - Si la red cae o se inicia la PWA en un mostrador sin internet, el sistema recurre de forma autónoma a la caché local sin interrumpir la operación.
+
+2. **Motor de Sincronización Idempotente en Segundo Plano (`src/services/offlineSyncService.ts`):**
+   - Escucha reactivamente los eventos `online` y `offline` del navegador (`window.addEventListener`).
+   - Al restablecerse la conectividad, ejecuta `flushSalesQueue()` procesando secuencialmente las ventas acumuladas hacia Supabase mediante el RPC atómico `complete_sale`, previniendo duplicidades y respetando el `store_id` multi-tenant.
+   - Hook reactivo `useNetworkSync()` para proveer telemetría de conectividad en tiempo real.
+
+3. **Caché Inteligente con TanStack Query (`src/lib/queryClient.ts`):**
+   - Políticas de rendimiento de mostrador: `staleTime: 5 * 60 * 1000` (5 minutos) y `gcTime: 30 * 60 * 1000` (30 minutos).
+   - Reintentos condicionados al estado `navigator.onLine` para eliminar peticiones fallidas redundantes en ráfaga.
+
+4. **Componente de Estado de Conectividad (`NetworkStatusBadge.tsx`):**
+   - Integrado en `DesktopSidebar.tsx` (escritorio) y en `AppInner` como toast sutil inferior (móvil).
+   - Cero ruido visual: permanece oculto si el sistema está en línea con la cola vacía. Se activa automáticamente en color ámbar ante cortes de red o azul pulsante durante la sincronización de ventas acumuladas.

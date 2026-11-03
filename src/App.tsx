@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/queryClient";
 import AuthScreen from "./components/AuthScreen";
 import DesktopSidebar from "./components/DesktopSidebar";
 import DesktopStoreProfileView from "./components/DesktopStoreProfileView";
 import DesktopSuppliersView from "./components/DesktopSuppliersView";
 import FloatingCartFAB from "./components/FloatingCartFAB";
+import { NetworkStatusBadge } from "./components/NetworkStatusBadge";
 import Navbar, { type NavbarVariant, type Tab } from "./components/Navbar";
 import NewProductModal from "./components/NewProductModal";
 import ProductDetailModal from "./components/ProductDetailModal";
@@ -27,7 +30,9 @@ function getInitialTheme(): Theme {
   } catch (error) {
     console.error("No se pudo leer la preferencia de tema.", error);
   }
-  return stored === "light" || stored === "dark" || stored === "auto" ? stored : "auto";
+  return stored === "light" || stored === "dark" || stored === "auto"
+    ? stored
+    : "auto";
 }
 
 function AppInner() {
@@ -38,7 +43,8 @@ function AppInner() {
   const [isDesktopSuppliersView, setIsDesktopSuppliersView] = useState(false);
   const [isProfileSecurityOpen, setIsProfileSecurityOpen] = useState(false);
   const [isStoreProfileOpen, setIsStoreProfileOpen] = useState(false);
-  const [isDesktopStoreProfileView, setIsDesktopStoreProfileView] = useState(false);
+  const [isDesktopStoreProfileView, setIsDesktopStoreProfileView] =
+    useState(false);
   const [isInventoryFilterOpen, setIsInventoryFilterOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
@@ -65,8 +71,7 @@ function AppInner() {
   // Ocultar Navbar cuando cualquier modal o vista secundaria esté activa
   // Se restaura inmediatamente al iniciar la animación de cierre (0ms de retraso percibido)
   const hasActiveModal = Boolean(
-    (
-      selectedProduct ||
+    (selectedProduct ||
       isNewProductModalOpen ||
       isPurgeModalOpen ||
       isSuppliersModalOpen ||
@@ -75,8 +80,8 @@ function AppInner() {
       isInventoryFilterOpen ||
       isCheckoutOpen ||
       isSummaryModalOpen ||
-      isHistoryModalOpen
-    ) && !isModalClosing
+      isHistoryModalOpen) &&
+    !isModalClosing
   );
 
   const handleOpenStoreProfile = () => {
@@ -103,13 +108,21 @@ function AppInner() {
     setActiveTab(tab);
     requestAnimationFrame(() => {
       if (tab === "inventory") {
-        document.getElementById("inventory-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
+        document
+          .getElementById("inventory-scroll")
+          ?.scrollTo({ top: 0, behavior: "smooth" });
       } else if (tab === "sell") {
-        document.getElementById("pos-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
+        document
+          .getElementById("pos-scroll")
+          ?.scrollTo({ top: 0, behavior: "smooth" });
       } else if (tab === "history") {
-        document.getElementById("history-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
+        document
+          .getElementById("history-scroll")
+          ?.scrollTo({ top: 0, behavior: "smooth" });
       } else if (tab === "summary") {
-        document.getElementById("summary-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
+        document
+          .getElementById("summary-scroll")
+          ?.scrollTo({ top: 0, behavior: "smooth" });
       }
     });
   };
@@ -119,7 +132,8 @@ function AppInner() {
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
 
     const applyTheme = () => {
-      const isDark = theme === "dark" || (theme === "auto" && prefersDark.matches);
+      const isDark =
+        theme === "dark" || (theme === "auto" && prefersDark.matches);
       root.classList.toggle("dark", isDark);
 
       // Sincronizar theme-color meta tag para Safari / iOS PWA
@@ -147,8 +161,12 @@ function AppInner() {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center bg-[var(--bg-primary)] p-6 text-center select-none">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-accent border-t-transparent" />
-        <h2 className="mt-4 text-base font-bold text-[var(--text-primary)]">Iniciando Quiral POS</h2>
-        <p className="mt-1 text-xs text-[var(--text-secondary)]">Sincronizando estado...</p>
+        <h2 className="mt-4 text-base font-bold text-[var(--text-primary)]">
+          Iniciando Quiral POS
+        </h2>
+        <p className="mt-1 text-xs text-[var(--text-secondary)]">
+          Sincronizando estado...
+        </p>
       </div>
     );
   }
@@ -192,7 +210,9 @@ function AppInner() {
         {/* Contenedor Principal: las vistas manejan su scroll con .quiral-scroll-container */}
         <main className="h-full w-full overflow-hidden relative">
           {isDesktopSuppliersView ? (
-            <DesktopSuppliersView onBack={() => setIsDesktopSuppliersView(false)} />
+            <DesktopSuppliersView
+              onBack={() => setIsDesktopSuppliersView(false)}
+            />
           ) : isDesktopStoreProfileView ? (
             <DesktopStoreProfileView
               onBack={() => setIsDesktopStoreProfileView(false)}
@@ -214,7 +234,9 @@ function AppInner() {
             <SummaryView onModalStateChange={setIsSummaryModalOpen} />
           ) : (
             <div className="quiral-scroll-container px-4 pb-6 text-center text-[var(--text-secondary)]">
-              <p className="text-base font-semibold pt-12">Esta sección estará disponible próximamente.</p>
+              <p className="text-base font-semibold pt-12">
+                Esta sección estará disponible próximamente.
+              </p>
               <button
                 type="button"
                 onClick={() => setActiveTab("inventory")}
@@ -322,14 +344,20 @@ function AppInner() {
           isDemoUser={isDemoUser}
         />
       )}
+      {/* Indicador Flotante de Conectividad y Cola Offline en Móvil */}
+      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 pointer-events-auto md:hidden">
+        <NetworkStatusBadge storeId={userProfile?.storeId} />
+      </div>
     </div>
   );
 }
 
 export default function App() {
   return (
-    <InventoryProvider>
-      <AppInner />
-    </InventoryProvider>
+    <QueryClientProvider client={queryClient}>
+      <InventoryProvider>
+        <AppInner />
+      </InventoryProvider>
+    </QueryClientProvider>
   );
 }
