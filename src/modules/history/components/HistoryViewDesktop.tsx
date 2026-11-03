@@ -303,11 +303,11 @@ export default function HistoryViewDesktop({
           ) : (
             <div
               data-testid="desktop-history-table-container"
-              className="overflow-hidden rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] shadow-xs"
+              className="overflow-hidden rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] shadow-xs antialiased-hd"
             >
               <table className="w-full text-left border-collapse table-fixed">
                 <thead>
-                  <tr className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]/80 text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
+                  <tr className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]/80 text-xs sm:text-sm font-black uppercase tracking-wider text-[var(--text-secondary)]">
                     <th className="py-3.5 px-3 sm:px-4 w-20 sm:w-24">Ticket</th>
                     <th className="py-3.5 px-3 sm:px-4 w-36 sm:w-40">
                       Fecha y Hora
@@ -316,7 +316,7 @@ export default function HistoryViewDesktop({
                       Cliente / Detalle de Artículos
                     </th>
                     <th className="py-3.5 px-3 sm:px-4 w-28 sm:w-32">Método</th>
-                    <th className="py-3.5 px-3 sm:px-4 w-32 sm:w-36 text-right pr-4">
+                    <th className="py-3.5 px-3 sm:px-4 w-32 sm:w-36 text-right pr-4 tabular-nums">
                       Total
                     </th>
                     <th className="py-3.5 px-3 sm:px-4 w-48 sm:w-52 text-right pr-3">

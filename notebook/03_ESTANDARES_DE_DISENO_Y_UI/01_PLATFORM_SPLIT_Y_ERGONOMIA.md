@@ -95,3 +95,19 @@ Quedan terminantemente prohibidas las barras de desplazamiento toscas grises por
    - Desplazamiento por celdas con flechas del teclado (`↑`, `↓`, `←`, `→`).
    - <kbd>Enter</kbd> edita el stock o precio y baja automáticamente a la siguiente fila.
    - Fila de inserción rápida en serie (`QuickAddRow`) activada con <kbd>Ctrl+N</kbd>.
+
+---
+
+## 5. Nitidez Tipográfica de Mostrador y Ergonomía de Selección
+
+1. **Alta Definición Tipográfica (`.antialiased-hd`):**
+   - Directivas forzadas en `body` y tablas: `-webkit-font-smoothing: antialiased;`, `-moz-osx-font-smoothing: grayscale;`, `text-rendering: optimizeLegibility;`.
+   - Supresión de aberración cromática: prohibido usar texto coloreado (`text-accent`) sobre fondos de acento sutiles (`bg-accent-subtle`) en temas oscuros, ya que el subpixel rendering genera halos de color difusos. Se emplean contrastes limpios (`text-white` o `text-[var(--text-primary)]`) sobre fondos sólidos con bordes nítidos.
+   - Textos de catálogo y celdas escalados a `text-sm font-semibold` o `text-base font-bold` para lectura cómoda a distancia de mostrador.
+2. **Iconografía Profesional y Limpieza de Estrellas:**
+   - Erradicación de iconos de destellos (`Sparkles` / ✨). Se emplean iconos vectoriales sobrios y semánticos de `lucide-react` (ej. `<Zap size={16} />` para el _Modo Conteo Rápido_).
+3. **Ergonomía de Selección:**
+   - Clic en el área general vacía de la tarjeta o fila: **selecciona el ítem**.
+   - Clic en el enlace/título o botón de acción: **abre el panel de detalle o inspección profunda**, protegido con `e.stopPropagation()` para evitar falsos positivos de selección.
+4. **Independencia Cromática de Proveedores:**
+   - Los puntos de identificación de proveedores respetan exclusivamente `supplier.color` mediante `style={{ backgroundColor: supplier.color }}`, inmunes a la paleta global `--accent-*`.

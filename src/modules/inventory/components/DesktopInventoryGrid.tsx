@@ -1,5 +1,12 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, Sparkles, Trash2, X } from "lucide-react";
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Trash2, X, Zap } from "lucide-react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useInventory } from "../../../context/InventoryContext";
 import { useScrollParentVirtualizer } from "../../../hooks/useScrollParentVirtualizer";
 import { Product, ProductCategory, Supplier } from "../../../types/domain";
@@ -14,7 +21,8 @@ import {
 
 export type { EditableColKey } from "./DesktopInventoryGridParts";
 
-type SortColumn = "index" | "name" | "category" | "stock" | "cost" | "price" | "profit";
+type SortColumn =
+  "index" | "name" | "category" | "stock" | "cost" | "price" | "profit";
 type SortDirection = "asc" | "desc" | null;
 
 interface ActiveCell {
@@ -102,16 +110,24 @@ export default function DesktopInventoryGrid({
   const enrichedRows = useMemo<EnrichedRow[]>(() => {
     const base = products.map((product, idx) => {
       const totalStock = product.batches.reduce((sum, b) => sum + b.stock, 0);
-      const totalBatchCost = product.batches.reduce((sum, b) => sum + b.cost * b.stock, 0);
+      const totalBatchCost = product.batches.reduce(
+        (sum, b) => sum + b.cost * b.stock,
+        0
+      );
       const avgCost =
-        totalStock > 0 ? Math.round(totalBatchCost / totalStock) : product.batches[0]?.cost ?? 0;
+        totalStock > 0
+          ? Math.round(totalBatchCost / totalStock)
+          : (product.batches[0]?.cost ?? 0);
       const profit = product.price - avgCost;
       const marginPct = avgCost > 0 ? Math.round((profit / avgCost) * 100) : 0;
 
       const attributeBadges = (product.subtitle || "")
         .split("·")
         .map((s) => s.trim())
-        .filter((s) => s.length > 0 && s.toLowerCase() !== product.category.toLowerCase());
+        .filter(
+          (s) =>
+            s.length > 0 && s.toLowerCase() !== product.category.toLowerCase()
+        );
 
       return {
         product,
@@ -169,7 +185,9 @@ export default function DesktopInventoryGrid({
     overscan: 12,
     getItemKey: getRowKey,
   });
-  const measureRowRef = virtual.enabled ? virtual.virtualizer.measureElement : undefined;
+  const measureRowRef = virtual.enabled
+    ? virtual.virtualizer.measureElement
+    : undefined;
 
   /* ------------------------------------------------------------------------ */
   /*  "Latest-ref": snapshot del estado vigente para manejadores estables.     */
@@ -232,7 +250,9 @@ export default function DesktopInventoryGrid({
         activeInputRef.current?.focus();
         activeInputRef.current?.select();
       } else {
-        const el = cellRefs.current.get(`${activeCell.rowIndex}:${activeCell.colKey}`);
+        const el = cellRefs.current.get(
+          `${activeCell.rowIndex}:${activeCell.colKey}`
+        );
         el?.focus({ preventScroll: false });
       }
     };
@@ -276,24 +296,31 @@ export default function DesktopInventoryGrid({
         setSortDirection("asc");
         return col;
       }
-      setSortDirection((prevDir) => (prevDir === "asc" ? "desc" : prevDir === "desc" ? null : "asc"));
+      setSortDirection((prevDir) =>
+        prevDir === "asc" ? "desc" : prevDir === "desc" ? null : "asc"
+      );
       return prevCol;
     });
   }, []);
 
   /* ------------------------------ Motor Excel ------------------------------ */
 
-  const getCellNumericValue = useCallback((rowIndex: number, colKey: EditableColKey): number => {
-    const row = latestRef.current.enrichedRows[rowIndex];
-    if (!row) return 0;
-    if (colKey === "stock") return row.totalStock;
-    if (colKey === "cost") return row.avgCost;
-    return row.product.price;
-  }, []);
+  const getCellNumericValue = useCallback(
+    (rowIndex: number, colKey: EditableColKey): number => {
+      const row = latestRef.current.enrichedRows[rowIndex];
+      if (!row) return 0;
+      if (colKey === "stock") return row.totalStock;
+      if (colKey === "cost") return row.avgCost;
+      return row.product.price;
+    },
+    []
+  );
 
   const focusCell = useCallback((rowIndex: number, colKey: EditableColKey) => {
     setActiveCell((prev) =>
-      prev && prev.rowIndex === rowIndex && prev.colKey === colKey ? prev : { rowIndex, colKey }
+      prev && prev.rowIndex === rowIndex && prev.colKey === colKey
+        ? prev
+        : { rowIndex, colKey }
     );
     setIsEditingCell(false);
   }, []);
@@ -305,7 +332,9 @@ export default function DesktopInventoryGrid({
       if (!rows[rowIndex]) return;
       setActiveCell({ rowIndex, colKey });
       setEditDraftValue(
-        initialOverride !== undefined ? initialOverride : String(getCellNumericValue(rowIndex, colKey))
+        initialOverride !== undefined
+          ? initialOverride
+          : String(getCellNumericValue(rowIndex, colKey))
       );
       setIsEditingCell(true);
     },
@@ -313,59 +342,77 @@ export default function DesktopInventoryGrid({
   );
 
   // Confirmar edición inline y aplicar mutación optimista
-  const commitEdit = useCallback((rowIndex: number, colKey: EditableColKey, rawVal: string) => {
-    const s = latestRef.current;
-    const row = s.enrichedRows[rowIndex];
-    if (!row) return;
-    const { product, totalStock, avgCost } = row;
-    const cleanDigits = rawVal.replace(/[^\d]/g, "");
-    if (!cleanDigits) {
+  const commitEdit = useCallback(
+    (rowIndex: number, colKey: EditableColKey, rawVal: string) => {
+      const s = latestRef.current;
+      const row = s.enrichedRows[rowIndex];
+      if (!row) return;
+      const { product, totalStock, avgCost } = row;
+      const cleanDigits = rawVal.replace(/[^\d]/g, "");
+      if (!cleanDigits) {
+        setIsEditingCell(false);
+        return;
+      }
+      const parsedNum = Math.max(0, parseInt(cleanDigits, 10) || 0);
+      const defaultSupplierId = s.suppliers[0]?.id || "sup-default";
+
+      if (colKey === "stock") {
+        if (parsedNum !== totalStock) {
+          if (product.batches.length === 0) {
+            s.updateProduct({
+              ...product,
+              batches: [
+                {
+                  id: `batch-${Date.now()}`,
+                  supplierId: defaultSupplierId,
+                  cost: 0,
+                  stock: parsedNum,
+                },
+              ],
+            });
+          } else {
+            s.adjustMasterStock(product.id, parsedNum - totalStock);
+          }
+        }
+      } else if (colKey === "cost" && s.showCosts) {
+        if (parsedNum !== avgCost) {
+          if (product.batches.length === 0) {
+            s.updateProduct({
+              ...product,
+              batches: [
+                {
+                  id: `batch-${Date.now()}`,
+                  supplierId: defaultSupplierId,
+                  cost: parsedNum,
+                  stock: 0,
+                },
+              ],
+            });
+          } else {
+            s.updateProduct({
+              ...product,
+              batches: product.batches.map((b) => ({ ...b, cost: parsedNum })),
+            });
+          }
+        }
+      } else if (colKey === "price") {
+        if (parsedNum !== product.price && parsedNum > 0) {
+          s.updateProductPrice(product.id, parsedNum);
+        }
+      }
+
       setIsEditingCell(false);
-      return;
-    }
-    const parsedNum = Math.max(0, parseInt(cleanDigits, 10) || 0);
-    const defaultSupplierId = s.suppliers[0]?.id || "sup-default";
-
-    if (colKey === "stock") {
-      if (parsedNum !== totalStock) {
-        if (product.batches.length === 0) {
-          s.updateProduct({
-            ...product,
-            batches: [
-              { id: `batch-${Date.now()}`, supplierId: defaultSupplierId, cost: 0, stock: parsedNum },
-            ],
-          });
-        } else {
-          s.adjustMasterStock(product.id, parsedNum - totalStock);
-        }
-      }
-    } else if (colKey === "cost" && s.showCosts) {
-      if (parsedNum !== avgCost) {
-        if (product.batches.length === 0) {
-          s.updateProduct({
-            ...product,
-            batches: [
-              { id: `batch-${Date.now()}`, supplierId: defaultSupplierId, cost: parsedNum, stock: 0 },
-            ],
-          });
-        } else {
-          s.updateProduct({
-            ...product,
-            batches: product.batches.map((b) => ({ ...b, cost: parsedNum })),
-          });
-        }
-      }
-    } else if (colKey === "price") {
-      if (parsedNum !== product.price && parsedNum > 0) {
-        s.updateProductPrice(product.id, parsedNum);
-      }
-    }
-
-    setIsEditingCell(false);
-  }, []);
+    },
+    []
+  );
 
   const moveFocusTab = useCallback(
-    (rowIndex: number, colIdx: number, cols: EditableColKey[], isShift: boolean) => {
+    (
+      rowIndex: number,
+      colIdx: number,
+      cols: EditableColKey[],
+      isShift: boolean
+    ) => {
       const maxRow = latestRef.current.enrichedRows.length - 1;
       if (!isShift) {
         if (colIdx < cols.length - 1) {
@@ -376,7 +423,10 @@ export default function DesktopInventoryGrid({
       } else if (colIdx > 0) {
         setActiveCell({ rowIndex, colKey: cols[colIdx - 1] });
       } else if (rowIndex > 0) {
-        setActiveCell({ rowIndex: rowIndex - 1, colKey: cols[cols.length - 1] });
+        setActiveCell({
+          rowIndex: rowIndex - 1,
+          colKey: cols[cols.length - 1],
+        });
       }
     },
     []
@@ -387,7 +437,9 @@ export default function DesktopInventoryGrid({
     (e: React.KeyboardEvent, rowIndex: number, colKey: EditableColKey) => {
       const s = latestRef.current;
       const maxRow = s.enrichedRows.length - 1;
-      const effectiveCols: EditableColKey[] = s.quickCountMode ? ["stock"] : s.editableColumns;
+      const effectiveCols: EditableColKey[] = s.quickCountMode
+        ? ["stock"]
+        : s.editableColumns;
       const colIdx = effectiveCols.indexOf(colKey);
 
       if (s.isEditingCell) {
@@ -396,7 +448,8 @@ export default function DesktopInventoryGrid({
           e.stopPropagation();
           commitEdit(rowIndex, colKey, s.editDraftValue);
           // Bajar automáticamente a la misma columna de la fila siguiente (flujo Excel)
-          if (rowIndex < maxRow) setActiveCell({ rowIndex: rowIndex + 1, colKey });
+          if (rowIndex < maxRow)
+            setActiveCell({ rowIndex: rowIndex + 1, colKey });
           return;
         }
         if (e.key === "Escape") {
@@ -428,7 +481,8 @@ export default function DesktopInventoryGrid({
         }
         case "ArrowDown":
           e.preventDefault();
-          if (rowIndex < maxRow) setActiveCell({ rowIndex: rowIndex + 1, colKey });
+          if (rowIndex < maxRow)
+            setActiveCell({ rowIndex: rowIndex + 1, colKey });
           return;
         case "ArrowUp":
           e.preventDefault();
@@ -447,7 +501,10 @@ export default function DesktopInventoryGrid({
           if (colIdx > 0) {
             setActiveCell({ rowIndex, colKey: effectiveCols[colIdx - 1] });
           } else if (rowIndex > 0) {
-            setActiveCell({ rowIndex: rowIndex - 1, colKey: effectiveCols[effectiveCols.length - 1] });
+            setActiveCell({
+              rowIndex: rowIndex - 1,
+              colKey: effectiveCols[effectiveCols.length - 1],
+            });
           }
           return;
         case "Tab":
@@ -526,7 +583,8 @@ export default function DesktopInventoryGrid({
       registerCell,
       registerActiveInput,
       toggleRowSelect,
-      adjustStock: (productId, delta) => latestRef.current.adjustMasterStock(productId, delta),
+      adjustStock: (productId, delta) =>
+        latestRef.current.adjustMasterStock(productId, delta),
       addToCart: handleQuickAddToCart,
       inspect: (product) => latestRef.current.onInspectProduct(product),
       duplicate: handleDuplicateRow,
@@ -569,7 +627,9 @@ export default function DesktopInventoryGrid({
   /* ------------------------------ Selección/Lote ---------------------------- */
 
   const allVisibleSelected = useMemo(
-    () => enrichedRows.length > 0 && enrichedRows.every((r) => selectedIds.has(r.product.id)),
+    () =>
+      enrichedRows.length > 0 &&
+      enrichedRows.every((r) => selectedIds.has(r.product.id)),
     [enrichedRows, selectedIds]
   );
 
@@ -597,7 +657,11 @@ export default function DesktopInventoryGrid({
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
-    if (window.confirm(`¿Eliminar las ${selectedIds.size} referencias seleccionadas del inventario?`)) {
+    if (
+      window.confirm(
+        `¿Eliminar las ${selectedIds.size} referencias seleccionadas del inventario?`
+      )
+    ) {
       await deleteMultipleProducts(Array.from(selectedIds));
       setSelectedIds(new Set());
     }
@@ -605,7 +669,9 @@ export default function DesktopInventoryGrid({
 
   const renderSortIcon = (col: SortColumn) => {
     if (sortColumn !== col || !sortDirection) {
-      return <ArrowUpDown size={12} className="opacity-40 group-hover:opacity-80" />;
+      return (
+        <ArrowUpDown size={12} className="opacity-40 group-hover:opacity-80" />
+      );
     }
     return sortDirection === "asc" ? (
       <ArrowUp size={12} className="text-accent" />
@@ -614,8 +680,14 @@ export default function DesktopInventoryGrid({
     );
   };
 
-  const renderSortableHeader = (col: SortColumn, label: string, widthClass: string) => (
-    <th className={`${widthClass} border-r border-[var(--border-color)] px-3 py-2.5`}>
+  const renderSortableHeader = (
+    col: SortColumn,
+    label: string,
+    widthClass: string
+  ) => (
+    <th
+      className={`${widthClass} border-r border-[var(--border-color)] px-3 py-2.5`}
+    >
       <button
         type="button"
         onClick={() => handleToggleSort(col)}
@@ -633,25 +705,28 @@ export default function DesktopInventoryGrid({
     <div
       data-testid="desktop-inventory-grid-wrapper"
       data-virtualized={virtual.enabled ? "true" : "false"}
-      className="relative rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] shadow-sm overflow-hidden"
+      className="relative rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] shadow-sm overflow-hidden antialiased-hd"
     >
       {/* Banner informativo sutil cuando Modo Conteo Rápido está activo */}
       {quickCountMode && (
         <div
           data-testid="quick-count-mode-banner"
-          className="flex items-center justify-between border-b border-accent/30 bg-accent-subtle px-4 py-2 text-xs"
+          className="flex items-center justify-between border-b border-accent/40 bg-[var(--bg-elevated)] dark:bg-black/95 px-4 py-2.5 antialiased-hd shadow-xs"
         >
-          <div className="flex items-center gap-2 font-bold text-accent">
-            <Sparkles size={14} />
-            <span>
-              MODO CONTEO RÁPIDO ACTIVO: Digita la cantidad física y presiona{" "}
-              <kbd className="rounded border border-accent/40 bg-[var(--bg-elevated)] px-1.5 py-0.5 text-[10px] font-extrabold">
+          <div className="flex items-center gap-2.5 font-bold text-[var(--text-primary)]">
+            <Zap size={16} className="text-accent shrink-0 fill-accent/20" />
+            <span className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-white select-none">
+              Modo Conteo Rápido
+            </span>
+            <span className="text-xs sm:text-sm font-semibold text-[var(--text-primary)] leading-none">
+              Digita la cantidad física y presiona{" "}
+              <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-primary)] px-1.5 py-0.5 text-xs font-black text-accent shadow-2xs">
                 Enter ↵
               </kbd>{" "}
               para guardar y avanzar a la fila siguiente.
             </span>
           </div>
-          <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
+          <span className="text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">
             Usa ↑ / ↓ para desplazarte · Esc para cancelar
           </span>
         </div>
@@ -659,7 +734,10 @@ export default function DesktopInventoryGrid({
 
       {/* Contenedor de Tabla con Scroll Horizontal Seguro */}
       <div className="overflow-x-auto">
-        <table data-testid="desktop-inventory-table" className="w-full border-collapse text-left">
+        <table
+          data-testid="desktop-inventory-table"
+          className="w-full border-collapse text-left"
+        >
           {/* Cabecera con Desenfoque Translúcido y Bordes Milimétricos */}
           <thead className="sticky top-0 z-10 backdrop-blur-md bg-[var(--bg-elevated)]/95 border-b border-[var(--border-color)] select-none">
             <tr className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
@@ -722,10 +800,16 @@ export default function DesktopInventoryGrid({
           </tbody>
 
           {/* Filas de Productos (virtualizadas al superar el umbral) */}
-          <tbody ref={rowsBodyRef} className="divide-y divide-[var(--border-color)] text-xs">
+          <tbody
+            ref={rowsBodyRef}
+            className="divide-y divide-[var(--border-color)] text-xs"
+          >
             {virtual.paddingTop > 0 && (
               <tr aria-hidden="true" data-virtual-spacer="top">
-                <td colSpan={8} style={{ height: virtual.paddingTop, padding: 0, border: 0 }} />
+                <td
+                  colSpan={8}
+                  style={{ height: virtual.paddingTop, padding: 0, border: 0 }}
+                />
               </tr>
             )}
 
@@ -754,7 +838,14 @@ export default function DesktopInventoryGrid({
 
             {virtual.paddingBottom > 0 && (
               <tr aria-hidden="true" data-virtual-spacer="bottom">
-                <td colSpan={8} style={{ height: virtual.paddingBottom, padding: 0, border: 0 }} />
+                <td
+                  colSpan={8}
+                  style={{
+                    height: virtual.paddingBottom,
+                    padding: 0,
+                    border: 0,
+                  }}
+                />
               </tr>
             )}
           </tbody>
@@ -796,7 +887,9 @@ export default function DesktopInventoryGrid({
           </span>
         </div>
 
-        <div className="font-semibold tabular-nums">{enrichedRows.length} referencias en tabla</div>
+        <div className="font-semibold tabular-nums">
+          {enrichedRows.length} referencias en tabla
+        </div>
       </footer>
 
       {/* Barra Flotante de Acciones en Lote (Bulk Actions Bar) */}
@@ -813,7 +906,9 @@ export default function DesktopInventoryGrid({
           <div className="flex items-center gap-1.5 border-l border-[var(--border-color)] pl-3">
             <select
               value={bulkCategory}
-              onChange={(e) => setBulkCategory(e.target.value as ProductCategory)}
+              onChange={(e) =>
+                setBulkCategory(e.target.value as ProductCategory)
+              }
               aria-label="Seleccionar nueva categoría en lote"
               className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
             >

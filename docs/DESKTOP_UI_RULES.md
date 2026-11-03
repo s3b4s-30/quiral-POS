@@ -203,3 +203,24 @@ Para potenciar la auditoría y diseño con los paquetes upstream oficiales recom
 2. **[`web-design-guidelines`](../.agents/skills/web-design-guidelines/SKILL.md) (`tech-leads-club/agent-skills`):** Guías oficiales de Vercel para auditoría a11y, focus states, formularios y tipografía.
 3. **[`awesome-design-skills`](../.agents/skills/awesome-design-skills/SKILL.md) (`bergside/awesome-design-skills`):** 67 sistemas de diseño oficiales (Premium, Sleek, Enterprise, Bento, Shadcn) adaptados a la paleta Dual OLED.
 4. **[`playwright-skill`](../.agents/skills/playwright-skill/SKILL.md) y Servidor MCP Playwright (`@playwright/mcp`):** Configurado en `~/.gemini/config/mcp_config.json` para automatización browser en modo aislado (`--isolated`).
+
+---
+
+## 11. Estándares de Nitidez Tipográfica, Ergonomía de Selección y Anti-Halos Cromáticos
+
+1. **Alta Definición Tipográfica y Anti-Aliasing Estricto:**
+   - En el `body`, contenedores maestros y tablas de escritorio (`antialiased-hd`) se fuerza `-webkit-font-smoothing: antialiased;`, `-moz-osx-font-smoothing: grayscale;` y `text-rendering: optimizeLegibility;`.
+   - **Supresión de Aberración Cromática:** Prohibido ubicar texto coloreado (`text-accent`) sobre fondos sutiles del mismo tono (`bg-accent-subtle`) en fondos oscuros que generen halos subpixel difusos. Los banners y botones usan contraste de alta visibilidad (`text-[var(--text-primary)]`, `text-white`) con badges sólidos (`bg-accent`).
+   - Los tamaños base de tipografía en escritorio se escalan para lectura ágil de mostrador (`text-sm` a `text-base` con pesos `font-bold` o `font-black`).
+
+2. **Iconografía Profesional (Prohibición de Estrellas/Sparkles):**
+   - Queda prohibido el uso de emojis de estrellas (✨) o iconos genéricos `Sparkles` en banners y controles funcionales.
+   - Las herramientas de acción rápida (como _Modo Conteo Rápido_) deben utilizar iconos vectoriales semánticos y sobrios de `lucide-react` (ej. `<Zap size={16} />`).
+
+3. **Ergonomía de Selección vs. Apertura de Detalle:**
+   - **Área General:** Hacer clic en el área vacía de una tarjeta (`ProductCard`) o fila (`InventoryGridRow`) ejecuta exclusivamente la **selección/deselección** del elemento.
+   - **Apertura de Detalle:** El panel de inspección o detalle profundo solo se activa al hacer clic explícitamente en el título, enlace o botón dedicado, encapsulado con `e.stopPropagation()` para evitar falsos positivos de selección.
+
+4. **Inviolabilidad de Colores de Proveedores:**
+   - Los puntos e indicadores cromáticos de mayoristas y lotes deben reflejar fidedignamente `supplier.color` mediante `style={{ backgroundColor: supplier.color }}`.
+   - Jamás deben ser sobreescritos por las clases dinámicas de acento del sistema (`--accent-*`).

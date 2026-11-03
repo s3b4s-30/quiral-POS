@@ -12,7 +12,10 @@ import {
   X,
 } from "lucide-react";
 import React, { useMemo, useRef, useState } from "react";
-import { SUPPLIER_PALETTE, useInventory } from "../../../context/InventoryContext";
+import {
+  SUPPLIER_PALETTE,
+  useInventory,
+} from "../../../context/InventoryContext";
 import { Supplier } from "../../../types/domain";
 import { formatCOP } from "../../../utils/formatters";
 
@@ -20,9 +23,17 @@ interface DesktopSuppliersViewProps {
   onBack: () => void;
 }
 
-export default function DesktopSuppliersView({ onBack }: DesktopSuppliersViewProps) {
-  const { suppliers, products, showCosts, addSupplier, updateSupplier, deleteSupplier } =
-    useInventory();
+export default function DesktopSuppliersView({
+  onBack,
+}: DesktopSuppliersViewProps) {
+  const {
+    suppliers,
+    products,
+    showCosts,
+    addSupplier,
+    updateSupplier,
+    deleteSupplier,
+  } = useInventory();
 
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [name, setName] = useState("");
@@ -31,7 +42,9 @@ export default function DesktopSuppliersView({ onBack }: DesktopSuppliersViewPro
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
+  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(
+    null
+  );
 
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -88,7 +101,8 @@ export default function DesktopSuppliersView({ onBack }: DesktopSuppliersViewPro
     const q = searchQuery.trim().toLowerCase();
     if (!q) return suppliers;
     return suppliers.filter(
-      (s) => s.name.toLowerCase().includes(q) || (s.phone && s.phone.includes(q))
+      (s) =>
+        s.name.toLowerCase().includes(q) || (s.phone && s.phone.includes(q))
     );
   }, [suppliers, searchQuery]);
 
@@ -162,7 +176,7 @@ export default function DesktopSuppliersView({ onBack }: DesktopSuppliersViewPro
   return (
     <div
       data-testid="desktop-suppliers-view"
-      className="w-full h-full flex flex-col overflow-hidden bg-[var(--bg-primary)] pt-[var(--quiral-header-offset,4rem)] select-none"
+      className="w-full h-full flex flex-col overflow-hidden bg-[var(--bg-primary)] pt-[var(--quiral-header-offset,4rem)] select-none antialiased-hd"
     >
       {/* 1. Cabecera Fija de Navegación de Escritorio */}
       <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-elevated)]/90 backdrop-blur-md px-6 py-4 flex items-center justify-between">
@@ -182,7 +196,8 @@ export default function DesktopSuppliersView({ onBack }: DesktopSuppliersViewPro
               Gestión de Proveedores y Canales de Abastecimiento
             </h1>
             <p className="text-xs text-[var(--text-secondary)]">
-              Base de datos de mayoristas, líneas directas, identificación cromática y control de existencias
+              Base de datos de mayoristas, líneas directas, identificación
+              cromática y control de existencias
             </p>
           </div>
         </div>
@@ -196,7 +211,9 @@ export default function DesktopSuppliersView({ onBack }: DesktopSuppliersViewPro
             </span>
           </div>
           <div className="flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-semibold">
-            <span className="text-[var(--text-secondary)]">Stock Abastecido:</span>
+            <span className="text-[var(--text-secondary)]">
+              Stock Abastecido:
+            </span>
             <span className="tabular-nums font-bold text-accent">
               {globalStats.totalStockAll} uds
             </span>
@@ -302,14 +319,19 @@ export default function DesktopSuppliersView({ onBack }: DesktopSuppliersViewPro
                       style={{ backgroundColor: color }}
                     >
                       {isSelected && (
-                        <Check size={16} strokeWidth={3} className="text-white drop-shadow-md" />
+                        <Check
+                          size={16}
+                          strokeWidth={3}
+                          className="text-white drop-shadow-md"
+                        />
                       )}
                     </button>
                   );
                 })}
               </div>
               <p className="mt-2 text-[11px] text-[var(--text-secondary)]">
-                Este color se asociará a los puntos de lote de cada producto que provenga de este proveedor.
+                Este color se asociará a los puntos de lote de cada producto que
+                provenga de este proveedor.
               </p>
             </div>
 
@@ -365,7 +387,8 @@ export default function DesktopSuppliersView({ onBack }: DesktopSuppliersViewPro
             </div>
 
             <span className="text-xs font-bold text-[var(--text-secondary)] tabular-nums">
-              Mostrando {filteredSuppliers.length} de {suppliers.length} proveedores
+              Mostrando {filteredSuppliers.length} de {suppliers.length}{" "}
+              proveedores
             </span>
           </div>
 
@@ -391,11 +414,17 @@ export default function DesktopSuppliersView({ onBack }: DesktopSuppliersViewPro
                 <thead className="sticky top-0 z-10 bg-[var(--bg-primary)] border-b border-[var(--border-color)] text-[11px] font-black uppercase tracking-wider text-[var(--text-secondary)]">
                   <tr>
                     <th className="py-3 px-4 w-12 text-center">Color</th>
-                    <th className="py-3 px-4 min-w-[180px]">Proveedor / Mayorista</th>
+                    <th className="py-3 px-4 min-w-[180px]">
+                      Proveedor / Mayorista
+                    </th>
                     <th className="py-3 px-4 w-44">Contacto / Teléfono</th>
                     <th className="py-3 px-4 w-36 text-center">Referencias</th>
                     <th className="py-3 px-4 w-36 text-center">Stock Físico</th>
-                    {showCosts && <th className="py-3 px-4 w-36 text-right">Inversión Costo</th>}
+                    {showCosts && (
+                      <th className="py-3 px-4 w-36 text-right">
+                        Inversión Costo
+                      </th>
+                    )}
                     <th className="py-3 px-4 w-28 text-right">Acciones</th>
                   </tr>
                 </thead>
@@ -447,14 +476,17 @@ export default function DesktopSuppliersView({ onBack }: DesktopSuppliersViewPro
                               {sup.phone}
                             </span>
                           ) : (
-                            <span className="text-[11px] italic opacity-60">Sin teléfono</span>
+                            <span className="text-[11px] italic opacity-60">
+                              Sin teléfono
+                            </span>
                           )}
                         </td>
 
                         {/* 4. Referencias Vinculadas */}
                         <td className="py-3 px-4 text-center tabular-nums">
                           <span className="rounded-lg bg-black/5 dark:bg-white/10 px-2.5 py-1 text-xs font-bold text-[var(--text-primary)]">
-                            {stats.productsCount} {stats.productsCount === 1 ? "ref" : "refs"}
+                            {stats.productsCount}{" "}
+                            {stats.productsCount === 1 ? "ref" : "refs"}
                           </span>
                         </td>
 
@@ -462,7 +494,9 @@ export default function DesktopSuppliersView({ onBack }: DesktopSuppliersViewPro
                         <td className="py-3 px-4 text-center tabular-nums">
                           <span
                             className={`font-black text-xs ${
-                              stats.totalStock > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-[var(--text-secondary)]"
+                              stats.totalStock > 0
+                                ? "text-emerald-600 dark:text-emerald-400"
+                                : "text-[var(--text-secondary)]"
                             }`}
                           >
                             {stats.totalStock} uds
@@ -472,7 +506,7 @@ export default function DesktopSuppliersView({ onBack }: DesktopSuppliersViewPro
                         {/* 6. Inversión en Costo (si showCosts) */}
                         {showCosts && (
                           <td className="py-3 px-4 text-right tabular-nums">
-                            <span className="font-bold text-xs text-[var(--text-primary)]">
+                            <span className="font-bold text-xs sm:text-sm text-[var(--text-primary)]">
                               {formatCOP(stats.totalCost)}
                             </span>
                           </td>
@@ -520,9 +554,10 @@ export default function DesktopSuppliersView({ onBack }: DesktopSuppliersViewPro
               <div className="text-xs leading-relaxed">
                 <p className="font-black text-sm">¿Eliminar proveedor?</p>
                 <p className="mt-1 opacity-90">
-                  Estás a punto de eliminar a <strong>"{supplierToDelete.name}"</strong>. Los
-                  lotes y productos que tengan asignado este proveedor conservarán su información
-                  histórica y su stock.
+                  Estás a punto de eliminar a{" "}
+                  <strong>"{supplierToDelete.name}"</strong>. Los lotes y
+                  productos que tengan asignado este proveedor conservarán su
+                  información histórica y su stock.
                 </p>
               </div>
             </div>

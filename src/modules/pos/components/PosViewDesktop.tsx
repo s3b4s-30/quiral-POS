@@ -1,8 +1,16 @@
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import CategoryManagerModal from "../../../components/CategoryManagerModal";
 import DesktopPosTicket from "../../../components/DesktopPosTicket";
-import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../../../components/LottiePlayer";
+import LottiePlayer, {
+  EMPTY_BOX_ANIMATION,
+} from "../../../components/LottiePlayer";
 import PosProductCard from "../../../components/PosProductCard";
 import { useInventory } from "../../../context/InventoryContext";
 import { ProductCategory } from "../../../types/domain";
@@ -12,15 +20,11 @@ export interface PosViewDesktopProps {
   onCheckoutStateChange?: (open: boolean) => void;
 }
 
-export default function PosViewDesktop({ onCheckoutStateChange }: PosViewDesktopProps) {
-  const {
-    products,
-    suppliers,
-    cart,
-    addToCart,
-    loading,
-    catalogConfig,
-  } = useInventory();
+export default function PosViewDesktop({
+  onCheckoutStateChange,
+}: PosViewDesktopProps) {
+  const { products, suppliers, cart, addToCart, loading, catalogConfig } =
+    useInventory();
 
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<"Todos" | ProductCategory>("Todos");
@@ -33,7 +37,8 @@ export default function PosViewDesktop({ onCheckoutStateChange }: PosViewDesktop
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       const activeEl = document.activeElement;
       const isInput =
-        activeEl instanceof HTMLInputElement || activeEl instanceof HTMLTextAreaElement;
+        activeEl instanceof HTMLInputElement ||
+        activeEl instanceof HTMLTextAreaElement;
 
       // Atajo '/' cuando no se está escribiendo en otro input
       if (e.key === "/" && !isInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -67,7 +72,9 @@ export default function PosViewDesktop({ onCheckoutStateChange }: PosViewDesktop
     for (const product of products) {
       if (
         product.category &&
-        !ordered.some((existing) => isSameCatalogText(existing, product.category))
+        !ordered.some((existing) =>
+          isSameCatalogText(existing, product.category)
+        )
       ) {
         ordered.push(product.category);
       }
@@ -98,7 +105,8 @@ export default function PosViewDesktop({ onCheckoutStateChange }: PosViewDesktop
     const normalizedQuery = query.trim().toLowerCase();
     return products.filter(
       (product) =>
-        (category === "Todos" || isSameCatalogText(product.category, category)) &&
+        (category === "Todos" ||
+          isSameCatalogText(product.category, category)) &&
         (!normalizedQuery ||
           product.name.toLowerCase().includes(normalizedQuery) ||
           product.subtitle?.toLowerCase().includes(normalizedQuery))
@@ -115,7 +123,7 @@ export default function PosViewDesktop({ onCheckoutStateChange }: PosViewDesktop
   return (
     <div
       data-testid="desktop-pos-split-view"
-      className="w-full h-full flex overflow-hidden bg-[var(--bg-primary)]"
+      className="w-full h-full flex overflow-hidden bg-[var(--bg-primary)] antialiased-hd"
     >
       {/* Columna Izquierda: Catálogo y Búsqueda Rápida (~65% - 70%) */}
       <section className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-[var(--bg-primary)]">
@@ -124,7 +132,10 @@ export default function PosViewDesktop({ onCheckoutStateChange }: PosViewDesktop
           <div className="flex items-center gap-3">
             {/* Buscador Rápido con atajo de teclado */}
             <div className="flex-1 flex min-h-11 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-xs focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all duration-150">
-              <Search size={18} className="shrink-0 text-[var(--text-secondary)]" />
+              <Search
+                size={18}
+                className="shrink-0 text-[var(--text-secondary)]"
+              />
               <input
                 ref={searchInputRef}
                 value={query}
@@ -217,7 +228,8 @@ export default function PosViewDesktop({ onCheckoutStateChange }: PosViewDesktop
                 Sin productos disponibles
               </h4>
               <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">
-                No se encontraron productos para vender que coincidan con el filtro.
+                No se encontraron productos para vender que coincidan con el
+                filtro.
               </p>
               <button
                 type="button"

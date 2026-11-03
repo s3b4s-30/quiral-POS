@@ -7,11 +7,17 @@ import {
   Search,
   Sliders,
   SlidersHorizontal,
-  Sparkles,
   Table2,
   X,
+  Zap,
 } from "lucide-react";
-import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   AdvancedFiltersModal,
   type AdvancedFilterValues,
@@ -61,7 +67,9 @@ export default function InventoryView({
   // Filtros y búsqueda diferida sin bloqueo del hilo principal (60fps en iPhone)
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
-  const [selectedCategory, setSelectedCategory] = useState<"Todos" | ProductCategory>("Todos");
+  const [selectedCategory, setSelectedCategory] = useState<
+    "Todos" | ProductCategory
+  >("Todos");
   const [selectedAttributeTag, setSelectedAttributeTag] = useState<string>("");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterValues>(
     DEFAULT_ADVANCED_FILTERS
@@ -72,10 +80,16 @@ export default function InventoryView({
 
   // Estados exclusivos de la Estación de Trabajo de Escritorio (Data Grid / Excel)
   const isDesktopViewport = useIsDesktop();
-  const [desktopViewMode, setDesktopViewMode] = useState<"table" | "cards">("table");
+  const [desktopViewMode, setDesktopViewMode] = useState<"table" | "cards">(
+    "table"
+  );
   const [quickCountMode, setQuickCountMode] = useState(false);
-  const [inspectedProduct, setInspectedProduct] = useState<Product | null>(null);
-  const [selectedCardIds, setSelectedCardIds] = useState<Set<string>>(new Set());
+  const [inspectedProduct, setInspectedProduct] = useState<Product | null>(
+    null
+  );
+  const [selectedCardIds, setSelectedCardIds] = useState<Set<string>>(
+    new Set()
+  );
 
   const handleToggleCardSelect = (id: string) => {
     setSelectedCardIds((prev) => {
@@ -99,12 +113,16 @@ export default function InventoryView({
 
   const handleOpenFilterModal = (open: boolean) => {
     setIsFilterModalOpen(open);
-    onFilterModalStateChange?.(open || isCategoryModalOpen || isAttributeModalOpen);
+    onFilterModalStateChange?.(
+      open || isCategoryModalOpen || isAttributeModalOpen
+    );
   };
 
   const handleOpenCategoryModal = (open: boolean) => {
     setIsCategoryModalOpen(open);
-    onFilterModalStateChange?.(open || isFilterModalOpen || isAttributeModalOpen);
+    onFilterModalStateChange?.(
+      open || isFilterModalOpen || isAttributeModalOpen
+    );
   };
 
   const [isDesktopAttributeView, setIsDesktopAttributeView] = useState(false);
@@ -115,7 +133,9 @@ export default function InventoryView({
       return;
     }
     setIsAttributeModalOpen(open);
-    onFilterModalStateChange?.(open || isFilterModalOpen || isCategoryModalOpen);
+    onFilterModalStateChange?.(
+      open || isFilterModalOpen || isCategoryModalOpen
+    );
   };
 
   // Atajos Globales de Teclado en Escritorio (Ctrl+F / '/', Ctrl+N, Alt+M)
@@ -138,7 +158,13 @@ export default function InventoryView({
         return;
       }
 
-      if (e.key === "/" && !isInputFocused && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (
+        e.key === "/" &&
+        !isInputFocused &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey
+      ) {
         e.preventDefault();
         searchInputRef.current?.focus();
         searchInputRef.current?.select();
@@ -221,14 +247,18 @@ export default function InventoryView({
 
     products.forEach((p) => {
       const pStock = p.batches.reduce((sum, b) => sum + b.stock, 0);
-      const matchingKey = orderedList.find((c) => isSameCatalogText(c, p.category));
+      const matchingKey = orderedList.find((c) =>
+        isSameCatalogText(c, p.category)
+      );
       if (matchingKey !== undefined) {
         stockMap[matchingKey] = (stockMap[matchingKey] || 0) + pStock;
       }
     });
 
     return {
-      sortedCategories: ["Todos", ...orderedList] as Array<"Todos" | ProductCategory>,
+      sortedCategories: ["Todos", ...orderedList] as Array<
+        "Todos" | ProductCategory
+      >,
       categoryStockMap: stockMap,
     };
   }, [products, catalogConfig.categoryOrder]);
@@ -248,7 +278,8 @@ export default function InventoryView({
   const productSearchIndex = useMemo(() => {
     const indexMap = new Map<string, string>();
     for (const p of products) {
-      const searchableBlob = `${p.name} ${p.category} ${p.subtitle || ""}`.toLowerCase();
+      const searchableBlob =
+        `${p.name} ${p.category} ${p.subtitle || ""}`.toLowerCase();
       indexMap.set(p.id, searchableBlob);
     }
     return indexMap;
@@ -279,7 +310,14 @@ export default function InventoryView({
     } else {
       setVisibleCount(pageSize);
     }
-  }, [selectedCategory, selectedAttributeTag, deferredQuery, advancedFilters, pageSize, products.length]);
+  }, [
+    selectedCategory,
+    selectedAttributeTag,
+    deferredQuery,
+    advancedFilters,
+    pageSize,
+    products.length,
+  ]);
 
   // Listado filtrado de productos con combinación multifiltro e índice de atributos
   const filteredProducts = useMemo(() => {
@@ -296,7 +334,8 @@ export default function InventoryView({
     return products.filter((p) => {
       // 1. Filtro de categoría
       const matchesCategory =
-        selectedCategory === "Todos" || isSameCatalogText(p.category, selectedCategory);
+        selectedCategory === "Todos" ||
+        isSameCatalogText(p.category, selectedCategory);
       if (!matchesCategory) return false;
 
       // 2. Filtro rápido por etiqueta de atributo / subtipo de la categoría activa
@@ -327,14 +366,16 @@ export default function InventoryView({
       }
 
       // 5. Filtro de Estado de Stock
-      if (advancedFilters.stockStatus === "in_stock" && totalStock <= 0) return false;
+      if (advancedFilters.stockStatus === "in_stock" && totalStock <= 0)
+        return false;
       if (
         advancedFilters.stockStatus === "low_stock" &&
         (totalStock <= 0 || totalStock > 3)
       ) {
         return false;
       }
-      if (advancedFilters.stockStatus === "out_of_stock" && totalStock > 0) return false;
+      if (advancedFilters.stockStatus === "out_of_stock" && totalStock > 0)
+        return false;
 
       // 6. Filtro de Rango de Precio
       if (minP > 0 && p.price < minP) return false;
@@ -372,7 +413,9 @@ export default function InventoryView({
 
   const handleLoadMore = () => {
     if (pageSize === "all") return;
-    setVisibleCount((prev) => Math.min(filteredProducts.length, prev + pageSize));
+    setVisibleCount((prev) =>
+      Math.min(filteredProducts.length, prev + pageSize)
+    );
   };
 
   const handleSelectPageSize = (nextSize: InventoryPageSize) => {
@@ -416,7 +459,9 @@ export default function InventoryView({
   if (isDesktopViewport && isDesktopAttributeView) {
     return (
       <DesktopAttributeConfigView
-        activeCategory={selectedCategory !== "Todos" ? selectedCategory : undefined}
+        activeCategory={
+          selectedCategory !== "Todos" ? selectedCategory : undefined
+        }
         onBack={() => setIsDesktopAttributeView(false)}
       />
     );
@@ -424,14 +469,28 @@ export default function InventoryView({
 
   return (
     /* Contenedor Principal: scroll vertical nativo Apple HIG en móvil o estación completa en desktop */
-    <div id="inventory-scroll" className={`${isDesktopViewport ? "w-full h-full overflow-y-auto" : "quiral-scroll-container"} transition-colors duration-75`}>
-      <div className={isDesktopViewport ? "w-full px-6 lg:px-8 py-4 space-y-4 animate-in fade-in duration-200" : "mx-auto max-w-xl md:max-w-6xl lg:max-w-7xl px-4"}>
+    <div
+      id="inventory-scroll"
+      className={`${isDesktopViewport ? "w-full h-full overflow-y-auto" : "quiral-scroll-container"} transition-colors duration-75`}
+    >
+      <div
+        className={
+          isDesktopViewport
+            ? "w-full px-6 lg:px-8 py-4 space-y-4 animate-in fade-in duration-200"
+            : "mx-auto max-w-xl md:max-w-6xl lg:max-w-7xl px-4"
+        }
+      >
         {/* 1. Buscador Instantáneo, Embudo Multifiltro y Categorías Modulares Fijas */}
-        <div className={`sticky top-0 z-20 ${isDesktopViewport ? "-mx-6 lg:-mx-8 px-6 lg:px-8" : "-mx-4 px-4"} pt-1 pb-2.5 mb-3 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75`}>
+        <div
+          className={`sticky top-0 z-20 ${isDesktopViewport ? "-mx-6 lg:-mx-8 px-6 lg:px-8" : "-mx-4 px-4"} pt-1 pb-2.5 mb-3 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75`}
+        >
           <div className="flex items-center gap-2 mb-2.5">
             <div className="relative flex-1">
               <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm transition-colors duration-200 focus-within:border-accent">
-                <Search size={18} className="text-[var(--text-secondary)] shrink-0" />
+                <Search
+                  size={18}
+                  className="text-[var(--text-secondary)] shrink-0"
+                />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -515,7 +574,10 @@ export default function InventoryView({
                     : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:border-accent/40"
                 }`}
               >
-                <Sparkles size={14} />
+                <Zap
+                  size={14}
+                  className={quickCountMode ? "fill-white/20" : "text-accent"}
+                />
                 <span>Modo Conteo Rápido</span>
                 <kbd
                   className={`rounded px-1 py-0.5 text-[10px] font-extrabold ${
@@ -630,7 +692,8 @@ export default function InventoryView({
           <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
             {sortedCategories.map((cat) => {
               const isActive = selectedCategory === cat;
-              const isZeroStock = cat !== "Todos" && (categoryStockMap[cat] || 0) === 0;
+              const isZeroStock =
+                cat !== "Todos" && (categoryStockMap[cat] || 0) === 0;
               return (
                 <button
                   key={cat}
@@ -678,43 +741,47 @@ export default function InventoryView({
           </div>
 
           {/* Subfiltros rápidos de atributos/subtipos cuando hay una categoría activa */}
-          {selectedCategory !== "Todos" && availableAttributeTags.length > 0 && (
-            <div
-              data-testid="category-attribute-subfilters"
-              className="mt-2 flex items-center gap-1.5 overflow-x-auto pt-1.5 border-t border-[var(--border-color)]/60 no-scrollbar"
-            >
-              <button
-                type="button"
-                onClick={() => setSelectedAttributeTag("")}
-                className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 ${
-                  selectedAttributeTag === ""
-                    ? "bg-accent-subtle text-accent border border-accent/30"
-                    : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]"
-                }`}
+          {selectedCategory !== "Todos" &&
+            availableAttributeTags.length > 0 && (
+              <div
+                data-testid="category-attribute-subfilters"
+                className="mt-2 flex items-center gap-1.5 overflow-x-auto pt-1.5 border-t border-[var(--border-color)]/60 no-scrollbar"
               >
-                Todos en {selectedCategory}
-              </button>
-              {availableAttributeTags.map((tag) => {
-                const isTagActive = isSameCatalogText(selectedAttributeTag, tag);
-                return (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() =>
-                      setSelectedAttributeTag(isTagActive ? "" : tag)
-                    }
-                    className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 ${
-                      isTagActive
-                        ? "bg-accent text-white shadow-sm"
-                        : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedAttributeTag("")}
+                  className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 ${
+                    selectedAttributeTag === ""
+                      ? "bg-accent-subtle text-accent border border-accent/30"
+                      : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]"
+                  }`}
+                >
+                  Todos en {selectedCategory}
+                </button>
+                {availableAttributeTags.map((tag) => {
+                  const isTagActive = isSameCatalogText(
+                    selectedAttributeTag,
+                    tag
+                  );
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() =>
+                        setSelectedAttributeTag(isTagActive ? "" : tag)
+                      }
+                      className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 ${
+                        isTagActive
+                          ? "bg-accent text-white shadow-sm"
+                          : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
         </div>
 
         {/* Resumen de Costos y Valor cuando Modo Costos está Activo */}
@@ -728,7 +795,9 @@ export default function InventoryView({
             </div>
             <div className="mt-2.5 grid grid-cols-1 min-[360px]:grid-cols-3 gap-2 text-center">
               <div className="rounded-xl bg-[var(--bg-elevated)] p-2 border border-[var(--border-color)] min-w-0">
-                <p className="text-[10px] font-medium text-[var(--text-secondary)]">Stock Total</p>
+                <p className="text-[10px] font-medium text-[var(--text-secondary)]">
+                  Stock Total
+                </p>
                 {loading ? (
                   <div className="mx-auto h-4 w-12 rounded bg-black/5 dark:bg-white/10 animate-pulse mt-1" />
                 ) : (
@@ -738,7 +807,9 @@ export default function InventoryView({
                 )}
               </div>
               <div className="rounded-xl bg-[var(--bg-elevated)] p-2 border border-[var(--border-color)] min-w-0">
-                <p className="text-[10px] font-medium text-[var(--text-secondary)]">Inversión Costo</p>
+                <p className="text-[10px] font-medium text-[var(--text-secondary)]">
+                  Inversión Costo
+                </p>
                 {loading ? (
                   <div className="mx-auto h-4 w-16 rounded bg-black/5 dark:bg-white/10 animate-pulse mt-1" />
                 ) : (
@@ -748,7 +819,9 @@ export default function InventoryView({
                 )}
               </div>
               <div className="rounded-xl bg-[var(--bg-elevated)] p-2 border border-[var(--border-color)] min-w-0">
-                <p className="text-[10px] font-medium text-[var(--text-secondary)]">Utilidad Potencial</p>
+                <p className="text-[10px] font-medium text-[var(--text-secondary)]">
+                  Utilidad Potencial
+                </p>
                 {loading ? (
                   <div className="mx-auto h-4 w-16 rounded bg-black/5 dark:bg-white/10 animate-pulse mt-1" />
                 ) : (
@@ -806,7 +879,8 @@ export default function InventoryView({
                     Catálogo sin resultados
                   </h4>
                   <p className="mt-1 text-xs sm:text-sm font-medium text-[var(--text-secondary)] max-w-sm mx-auto">
-                    No se encontraron productos que coincidan con la búsqueda o los filtros activos.
+                    No se encontraron productos que coincidan con la búsqueda o
+                    los filtros activos.
                   </p>
                   <button
                     type="button"
@@ -818,7 +892,10 @@ export default function InventoryView({
                 </div>
               ) : (
                 paginatedProducts.map((product) => {
-                  const totalStock = product.batches.reduce((sum, b) => sum + b.stock, 0);
+                  const totalStock = product.batches.reduce(
+                    (sum, b) => sum + b.stock,
+                    0
+                  );
 
                   const supplierColors = new Map(
                     product.batches.map((b) => [
@@ -831,7 +908,10 @@ export default function InventoryView({
                     (sum, b) => sum + b.cost * b.stock,
                     0
                   );
-                  const avgCost = totalStock > 0 ? Math.round(totalBatchCost / totalStock) : 0;
+                  const avgCost =
+                    totalStock > 0
+                      ? Math.round(totalBatchCost / totalStock)
+                      : 0;
                   const profitPerUnit = product.price - avgCost;
 
                   return (

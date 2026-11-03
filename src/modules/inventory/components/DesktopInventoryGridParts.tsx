@@ -1,4 +1,13 @@
-import { Check, Copy, Lock, Minus, Plus, ShoppingCart, SlidersHorizontal, Trash2 } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Lock,
+  Minus,
+  Plus,
+  ShoppingCart,
+  SlidersHorizontal,
+  Trash2,
+} from "lucide-react";
 import React, { memo, useEffect, useState } from "react";
 import { Product, ProductCategory, Supplier } from "../../../types/domain";
 import { formatCOP, parseCOPInput } from "../../../utils/formatters";
@@ -23,8 +32,16 @@ export interface EnrichedRow {
 export interface GridHandlers {
   focusCell: (rowIndex: number, colKey: EditableColKey) => void;
   startEditing: (rowIndex: number, colKey: EditableColKey) => void;
-  commitEdit: (rowIndex: number, colKey: EditableColKey, rawValue: string) => void;
-  cellKeyDown: (e: React.KeyboardEvent, rowIndex: number, colKey: EditableColKey) => void;
+  commitEdit: (
+    rowIndex: number,
+    colKey: EditableColKey,
+    rawValue: string
+  ) => void;
+  cellKeyDown: (
+    e: React.KeyboardEvent,
+    rowIndex: number,
+    colKey: EditableColKey
+  ) => void;
   setDraft: (value: string) => void;
   registerCell: (key: string, el: HTMLDivElement | null) => void;
   registerActiveInput: (el: HTMLInputElement | null) => void;
@@ -59,8 +76,10 @@ const CELL_LABELS: Record<EditableColKey, string> = {
 };
 
 function stockBadgeClasses(totalStock: number): string {
-  if (totalStock > 5) return "bg-[#30d158]/15 text-[#30d158] border-[#30d158]/30";
-  if (totalStock > 0) return "bg-[#ff9500]/15 text-[#ff9500] border-[#ff9500]/30";
+  if (totalStock > 5)
+    return "bg-[#30d158]/15 text-[#30d158] border-[#30d158]/30";
+  if (totalStock > 0)
+    return "bg-[#ff9500]/15 text-[#ff9500] border-[#ff9500]/30";
   return "bg-[#ff3b30]/15 text-[#ff3b30] border-[#ff3b30]/30";
 }
 
@@ -106,7 +125,9 @@ export const EditableGridCell = memo(
             inputMode="numeric"
             value={draftValue}
             onChange={(e) => handlers.setDraft(e.target.value)}
-            onBlur={(e) => handlers.commitEdit(rowIndex, colKey, e.currentTarget.value)}
+            onBlur={(e) =>
+              handlers.commitEdit(rowIndex, colKey, e.currentTarget.value)
+            }
             onKeyDown={(e) => handlers.cellKeyDown(e, rowIndex, colKey)}
             className={`tabular-nums w-full rounded bg-[var(--bg-elevated)] px-1.5 py-0.5 ${
               isStock ? "text-center" : "text-right"
@@ -129,7 +150,7 @@ export const EditableGridCell = memo(
             </button>
 
             <span
-              className={`tabular-nums inline-flex min-w-[44px] items-center justify-center rounded-md border px-1.5 py-0.5 text-xs font-extrabold ${stockBadgeClasses(
+              className={`tabular-nums inline-flex min-w-[44px] items-center justify-center rounded-md border px-2 py-0.5 text-xs sm:text-sm font-black ${stockBadgeClasses(
                 value
               )}`}
             >
@@ -150,11 +171,11 @@ export const EditableGridCell = memo(
             </button>
           </>
         ) : colKey === "cost" ? (
-          <span className="tabular-nums font-semibold text-[var(--text-secondary)]">
+          <span className="tabular-nums font-bold text-xs sm:text-sm text-[var(--text-secondary)]">
             {formatCOP(value)}
           </span>
         ) : (
-          <span className="tabular-nums text-[13px] font-extrabold text-[var(--text-primary)]">
+          <span className="tabular-nums text-sm font-black text-[var(--text-primary)]">
             {formatCOP(value)}
           </span>
         )}
@@ -209,21 +230,35 @@ export const InventoryGridRow = memo(
     handlers,
     measureRef,
   }: InventoryGridRowProps) {
-    const { product, originalIndex, totalStock, avgCost, profit, marginPct, attributeBadges } = row;
+    const {
+      product,
+      originalIndex,
+      totalStock,
+      avgCost,
+      profit,
+      marginPct,
+      attributeBadges,
+    } = row;
 
     return (
       <tr
         ref={measureRef}
         data-index={rowIndex}
         data-testid={`desktop-grid-row-${rowIndex}`}
-        onDoubleClick={() => handlers.inspect(product)}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          handlers.inspect(product);
+        }}
         onClick={(e) => {
           const target = e.target as HTMLElement;
-          if (target.closest('input, button, a, [contenteditable="true"]')) return;
+          if (target.closest('input, button, a, [contenteditable="true"]'))
+            return;
           handlers.toggleRowSelect(product.id);
         }}
         className={`group transition-colors duration-150 cursor-pointer ${
-          isSelected ? "bg-accent-subtle/60" : "hover:bg-black/[0.035] dark:hover:bg-white/[0.045]"
+          isSelected
+            ? "bg-accent-subtle/60"
+            : "hover:bg-black/[0.035] dark:hover:bg-white/[0.045]"
         }`}
       >
         {/* 1. [✓] / Nº (48px) */}
@@ -235,7 +270,9 @@ export const InventoryGridRow = memo(
               onChange={() => handlers.toggleRowSelect(product.id)}
               aria-label={`Seleccionar ${product.name}`}
               className={`h-3.5 w-3.5 rounded accent-[var(--accent-primary)] cursor-pointer transition-opacity duration-150 ${
-                isSelected ? "opacity-100" : "opacity-30 group-hover:opacity-100"
+                isSelected
+                  ? "opacity-100"
+                  : "opacity-30 group-hover:opacity-100"
               }`}
             />
             <span className="tabular-nums text-xs font-bold text-[var(--text-secondary)]">
@@ -250,8 +287,11 @@ export const InventoryGridRow = memo(
             <div className="min-w-0 flex-1">
               <button
                 type="button"
-                onClick={() => handlers.inspect(product)}
-                className="text-left font-bold text-sm text-[var(--text-primary)] hover:text-accent transition-colors duration-150 truncate block max-w-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlers.inspect(product);
+                }}
+                className="text-left font-bold text-sm sm:text-base text-[var(--text-primary)] hover:text-accent transition-colors duration-150 truncate block max-w-full cursor-pointer"
                 title="Clic para abrir el panel de inspección y atributos avanzados"
               >
                 {product.name}
@@ -272,7 +312,7 @@ export const InventoryGridRow = memo(
             </div>
 
             {/* Puntos de color de lotes por proveedor (colores fijos del proveedor) */}
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               {product.batches
                 .filter((b) => b.stock > 0)
                 .map((b) => {
@@ -281,7 +321,7 @@ export const InventoryGridRow = memo(
                     <span
                       key={b.id}
                       title={`${sup?.name ?? "Proveedor"}: ${b.stock} uds`}
-                      className="h-2 w-2 rounded-full"
+                      className="h-2.5 w-2.5 rounded-full ring-1 ring-black/10 dark:ring-white/10 shrink-0"
                       style={{ backgroundColor: sup?.color ?? "#007aff" }}
                     />
                   );
@@ -292,7 +332,7 @@ export const InventoryGridRow = memo(
 
         {/* 3. Categoría (160px) */}
         <td className="w-[160px] border-r border-[var(--border-color)] px-3 py-2">
-          <span className="inline-flex max-w-full truncate rounded-full border border-accent/25 bg-accent-subtle px-2.5 py-0.5 text-xs font-bold text-accent">
+          <span className="inline-flex max-w-full truncate rounded-full border border-accent/30 bg-accent-subtle px-2.5 py-0.5 text-xs font-bold text-accent antialiased-hd">
             {product.category}
           </span>
         </td>

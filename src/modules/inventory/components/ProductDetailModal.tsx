@@ -15,7 +15,7 @@ interface ProductDetailModalProps {
 
 /**
  * ProductDetailModal — Vista / Hoja de Detalle de Producto
- * 
+ *
  * Estándares Apple HIG aplicados:
  * 1. Cabecera persistente opaca con handle superior ajustado y soporte swipe-to-dismiss (vía ModalSheet).
  * 2. Botón de acción principal fijado en el footer persistente inferior respetando safe areas,
@@ -55,16 +55,22 @@ export default function ProductDetailModal({
   // Price editing state
   const [priceInput, setPriceInput] = useState(formatCOP(currentProduct.price));
   const currentNumericPrice = parseCOPInput(priceInput);
-  const isPriceModified = currentNumericPrice !== currentProduct.price && currentNumericPrice > 0;
+  const isPriceModified =
+    currentNumericPrice !== currentProduct.price && currentNumericPrice > 0;
 
   // New batch form state
   const [isAddingBatch, setIsAddingBatch] = useState(false);
-  const [newBatchSupplierId, setNewBatchSupplierId] = useState(suppliers[0]?.id || "");
+  const [newBatchSupplierId, setNewBatchSupplierId] = useState(
+    suppliers[0]?.id || ""
+  );
   const [newBatchCostInput, setNewBatchCostInput] = useState("");
   const [newBatchStock, setNewBatchStock] = useState("5");
 
   // Total de unidades siempre calculado directamente de la suma de los lotes
-  const totalStock = currentProduct.batches.reduce((sum, b) => sum + b.stock, 0);
+  const totalStock = currentProduct.batches.reduce(
+    (sum, b) => sum + b.stock,
+    0
+  );
 
   const handleSavePrice = () => {
     if (isPriceModified) {
@@ -186,7 +192,8 @@ export default function ProductDetailModal({
           />
           {isPriceModified && (
             <p className="text-xs font-semibold text-accent transition-colors duration-200">
-              Presiona «Guardar nuevo precio» en la barra inferior para aplicar el cambio.
+              Presiona «Guardar nuevo precio» en la barra inferior para aplicar
+              el cambio.
             </p>
           )}
         </div>
@@ -292,7 +299,7 @@ export default function ProductDetailModal({
                   <div className="flex items-center gap-2.5">
                     <span
                       className="h-3.5 w-3.5 rounded-full shadow-sm shrink-0"
-                      style={{ backgroundColor: sup?.color || "#8E8E93" }}
+                      style={{ backgroundColor: sup?.color ?? "#007aff" }}
                     />
                     <div>
                       <p className="text-sm font-bold text-[var(--text-primary)]">
@@ -310,7 +317,9 @@ export default function ProductDetailModal({
                   <div className="flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2 py-1 shadow-sm">
                     <button
                       type="button"
-                      onClick={() => adjustBatchStock(currentProduct.id, batch.id, -1)}
+                      onClick={() =>
+                        adjustBatchStock(currentProduct.id, batch.id, -1)
+                      }
                       disabled={batch.stock <= 0}
                       className="flex h-7 w-7 items-center justify-center rounded-lg text-[#ff3b30] hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-20"
                       aria-label="Reducir lote"
@@ -322,7 +331,9 @@ export default function ProductDetailModal({
                     </span>
                     <button
                       type="button"
-                      onClick={() => adjustBatchStock(currentProduct.id, batch.id, 1)}
+                      onClick={() =>
+                        adjustBatchStock(currentProduct.id, batch.id, 1)
+                      }
                       className="flex h-7 w-7 items-center justify-center rounded-lg text-[#30d158] hover:bg-black/5 dark:hover:bg-white/10"
                       aria-label="Aumentar lote"
                     >
