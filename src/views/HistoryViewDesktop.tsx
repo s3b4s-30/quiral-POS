@@ -160,9 +160,9 @@ export default function HistoryViewDesktop({
 
   return (
     <div id="history-scroll" className="w-full h-full overflow-y-auto transition-colors duration-75">
-      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 py-4">
+      <div className="w-full px-6 lg:px-8 py-6 flex flex-col animate-in fade-in duration-200">
         {/* Header sticky con fondo sólido opaco nativo (Apple HIG) */}
-        <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
+        <div className="sticky top-0 z-20 -mx-6 lg:-mx-8 px-6 lg:px-8 pt-1 pb-3 mb-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
           <div className="relative">
             <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm transition-colors duration-200 focus-within:border-accent">
               <Search size={18} className="text-[var(--text-secondary)] shrink-0" />
@@ -247,7 +247,7 @@ export default function HistoryViewDesktop({
                         <tr
                           data-testid={`desktop-history-row-${sale.id}`}
                           onClick={() => setOpenSaleId(isOpen ? null : sale.id)}
-                          className="group hover:bg-black/[0.02] dark:hover:bg-white/[0.02] cursor-pointer transition-colors"
+                          className="group hover:bg-black/[0.035] dark:hover:bg-white/[0.045] cursor-pointer transition-all duration-150"
                         >
                           <td className="py-4 px-4 sm:px-5">
                             <span className="tabular-nums font-black text-sm text-accent bg-accent-subtle px-2.5 py-1 rounded-lg">
@@ -330,7 +330,7 @@ export default function HistoryViewDesktop({
                                     return (
                                       <div
                                         key={item.id}
-                                        className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3 space-y-2 shadow-xs"
+                                        className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3 space-y-2 shadow-xs hover:border-accent/40 transition-all duration-150"
                                       >
                                         <div className="flex items-start justify-between gap-2">
                                           <div className="min-w-0 flex-1">
@@ -703,7 +703,7 @@ export default function HistoryViewDesktop({
                     onClick={() => setConfirmSaveEdit(true)}
                     className="px-6 py-2.5 rounded-xl bg-accent text-sm font-bold text-white shadow-lg shadow-accent/25 hover:bg-accent-hover active:scale-95 transition-all"
                   >
-                    Revisar y guardar · {formatCOP(effectiveEditTotal)}
+                    Revisar y guardar · <span className="tabular-nums">{formatCOP(effectiveEditTotal)}</span>
                   </button>
                 </>
               )}

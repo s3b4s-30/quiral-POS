@@ -438,7 +438,7 @@ export default function HistoryViewMobile({
                 onClick={() => setConfirmSaveEdit(true)}
                 className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-accent text-base font-bold text-white shadow-lg active:scale-[0.98] transition-all duration-200"
               >
-                Revisar y guardar · {formatCOP(effectiveEditTotal)}
+                Revisar y guardar · <span className="tabular-nums">{formatCOP(effectiveEditTotal)}</span>
               </button>
             )
           }

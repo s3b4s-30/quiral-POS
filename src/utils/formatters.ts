@@ -1,8 +1,12 @@
-export function formatCOP(value: number): string {
-  return "$" + Math.round(value).toLocaleString("es-CO");
+export function formatCOP(value: number | string | undefined | null): string {
+  if (value === undefined || value === null) return "$0";
+  const num = typeof value === "number" ? value : parseFloat(String(value).replace(/[^0-9.-]/g, ""));
+  if (!Number.isFinite(num)) return "$0";
+  return "$" + Math.round(num).toLocaleString("es-CO");
 }
 
 export function parseCOPInput(raw: string): number {
+  if (!raw) return 0;
   const digits = raw.replace(/\D/g, "");
   return digits ? parseInt(digits, 10) : 0;
 }

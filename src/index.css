@@ -97,6 +97,27 @@ a {
   scrollbar-width: none;
 }
 
+/* Scrollbar personalizado estilo Quiral OLED */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 9999px;
+  transition: background 200ms ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) var(--bg-primary);
+}
+
 /* Bloqueo estricto del scroll de la vista inferior al abrir cualquier modal */
 body.modal-open,
 body.modal-open #root,

@@ -865,7 +865,7 @@ export default function DesktopInventoryGrid({
                   className={`group transition-colors duration-150 ${
                     isSelected
                       ? "bg-accent-subtle/60"
-                      : "hover:bg-black/[0.025] dark:hover:bg-white/[0.03]"
+                      : "hover:bg-black/[0.035] dark:hover:bg-white/[0.045]"
                   }`}
                 >
                   {/* 1. [✓] / Nº (48px) */}
