@@ -152,7 +152,7 @@ export default function AdvancedFiltersModal({
           <button
             type="submit"
             form="advanced-filters-form"
-            className="flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-[#007aff] text-sm font-bold text-white shadow-md active:scale-95 transition-all hover:opacity-95"
+            className="flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-accent text-sm font-bold text-white shadow-md active:scale-95 transition-all hover:bg-accent-hover"
           >
             <Check size={16} />
             <span>Aplicar ({matchingCount} resultados)</span>
@@ -165,7 +165,7 @@ export default function AdvancedFiltersModal({
         <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3">
           <div className="mb-2 flex items-center justify-between">
             <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-              <Layers size={14} className="text-[#007aff]" />
+              <Layers size={14} className="text-accent" />
               <span>Productos por vista</span>
             </label>
             <span className="text-[11px] font-semibold text-[var(--text-secondary)] tabular-nums">
@@ -193,7 +193,7 @@ export default function AdvancedFiltersModal({
                   }}
                   className={`rounded-xl py-2 text-xs font-bold tabular-nums transition-all ${
                     isSelected
-                      ? "bg-[#007aff] text-white shadow-sm ring-1 ring-[#007aff]"
+                      ? "bg-accent text-white shadow-sm ring-1 ring-accent"
                       : "border border-[var(--border-color)] bg-black/5 dark:bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
@@ -219,7 +219,7 @@ export default function AdvancedFiltersModal({
               onClick={() => setSupplierId("")}
               className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${
                 !supplierId
-                  ? "bg-[#007aff] text-white shadow-sm"
+                  ? "bg-accent text-white shadow-sm"
                   : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
@@ -234,7 +234,7 @@ export default function AdvancedFiltersModal({
                   onClick={() => setSupplierId(sup.id)}
                   className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${
                     isSelected
-                      ? "bg-[#007aff] text-white shadow-sm"
+                      ? "bg-accent text-white shadow-sm"
                       : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >
@@ -265,7 +265,7 @@ export default function AdvancedFiltersModal({
                   onClick={() => setStockStatus(opt.id)}
                   className={`rounded-2xl border p-2.5 text-left transition-all ${
                     isSelected
-                      ? "border-[#007aff] bg-[#007aff]/10 text-[var(--text-primary)] ring-1 ring-[#007aff]"
+                      ? "border-accent bg-accent-subtle text-[var(--text-primary)] ring-1 ring-accent"
                       : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
@@ -294,7 +294,7 @@ export default function AdvancedFiltersModal({
                   setMinPrice(num > 0 ? formatCOP(num) : "");
                 }}
                 placeholder="$0"
-                className="tabular-nums w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+                className="tabular-nums w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
               />
             </div>
             <div>
@@ -307,7 +307,7 @@ export default function AdvancedFiltersModal({
                   setMaxPrice(num > 0 ? formatCOP(num) : "");
                 }}
                 placeholder="Sin límite"
-                className="tabular-nums w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+                className="tabular-nums w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
               />
             </div>
           </div>
@@ -329,7 +329,7 @@ export default function AdvancedFiltersModal({
                   onClick={() => setMinWarranty(w.value)}
                   className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${
                     isSelected
-                      ? "bg-[#007aff] text-white shadow-sm"
+                      ? "bg-accent text-white shadow-sm"
                       : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >

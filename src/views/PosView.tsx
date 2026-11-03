@@ -142,7 +142,7 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
           {/* Header sticky con fondo sólido opaco nativo (Apple HIG) */}
           <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
             <div className="relative">
-              <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm focus-within:border-[#007aff] transition-colors duration-75">
+              <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm focus-within:border-accent transition-colors duration-200">
                 <Search size={18} className="shrink-0 text-[var(--text-secondary)]" />
                 <input
                   value={query}
@@ -188,9 +188,9 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
                       setCategory(item);
                     }}
                     title="Toca para filtrar · Mantén presionado para organizar categorías"
-                    className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-colors duration-75 active:scale-95 select-none ${
+                    className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-all duration-200 active:scale-95 select-none ${
                       isActive
-                        ? "bg-[#007aff] text-white shadow-sm"
+                        ? "bg-accent text-white shadow-sm"
                         : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     }`}
                   >
@@ -204,7 +204,7 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
                 onClick={() => handleOpenCategoryModal(true)}
                 aria-label="Organizar categorías"
                 title="Organizar categorías (o mantén presionada una categoría)"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[#007aff] hover:border-[#007aff] active:scale-95 transition-colors"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-accent hover:border-accent active:scale-95 transition-colors duration-200"
               >
                 <SlidersHorizontal size={14} />
               </button>
@@ -256,7 +256,7 @@ export default function PosView({ onCheckoutStateChange }: PosViewProps) {
                     setQuery("");
                     setCategory("Todos");
                   }}
-                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#007aff] px-4 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-transform"
+                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-all duration-200"
                 >
                   Restablecer filtros
                 </button>

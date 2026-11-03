@@ -314,7 +314,7 @@ export default function InventoryView({
         <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-3 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
           <div className="flex items-center gap-2 mb-2.5">
             <div className="relative flex-1">
-              <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm transition-colors duration-75 focus-within:border-[#007aff]">
+              <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm transition-colors duration-200 focus-within:border-accent">
                 <Search size={18} className="text-[var(--text-secondary)] shrink-0" />
                 <input
                   type="text"
@@ -322,7 +322,7 @@ export default function InventoryView({
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Buscar por nombre, categoría o atributo..."
                   aria-label="Buscar en catálogo"
-                  className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)] transition-colors duration-75"
+                  className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)] transition-colors duration-200"
                 />
                 {query && (
                   <button
@@ -344,15 +344,15 @@ export default function InventoryView({
               onClick={() => handleOpenFilterModal(true)}
               aria-label="Filtros avanzados de inventario"
               title="Filtros avanzados"
-              className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border transition-all active:scale-95 ${
+              className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border transition-all duration-200 active:scale-95 ${
                 hasActiveAdvancedFilters
-                  ? "border-[#007aff] bg-[#007aff]/10 text-[#007aff] shadow-sm"
+                  ? "border-accent bg-accent-subtle text-accent shadow-sm"
                   : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               <Filter size={18} />
               {hasActiveAdvancedFilters && (
-                <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-[#007aff] ring-2 ring-[var(--bg-elevated)]" />
+                <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-accent ring-2 ring-[var(--bg-elevated)]" />
               )}
             </button>
           </div>
@@ -385,9 +385,9 @@ export default function InventoryView({
                     setSelectedAttributeTag("");
                   }}
                   title="Toca para filtrar · Mantén presionado para organizar categorías"
-                  className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-all duration-75 select-none ${
+                  className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-all duration-200 select-none ${
                     isActive
-                      ? "bg-[#007aff] text-white shadow-sm"
+                      ? "bg-accent text-white shadow-sm"
                       : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10"
                   } ${isZeroStock && !isActive ? "opacity-60" : ""}`}
                 >
@@ -402,7 +402,7 @@ export default function InventoryView({
               onClick={() => handleOpenCategoryModal(true)}
               aria-label="Organizar categorías"
               title="Organizar categorías (o mantén presionada una categoría)"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[#007aff] hover:border-[#007aff] active:scale-95 transition-colors"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-accent hover:border-accent active:scale-95 transition-colors duration-200"
             >
               <SlidersHorizontal size={14} />
             </button>
@@ -417,9 +417,9 @@ export default function InventoryView({
               <button
                 type="button"
                 onClick={() => setSelectedAttributeTag("")}
-                className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 ${
                   selectedAttributeTag === ""
-                    ? "bg-[#007aff]/15 text-[#007aff] dark:text-[#0a84ff] border border-[#007aff]/30"
+                    ? "bg-accent-subtle text-accent border border-accent/30"
                     : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]"
                 }`}
               >
@@ -434,9 +434,9 @@ export default function InventoryView({
                     onClick={() =>
                       setSelectedAttributeTag(isTagActive ? "" : tag)
                     }
-                    className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                    className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 ${
                       isTagActive
-                        ? "bg-[#007aff] text-white shadow-sm"
+                        ? "bg-accent text-white shadow-sm"
                         : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     }`}
                   >
@@ -450,10 +450,10 @@ export default function InventoryView({
 
         {/* Resumen de Costos y Valor cuando Modo Costos está Activo */}
         {showCosts && (
-          <section className="mb-4 overflow-hidden rounded-2xl border border-[#007aff]/30 bg-[#007aff]/5 p-3.5 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[#007aff] dark:text-[#0a84ff]">
+          <section className="mb-4 overflow-hidden rounded-2xl border border-accent/30 bg-accent-subtle p-3.5 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-accent">
               <span>Auditoría de Costos y Valorización</span>
-              <span className="rounded-full bg-[#007aff]/15 px-2 py-0.5 text-[10px] font-bold text-[#007aff] dark:text-[#0a84ff]">
+              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent">
                 Activo
               </span>
             </div>
@@ -531,7 +531,7 @@ export default function InventoryView({
                 <button
                   type="button"
                   onClick={handleResetAllFilters}
-                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#007aff] px-4 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-transform"
+                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-all duration-200"
                 >
                   Restablecer todos los filtros
                 </button>
@@ -578,7 +578,7 @@ export default function InventoryView({
                 data-testid="load-more-products-btn"
                 aria-label={`Ver ${nextIncrementCount} productos más`}
                 onClick={handleLoadMore}
-                className="flex min-h-12 w-full sm:w-auto sm:min-w-[260px] items-center justify-center gap-2 rounded-2xl border border-[#007aff]/35 bg-[#007aff]/10 dark:bg-[#007aff]/15 px-5 py-3 text-sm font-bold text-[#007aff] dark:text-[#0a84ff] shadow-sm transition-all hover:bg-[#007aff] hover:text-white active:scale-[0.98]"
+                className="flex min-h-12 w-full sm:w-auto sm:min-w-[260px] items-center justify-center gap-2 rounded-2xl border border-accent/35 bg-accent-subtle px-5 py-3 text-sm font-bold text-accent shadow-sm transition-all duration-200 hover:bg-accent hover:text-white active:scale-[0.98]"
               >
                 <ChevronDown size={18} strokeWidth={2.5} className="shrink-0" />
                 <span>
@@ -586,7 +586,7 @@ export default function InventoryView({
                     ? "Ver 1 producto más"
                     : `Ver ${nextIncrementCount} productos más`}
                 </span>
-                <span className="rounded-full bg-[#007aff]/20 px-2 py-0.5 text-[11px] font-extrabold tabular-nums">
+                <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[11px] font-extrabold tabular-nums">
                   Restan {remainingProductsCount}
                 </span>
               </button>

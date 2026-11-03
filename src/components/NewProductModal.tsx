@@ -711,9 +711,9 @@ export default function NewProductModal({
               key={opt}
               type="button"
               onClick={() => setSelectedValueForAttribute(attrKey, opt)}
-              className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-colors duration-75 ${
+              className={`rounded-xl px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
                 selectedVal === opt
-                  ? "bg-[#007aff] text-white font-semibold shadow-sm"
+                  ? "bg-accent text-white font-semibold shadow-sm"
                   : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200"
               }`}
             >
@@ -741,7 +741,7 @@ export default function NewProductModal({
               onClick={handleCreateQuickCategory}
               disabled={!newCategoryName.trim()}
               aria-label="Confirmar creación de categoría"
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#007aff] text-base font-bold text-white shadow-lg transition-transform active:scale-[0.98] hover:opacity-95 disabled:opacity-40"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent text-base font-bold text-white shadow-lg transition-transform active:scale-[0.98] hover:opacity-95 disabled:opacity-40"
             >
               <Check size={18} strokeWidth={2.5} />
               <span>Crear categoría</span>
@@ -750,7 +750,7 @@ export default function NewProductModal({
             <button
               type="submit"
               form="new-product-form"
-              className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#007aff] text-base font-bold text-white shadow-lg transition-transform active:scale-[0.98] hover:opacity-95"
+              className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-accent text-base font-bold text-white shadow-lg transition-transform active:scale-[0.98] hover:opacity-95"
             >
               Guardar producto
             </button>
@@ -1080,9 +1080,9 @@ export default function NewProductModal({
                         key={cat}
                         type="button"
                         onClick={() => setCategory(cat)}
-                        className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-colors duration-75 ${
+                        className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-all duration-200 ${
                           isActive
-                            ? "bg-[#007aff] text-white shadow-sm"
+                            ? "bg-accent text-white shadow-sm"
                             : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/70 dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200 hover:bg-black/5 dark:hover:bg-white/10"
                         }`}
                       >

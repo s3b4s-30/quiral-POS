@@ -1,4 +1,4 @@
-﻿import { AlertTriangle, Check, Pencil, Search, Trash2, X } from "lucide-react";
+import { AlertTriangle, Check, Pencil, Search, Trash2, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
 import ModalSheet from "../components/ModalSheet";
@@ -141,7 +141,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
         {/* Header sticky con fondo sólido opaco nativo (Apple HIG) */}
         <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
           <div className="relative">
-            <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm transition-colors duration-75 focus-within:border-[#007aff]">
+            <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm transition-colors duration-200 focus-within:border-accent">
               <Search size={18} className="text-[var(--text-secondary)] shrink-0" />
               <input
                 type="text"
@@ -201,7 +201,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                 <button
                   type="button"
                   onClick={() => setQuery("")}
-                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#007aff] px-4 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-transform"
+                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-all duration-200"
                 >
                   Restablecer búsqueda
                 </button>
@@ -245,7 +245,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                           onClick={(e) => openEditModal(sale, e)}
                           aria-label={`Modificar venta #${sale.saleNumber}`}
                           title="Modificar venta"
-                          className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#007aff]/25 bg-[#007aff]/10 px-2 text-[11px] font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform"
+                          className="inline-flex h-7 items-center gap-1 rounded-lg border border-accent/25 bg-accent-subtle px-2 text-[11px] font-bold text-accent active:scale-95 transition-all duration-200"
                         >
                           <Pencil size={12} />
                           <span>Modificar</span>
@@ -426,7 +426,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
               <button
                 type="button"
                 onClick={() => setConfirmSaveEdit(true)}
-                className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#007aff] text-base font-bold text-white shadow-lg active:scale-[0.98] transition-transform duration-75"
+                className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-accent text-base font-bold text-white shadow-lg active:scale-[0.98] transition-all duration-200"
               >
                 Revisar y guardar · {formatCOP(effectiveEditTotal)}
               </button>
@@ -435,8 +435,8 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
         >
           {confirmSaveEdit ? (
             <div className="space-y-4 py-2 animate-in fade-in duration-150">
-              <div className="rounded-2xl border border-[#007aff]/30 bg-[#007aff]/10 p-4 space-y-2">
-                <p className="text-sm font-bold text-[#007aff] dark:text-[#0a84ff]">
+              <div className="rounded-2xl border border-accent/30 bg-accent-subtle p-4 space-y-2">
+                <p className="text-sm font-bold text-accent">
                   ¿Confirmas la actualización de la venta #{editingSale.saleNumber}?
                 </p>
                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
@@ -481,7 +481,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                   value={editCustomerName}
                   onChange={(e) => setEditCustomerName(e.target.value)}
                   placeholder="Cliente General"
-                  className="mt-1.5 w-full rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-[#007aff] dark:focus:border-[#0a84ff] transition-colors"
+                  className="mt-1.5 w-full rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-accent transition-colors duration-200"
                 />
               </div>
 
@@ -503,7 +503,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                         <button
                           type="button"
                           onClick={() => updateEditItemQty(item.id, -1)}
-                          className="flex h-7 w-7 items-center justify-center text-sm font-bold text-[#007aff]"
+                          className="flex h-7 w-7 items-center justify-center text-sm font-bold text-accent"
                         >
                           −
                         </button>
@@ -513,7 +513,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                         <button
                           type="button"
                           onClick={() => updateEditItemQty(item.id, 1)}
-                          className="flex h-7 w-7 items-center justify-center text-sm font-bold text-[#007aff]"
+                          className="flex h-7 w-7 items-center justify-center text-sm font-bold text-accent"
                         >
                           +
                         </button>
@@ -532,7 +532,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                           onChange={(e) =>
                             updateEditItemPrice(item.id, parseCOPInput(e.target.value))
                           }
-                          className="tabular-nums mt-0.5 w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff] dark:focus:border-[#0a84ff] transition-colors"
+                          className="tabular-nums mt-0.5 w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-accent transition-colors duration-200"
                         />
                       </div>
                       {editItems.length > 1 && (
@@ -562,9 +562,9 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                         key={method}
                         type="button"
                         onClick={() => setEditPaymentMethod(method)}
-                        className={`min-h-10 rounded-xl border text-xs font-bold transition-colors ${
+                        className={`min-h-10 rounded-xl border text-xs font-bold transition-all duration-200 ${
                           active
-                            ? "border-[#007aff] bg-[#007aff] text-white shadow-sm"
+                            ? "border-accent bg-accent text-white shadow-sm"
                             : "border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200 hover:bg-black/5 dark:hover:bg-zinc-800"
                         }`}
                       >
@@ -586,7 +586,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                     inputMode="numeric"
                     value={formatCOP(effectiveEditTotal)}
                     onChange={(e) => setEditTotalInput(String(parseCOPInput(e.target.value)))}
-                    className="tabular-nums mt-1.5 w-full rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-4 py-2.5 text-base font-extrabold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff] dark:focus:border-[#0a84ff] transition-colors"
+                    className="tabular-nums mt-1.5 w-full rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-4 py-2.5 text-base font-extrabold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-accent transition-colors duration-200"
                   />
                 </div>
 
@@ -599,7 +599,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                     value={editNote}
                     onChange={(e) => setEditNote(e.target.value)}
                     placeholder="Observación o ajuste de la venta..."
-                    className="mt-1.5 w-full rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-4 py-2 text-xs font-medium text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-[#007aff] dark:focus:border-[#0a84ff] transition-colors"
+                    className="mt-1.5 w-full rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-4 py-2 text-xs font-medium text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-accent transition-colors duration-200"
                   />
                 </div>
               </div>

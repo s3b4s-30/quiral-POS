@@ -108,7 +108,7 @@ export default function CheckoutSheet({ onClose, onStartClose }: CheckoutSheetPr
             value={customerName}
             onChange={(event) => setCustomerName(event.target.value)}
             placeholder="Cliente general (opcional)"
-            className="mt-1.5 w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+            className="mt-1.5 w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors duration-200"
           />
         </div>
 
@@ -141,7 +141,7 @@ export default function CheckoutSheet({ onClose, onStartClose }: CheckoutSheetPr
                       type="button"
                       aria-label={`Quitar unidad de ${product.name}`}
                       onClick={() => updateCartQuantity(product.id, item.quantity - 1)}
-                      className="flex h-8 w-8 items-center justify-center text-base font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform duration-75"
+                      className="flex h-8 w-8 items-center justify-center text-base font-bold text-accent active:scale-95 transition-all duration-200"
                     >
                       −
                     </button>
@@ -153,7 +153,7 @@ export default function CheckoutSheet({ onClose, onStartClose }: CheckoutSheetPr
                       aria-label={`Agregar unidad de ${product.name}`}
                       disabled={item.quantity >= maxStock}
                       onClick={() => updateCartQuantity(product.id, item.quantity + 1)}
-                      className={`flex h-8 w-8 items-center justify-center text-base font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform duration-75 ${
+                      className={`flex h-8 w-8 items-center justify-center text-base font-bold text-accent active:scale-95 transition-all duration-200 ${
                         item.quantity >= maxStock ? "opacity-30 cursor-not-allowed" : ""
                       }`}
                     >
@@ -174,7 +174,7 @@ export default function CheckoutSheet({ onClose, onStartClose }: CheckoutSheetPr
                     onChange={(event) =>
                       updateCartItemPrice(product.id, parseCOPInput(event.target.value))
                     }
-                    className="tabular-nums mt-1 w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+                    className="tabular-nums mt-1 w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-accent transition-colors duration-200"
                   />
                 </div>
 
@@ -241,9 +241,9 @@ export default function CheckoutSheet({ onClose, onStartClose }: CheckoutSheetPr
                   key={method}
                   type="button"
                   onClick={() => setPayment(method)}
-                  className={`min-h-11 rounded-xl border text-sm font-semibold transition-colors duration-75 active:scale-95 ${
+                  className={`min-h-11 rounded-xl border text-sm font-semibold transition-all duration-200 active:scale-95 ${
                     active
-                      ? "border-[#007aff] bg-[#007aff] text-white shadow-sm"
+                      ? "border-accent bg-accent text-white shadow-sm"
                       : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >
@@ -302,7 +302,7 @@ export default function CheckoutSheet({ onClose, onStartClose }: CheckoutSheetPr
               }}
               placeholder={formatCOP(subtotal)}
               aria-label="Ajustar valor a cobrar"
-              className="tabular-nums mt-1.5 w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 py-2.5 text-base font-extrabold text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+              className="tabular-nums mt-1.5 w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 py-2.5 text-base font-extrabold text-[var(--text-primary)] outline-none focus:border-accent transition-colors duration-200"
             />
           </div>
         </section>

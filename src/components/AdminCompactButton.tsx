@@ -31,14 +31,14 @@ export default function AdminCompactButton({ className = "", iconOnly = false }:
           : "Activar modo administrador (ver costos de compra)"
       }
       aria-label={showCosts ? "Desactivar modo administrador" : "Activar modo administrador"}
-      className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-full border text-xs font-semibold shadow-sm transition-colors duration-75 active:scale-95 select-none shrink-0 ${
+      className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-full border text-xs font-semibold shadow-sm transition-all duration-200 active:scale-95 select-none shrink-0 ${
         showCosts
-          ? "border-[#007aff]/40 bg-[#007aff]/15 text-[#007aff] dark:text-[#0a84ff]"
+          ? "border-accent/40 bg-accent-subtle text-accent"
           : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
       } ${iconOnly ? "w-9" : "w-9 min-[420px]:w-auto min-[420px]:px-2.5"} ${className}`}
     >
       {showCosts ? (
-        <Eye size={16} className="shrink-0 text-[#007aff] dark:text-[#0a84ff]" />
+        <Eye size={16} className="shrink-0 text-accent" />
       ) : (
         <EyeOff size={16} className="shrink-0 text-[var(--text-secondary)]" />
       )}
