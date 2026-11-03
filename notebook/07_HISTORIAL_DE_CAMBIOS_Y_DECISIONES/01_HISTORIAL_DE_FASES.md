@@ -119,3 +119,25 @@ flowchart TD
   - **Endurecimiento de Funciones RPC en Supabase:** Revocación de permisos `EXECUTE` al rol `anon` en funciones sensibles (`handle_new_user`, `seed_demo_store`, `update_my_credentials`) para impedir abusos no autenticados en el endpoint REST.
   - **Endurecimiento de Cabeceras HTTP en `vercel.json`:** Configuración de cabeceras de nivel bancario en producción para todas las rutas (`/(.*)`): _Content-Security-Policy (CSP)_, _Strict-Transport-Security (HSTS)_ con 2 años y preload, _X-Frame-Options: DENY_, _X-Content-Type-Options: nosniff_, _Referrer-Policy: strict-origin-when-cross-origin_ y _Permissions-Policy_.
   - **Cero Vulnerabilidades en Dependencias:** Auditoría de paquetes mediante `npm audit` reportando 0 vulnerabilidades.
+
+---
+
+### Fase de Ergonomía Desktop, Nitidez HD y Anti-Halos Cromáticos
+
+- **Objetivo:** Perfeccionar la estación de trabajo de mostrador (>= 768px), erradicando halos de renderizado subpixel y eliminando elementos informales.
+- **Hitos Implementados:**
+  - **Antialiasing Global y Clase `.antialiased-hd`:** Forzado en `src/index.css` de `-webkit-font-smoothing: antialiased` y `text-rendering: optimizeLegibility`.
+  - **Supresión de Aberración Cromática:** Eliminación de texto de acento coloreado translúcido sobre fondos sutiles en pantallas OLED oscuras, sustituyéndolo por texto blanco de alto contraste sobre tarjetas sólidas y pastillas badge sólidas.
+  - **Iconografía Profesional:** Erradicación de estrellas y destellos (✨ / `Sparkles`) sustituidos universalmente por `<Zap />` de `lucide-react`.
+  - **Ergonomía de Selección en Grilla:** Clic en fila conmuta selección; títulos y enlaces aíslan la apertura de detalles con `e.stopPropagation()`.
+
+---
+
+### Fase de Purga Profunda, Gobernanza de Tokens y Consolidación de Skills
+
+- **Objetivo:** Resolver la saturación del presupuesto de contexto en Antigravity (`25.335 / 20.000 tokens`), eliminando carpetas y archivos residuales sin perder capacidades estéticas ni de base de datos.
+- **Hitos Implementados:**
+  - **Poda de 78 Carpetas y Archivos Residuales:** Eliminación de 67 carpetas sueltas de estilos, paquetes de documentación legacy de Octubre (`reference/`, 78 archivos) y scripts locales obsoletos (`deploy-assets.sh`).
+  - **Enrutador Maestro en `awesome-design-skills`:** Los 67 estilos se preservan íntegros dentro de `skills/<estilo>/` para consulta selectiva sin saturar el contexto de la IA.
+  - **Liberación de más de 15.000 Tokens:** Reducción drástica del consumo de personalizaciones al rango seguro (< 45%), reactivando las skills de Supabase, Impeccable y Design Taste.
+  - **Enriquecimiento del Núcleo:** Actualización de `quiral-pos-engine` (PostgreSQL RLS, `complete_sale` con `FOR UPDATE`, TanStack Query + Dexie) y `ui-ux-modern-taste` (principios Anti-Slop de ingeniería frontend).

@@ -64,3 +64,18 @@ Antes de autorizar una nueva skill en el repositorio:
    npx playwright test
    ```
 3. Los cuatro comandos deben finalizar con código de salida `0` (_Exit 0_).
+
+---
+
+## 4. Gobernanza del Presupuesto de Tokens y Prevención de Exclusión de Customizations
+
+> [!CAUTION]
+> **PRESUPUESTO MÁXIMO DE CUSTOMIZATIONS: 20.000 TOKENS EN ANTIGRAVITY**
+> Cuando el total de reglas, skills y herramientas MCP supera los 20.000 tokens, Antigravity demota reglas a punteros y **excluye automáticamente habilidades del contexto** (ej. Supabase, Impeccable o Design Taste quedan inaccesibles).
+
+Para mantener el consumo por debajo del 45% del presupuesto (~8.000 tokens):
+
+1. **Prohibición de Volcado Masivo de Carpetas en la Raíz:** Queda estrictamente prohibido clonar o descomprimir bibliotecas de múltiples estilos en carpetas individuales en la raíz de `.agents/skills/`.
+2. **Patrón Enrutador Maestro:** Toda colección de estilos o plantillas (como `awesome-design-skills`) debe residir bajo una única carpeta con su propio enrutador en `SKILL.md` y sus subestilos dentro de `skills/<estilo>/`.
+3. **Eliminación Inmediata de Dependencias Inútiles:** No alojar en `.agents/skills/` habilidades de tecnologías ajenas al proyecto (ej. React Native en proyectos web, generadores de diapositivas o banners de marketing).
+4. **Rango Óptimo:** El ecosistema de `.agents/skills/` debe mantenerse estrictamente entre 14 y 18 habilidades de élite activas.

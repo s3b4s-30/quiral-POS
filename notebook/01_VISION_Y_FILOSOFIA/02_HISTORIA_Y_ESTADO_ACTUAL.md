@@ -47,8 +47,21 @@ Quiral POS inició como un prototipo monolítico enfocado en la experiencia tác
 ### 🔹 Fase de Consolidación: Habilidades Maestras y Manifiesto de Gobierno
 
 - Integración de las 3 Habilidades Maestras (`ui-ux-modern-taste`, `image-to-code`, `playwright-cli`).
-- Integración de los frameworks upstream oficiales: Taste Skill v2 (`design-taste-frontend`), Web Design Guidelines (`web-design-guidelines`), Awesome Design Skills (`awesome-design-skills`), `playwright-skill` y `@playwright/mcp`.
+- Integración de los frameworks upstream oficiales: Taste Skill v2 (`design-taste-frontend`), Web Design Guidelines (`web-design-guidelines`), Awesome Design Skills (`awesome-design-skills`) y `@playwright/mcp`.
 - Creación de [`docs/AGENTS_AND_SKILLS_MANIFESTO.md`](file:///c:/Users/Sebas/Desktop/elytras/quiral-POS/docs/AGENTS_AND_SKILLS_MANIFESTO.md).
+
+### 🔹 Hito: Ergonomía Desktop, Nitidez HD y Supresión de Aberración Cromática
+
+- **Qué cambió:** Erradicación de halos cromáticos y aberración subpixel en pantallas OLED mediante `-webkit-font-smoothing: antialiased;` y clase utilitaria `.antialiased-hd`.
+- **Iconografía Profesional:** Sustitución definitiva de emojis y estrellas (✨ / `Sparkles`) por `<Zap />` vectorial en barras y tablas operativas.
+- **Ergonomía de Selección en Fila:** Clic en fila selecciona; apertura de inspección y enlaces con `e.stopPropagation()`.
+- **Formateo Financiero Estricto:** Alineación vertical con `formatCOP()` y `.tabular-nums` en todo el Historial Desktop.
+
+### 🔹 Hito: Gobernanza de Presupuesto de Tokens y Consolidación de Skills
+
+- **Qué cambió:** Diagnóstico de saturación en Antigravity (`25.335 / 20.000 tokens`). Poda de 78 carpetas redundantes y unificación de 67 estilos bajo el enrutador maestro `awesome-design-skills`.
+- **Tokens Liberados:** >15.000 tokens liberados, reduciendo el consumo al 40-45% y reactivando herramientas críticas (`supabase`, `supabase-postgres-best-practices`, `impeccable`, `design-taste-frontend`).
+- **Enriquecimiento del Motor POS y UI:** Integración de PostgreSQL RLS Best Practices, bloqueo pesimista `FOR UPDATE`, directivas Anti-Slop y microinteracciones físicas.
 
 ---
 

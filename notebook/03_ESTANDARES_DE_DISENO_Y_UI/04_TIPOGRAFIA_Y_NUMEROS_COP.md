@@ -58,14 +58,20 @@ import { formatCOP } from '../../utils/formatters';
 
 En monitores de escritorio (>= 768px), las fuentes pueden verse delgadas o poco nítidas si no se aplican los filtros correctos del motor de renderizado:
 
-1. **Suavizado de Fuentes Activo:**
+1. **Suavizado de Fuentes Activo y Clase `.antialiased-hd`:**
    ```css
+   /* Aplicado globalmente y en grillas de datos */
    -webkit-font-smoothing: antialiased;
    -moz-osx-font-smoothing: grayscale;
    text-rendering: optimizeLegibility;
    ```
-2. **Pesos Robustos de Mostrador:** Evitar pesos ultradelgados (`font-light`, `font-thin`). Los textos de producto, ticket y auditoría deben usar `font-medium`, `font-semibold` o `font-bold` con colores de alto contraste (`text-white` para títulos, `text-neutral-400` para metadatos).
-3. **Calibración de Columnas en Tablas (`table-fixed`):**
+2. **Supresión Estricta de Aberración Cromática (Anti-Halos):**
+   En monitores OLED y fondos oscuros (`#000000`), el renderizado de subpíxeles provoca franjas cromáticas (halos de color) cuando se superpone texto coloreado translúcido (`text-accent`) sobre fondos sutiles del mismo tono (`bg-accent-subtle`).
+   - **Regla inquebrantable:** Usar texto blanco o primario de alto contraste sobre tarjetas sólidas (`bg-[var(--bg-elevated)] dark:bg-black/95`) y badges sólidos (`bg-accent text-white`).
+3. **Erradicación de Estrellas y Emojis (✨ / `Sparkles`):**
+   Sustituidos de forma unificada por el icono vectorial profesional `<Zap className="h-4 w-4 shrink-0" />` de `lucide-react`.
+4. **Pesos Robustos de Mostrador:** Evitar pesos ultradelgados (`font-light`, `font-thin`). Los textos de producto, ticket y auditoría deben usar `font-medium`, `font-semibold` o `font-bold` con colores de alto contraste (`text-white` para títulos, `text-neutral-400` para metadatos).
+5. **Calibración de Columnas en Tablas (`table-fixed`):**
    Para evitar que columnas numéricas se colapsen o trunquen montos grandes en el Historial (`HistoryViewDesktop.tsx`):
    - Ticket / ID: `w-20 sm:w-24`
    - Fecha / Hora: `w-36 sm:w-40`

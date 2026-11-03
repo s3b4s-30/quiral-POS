@@ -140,3 +140,34 @@
 - **Consecuencias:**
   - _Positivas:_ Calificación A+ en escaneos de seguridad de cabeceras, mitigación completa de ataques IDOR y protección contra invocaciones de API no autorizadas.
   - _Negativas:_ Cualquier nuevo dominio externo o servicio de terceros (ej. pasarelas de pago futuras) debe ser declarado explícitamente en el CSP de `vercel.json`.
+
+---
+
+## ADR-009: Consolidación de Skills y Gobernanza de Presupuesto de Tokens
+
+- **Estado:** Aceptado.
+- **Fecha:** 2026-11-03
+- **Contexto:**  
+  Antigravity impone un límite estricto de 20.000 tokens para el contexto de personalizaciones (reglas, skills y servidores MCP). El volcado no planificado de 67 subcarpetas de estilos de diseño individuales en la raíz de `.agents/skills/` elevó el consumo a 25.335 tokens (126.7%), provocando la degradación de reglas a punteros y la exclusión forzosa de 19 habilidades vitales, entre ellas el plugin de base de datos Supabase, Impeccable y Design Taste.
+- **Decisión:**  
+  Poda profunda de 78 carpetas y archivos residuales. Adopción del patrón de Enrutador Maestro en `awesome-design-skills`: los 67 estilos se mantienen organizados en `skills/<estilo>/` para consulta bajo demanda, reduciendo las skills activas en la raíz a un núcleo de 16 herramientas de élite.
+- **Consecuencias:**
+  - _Positivas:_ Liberación de más de 15.000 tokens, bajando el uso al rango seguro (< 45%). Cero skills excluidas en Antigravity; reactivación total del soporte de base de datos y diseño.
+  - _Negativas:_ Los agentes deben consultar los estilos a través del enrutador `skills/<estilo>/` en vez de invocar nombres de estilos aislados como skills directas.
+
+---
+
+## ADR-010: Nitidez Tipográfica HD, Anti-Aberración Cromática y Supresión de Estrellas
+
+- **Estado:** Aceptado.
+- **Fecha:** 2026-11-03
+- **Contexto:**  
+  En pantallas OLED oscuras, el suavizado de fuentes subpixel ClearType genera franjas de color y halos borrosos en textos con acento semitransparente sobre fondos sutiles. Además, el uso de emojis y estrellas (✨ / `Sparkles`) degradaba la estética corporativa y seria requerida para un sistema POS de mostrador comercial.
+- **Decisión:**
+  1. Forzar en `src/index.css` el antialiasing global (`-webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility;`) y crear la clase `.antialiased-hd`.
+  2. Prohibir el uso de texto coloreado sobre fondos de acento en dark mode; utilizar contraste puro con texto blanco sobre tarjetas sólidas elevadas (`dark:bg-black/95`).
+  3. Reemplazar definitivamente ✨ por `<Zap />` de `lucide-react`.
+  4. Aislar la interacción en filas de datos: clic en fila conmuta selección; apertura de detalles exige `e.stopPropagation()`.
+- **Consecuencias:**
+  - _Positivas:_ Textos nítidos y legibles a distancia de mostrador sin fatiga visual ni aberración cromática. Estética profesional de alta gama tipo Linear/Apple.
+  - _Negativas:_ Ninguna detectada.

@@ -72,7 +72,7 @@ Esta base de conocimiento está organizada en 7 módulos temáticos que cubren e
 
 ### 📁 [04_SISTEMA_DE_AGENTES_Y_SKILLS/](./04_SISTEMA_DE_AGENTES_Y_SKILLS/)
 
-- [`01_CATALOGO_DE_SKILLS.md`](./04_SISTEMA_DE_AGENTES_Y_SKILLS/01_CATALOGO_DE_SKILLS.md): Inventario completo de las 21 skills y herramientas (Tier 1, Tier 2 y Tier 3).
+- [`01_CATALOGO_DE_SKILLS.md`](./04_SISTEMA_DE_AGENTES_Y_SKILLS/01_CATALOGO_DE_SKILLS.md): Inventario completo de las 16 skills consolidadas y enrutador maestro (Tier 1, Tier 2 y Tier 3).
 - [`02_MATRIZ_DE_USO_Y_PROHIBICIONES.md`](./04_SISTEMA_DE_AGENTES_Y_SKILLS/02_MATRIZ_DE_USO_Y_PROHIBICIONES.md): Cuándo activar obligatoriamente cada skill y qué estilos o patrones están terminantemente vetados.
 - [`03_CREACION_Y_MEJORA_DE_SKILLS.md`](./04_SISTEMA_DE_AGENTES_Y_SKILLS/03_CREACION_Y_MEJORA_DE_SKILLS.md): Protocolo para auditar, sincronizar y crear nuevas habilidades en `.agents/skills/`.
 
