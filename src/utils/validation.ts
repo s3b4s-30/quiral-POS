@@ -55,7 +55,7 @@ export function evaluatePasswordStrength(password: string): PasswordStrengthResu
       break;
     case 4:
       label = "Fuerte";
-      colorClass = "bg-[#007aff] text-[#007aff] dark:text-[#0a84ff]";
+      colorClass = "bg-accent text-accent";
       barWidthClass = "w-4/5";
       break;
     case 5:

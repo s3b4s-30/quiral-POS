@@ -215,7 +215,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                 <article
                   key={sale.id}
                   onClick={() => setOpenSaleId(isOpen ? null : sale.id)}
-                  className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3.5 shadow-sm transition-colors duration-75 cursor-pointer select-none active:scale-[0.99] hover:border-blue-500/40"
+                  className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3.5 shadow-sm transition-colors duration-200 cursor-pointer select-none active:scale-[0.99] hover:border-accent/40"
                 >
                   {/* Fila principal: Número de venta + Cliente | Total + Acciones rápidas */}
                   <div className="flex items-start justify-between gap-3">
@@ -387,7 +387,7 @@ export default function HistoryView({ onGoToPOS: _onGoToPOS }: HistoryViewProps)
                 type="checkbox"
                 checked={restoreStockOnDelete}
                 onChange={(e) => setRestoreStockOnDelete(e.target.checked)}
-                className="h-5 w-5 accent-[#007aff] rounded cursor-pointer shrink-0"
+                className="h-5 w-5 accent-[var(--accent-primary)] rounded cursor-pointer shrink-0"
               />
             </label>
           </div>

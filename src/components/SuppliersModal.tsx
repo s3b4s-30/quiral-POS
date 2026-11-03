@@ -88,7 +88,7 @@ export default function SuppliersModal({ onClose, onStartClose }: SuppliersModal
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="flex items-center gap-1 text-xs font-semibold text-[#007aff] dark:text-[#0a84ff]"
+                className="flex items-center gap-1 text-xs font-semibold text-accent transition-colors duration-200"
               >
                 <Plus size={14} /> Nuevo proveedor
               </button>
@@ -106,9 +106,9 @@ export default function SuppliersModal({ onClose, onStartClose }: SuppliersModal
                 return (
                   <div
                     key={sup.id}
-                    className={`flex items-center justify-between rounded-2xl border px-3.5 py-2.5 transition-colors duration-75 ${
+                    className={`flex items-center justify-between rounded-2xl border px-3.5 py-2.5 transition-colors duration-200 ${
                       isEditing
-                        ? "border-[#007aff] bg-[#007aff]/5 dark:bg-[#007aff]/10"
+                        ? "border-accent bg-accent-subtle"
                         : "border-[var(--border-color)] bg-[var(--bg-primary)]/50"
                     }`}
                   >
@@ -121,7 +121,7 @@ export default function SuppliersModal({ onClose, onStartClose }: SuppliersModal
                         <p className="font-semibold leading-tight text-sm flex items-center gap-2 truncate">
                           <span className="truncate">{sup.name}</span>
                           {isEditing && (
-                            <span className="rounded-full bg-[#007aff] px-2 py-0.5 text-[10px] font-bold text-white shrink-0">
+                            <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-white shrink-0 transition-colors duration-200">
                               Editando
                             </span>
                           )}
@@ -138,7 +138,7 @@ export default function SuppliersModal({ onClose, onStartClose }: SuppliersModal
                         onClick={() => startEdit(sup)}
                         title="Editar proveedor"
                         aria-label={`Editar proveedor ${sup.name}`}
-                        className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#007aff]/15 text-[#007aff] transition-colors hover:bg-[#007aff]/25 dark:text-[#0a84ff]"
+                        className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-subtle text-accent transition-colors duration-200 hover:bg-accent/25"
                       >
                         <Edit2 size={16} />
                       </button>
@@ -196,7 +196,7 @@ export default function SuppliersModal({ onClose, onStartClose }: SuppliersModal
                 setError(null);
               }}
               placeholder="Ej. Mayorista Monterrey"
-              className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+              className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
             />
           </div>
 
@@ -209,7 +209,7 @@ export default function SuppliersModal({ onClose, onStartClose }: SuppliersModal
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+57 300 000 0000"
-              className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+              className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
             />
           </div>
 
@@ -252,7 +252,7 @@ export default function SuppliersModal({ onClose, onStartClose }: SuppliersModal
                 </button>
                 <button
                   type="submit"
-                  className="flex min-h-11 items-center justify-center rounded-xl bg-[#007aff] text-sm font-semibold text-white shadow-md transition-opacity hover:opacity-90"
+                  className="flex min-h-11 items-center justify-center rounded-xl bg-accent hover:bg-accent-hover text-sm font-semibold text-white shadow-md transition-all duration-200"
                 >
                   Guardar Cambios
                 </button>
@@ -260,7 +260,7 @@ export default function SuppliersModal({ onClose, onStartClose }: SuppliersModal
             ) : (
               <button
                 type="submit"
-                className="flex min-h-11 w-full items-center justify-center rounded-xl bg-[#007aff] text-sm font-semibold text-white shadow-md transition-opacity hover:opacity-90"
+                className="flex min-h-11 w-full items-center justify-center rounded-xl bg-accent hover:bg-accent-hover text-sm font-semibold text-white shadow-md transition-all duration-200"
               >
                 Guardar Proveedor
               </button>

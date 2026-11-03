@@ -118,7 +118,7 @@ function AppInner() {
   if (!userProfile && loading) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center bg-[var(--bg-primary)] p-6 text-center select-none">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#007aff] border-t-transparent dark:border-[#0a84ff] dark:border-t-transparent" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-accent border-t-transparent" />
         <h2 className="mt-4 text-base font-bold text-[var(--text-primary)]">Iniciando Quiral POS</h2>
         <p className="mt-1 text-xs text-[var(--text-secondary)]">Sincronizando estado...</p>
       </div>
@@ -178,7 +178,7 @@ function AppInner() {
               <button
                 type="button"
                 onClick={() => setActiveTab("inventory")}
-                className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#007aff] px-4 py-2 text-xs font-bold text-white shadow-sm"
+                className="mt-4 inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors duration-200"
               >
                 Volver a Inventario
               </button>

@@ -114,7 +114,7 @@ export default function TopMenu({
         aria-expanded={open}
         aria-controls="top-menu-popover"
         onClick={handleToggleOpen}
-        className="relative z-50 flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[#007aff] shadow-sm transition-colors duration-75 hover:opacity-80 active:scale-95 dark:text-[#0a84ff]"
+        className="relative z-50 flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-elevated)] text-accent shadow-sm transition-colors duration-200 hover:opacity-80 active:scale-95"
       >
         {open ? <X size={20} /> : <MoreHorizontal size={20} />}
       </button>
@@ -162,7 +162,7 @@ export default function TopMenu({
                       <h3 className="text-base font-bold text-[var(--text-primary)] truncate transition-colors duration-75">
                         {userProfile?.storeName || "Quiral POS"}
                       </h3>
-                      <span className="shrink-0 rounded-md bg-[#007aff]/10 px-1.5 py-0.5 text-[10px] font-bold text-[#007aff] dark:text-[#0a84ff]">
+                      <span className="shrink-0 rounded-md bg-accent-subtle px-1.5 py-0.5 text-[10px] font-bold text-accent transition-colors duration-200">
                         {userProfile?.role === "owner" ? "Dueño" : "Vendedor"}
                       </span>
                     </div>
@@ -208,7 +208,7 @@ export default function TopMenu({
                   className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition-none hover:bg-black/5 dark:hover:bg-white/5"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#007aff]/15 text-[#007aff] dark:text-[#0a84ff]">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-subtle text-accent transition-colors duration-200">
                       <Users size={16} />
                     </div>
                     <span className="transition-none">Proveedores</span>
@@ -246,9 +246,9 @@ export default function TopMenu({
                   <button
                     type="button"
                     onClick={() => onThemeChange("auto")}
-                    className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-colors duration-75 ${
+                    className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-colors duration-200 ${
                       theme === "auto"
-                        ? "bg-[#007aff] text-white shadow-sm"
+                        ? "bg-accent text-white shadow-sm"
                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     }`}
                   >
@@ -257,9 +257,9 @@ export default function TopMenu({
                   <button
                     type="button"
                     onClick={() => onThemeChange("light")}
-                    className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-colors duration-75 ${
+                    className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-colors duration-200 ${
                       theme === "light"
-                        ? "bg-[#007aff] text-white shadow-sm"
+                        ? "bg-accent text-white shadow-sm"
                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     }`}
                   >
@@ -268,9 +268,9 @@ export default function TopMenu({
                   <button
                     type="button"
                     onClick={() => onThemeChange("dark")}
-                    className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-colors duration-75 ${
+                    className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-colors duration-200 ${
                       theme === "dark"
-                        ? "bg-[#007aff] text-white shadow-sm"
+                        ? "bg-accent text-white shadow-sm"
                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     }`}
                   >

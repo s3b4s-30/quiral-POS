@@ -32,7 +32,7 @@ export interface LottiePlayerProps {
 function DefaultFallbackIcon() {
   return (
     <div className="flex h-full w-full items-center justify-center">
-      <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl border border-[#007aff]/20 bg-[#007aff]/10 text-[#007aff] dark:border-[#0a84ff]/25 dark:bg-[#0a84ff]/15 dark:text-[#0a84ff] shadow-sm">
+      <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl border border-accent/20 bg-accent-subtle text-accent shadow-sm transition-colors duration-200">
         <PackageOpen size={40} strokeWidth={1.75} className="animate-pulse" />
       </div>
     </div>

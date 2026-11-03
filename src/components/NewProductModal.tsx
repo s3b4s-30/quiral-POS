@@ -595,7 +595,7 @@ export default function NewProductModal({
     const isAddingThis = addingAttrKey === attrKey;
     if (isAddingThis) {
       return (
-        <div className="inline-flex items-center gap-1 rounded-xl border border-[#007aff] bg-[var(--bg-elevated)] dark:bg-zinc-900 px-2 py-0.5 animate-in fade-in duration-100">
+        <div className="inline-flex items-center gap-1 rounded-xl border border-accent bg-[var(--bg-elevated)] dark:bg-zinc-900 px-2 py-0.5 animate-in fade-in duration-100">
           <input
             type="text"
             value={newAttrOptionText}
@@ -646,7 +646,7 @@ export default function NewProductModal({
         }}
         aria-label={`Agregar opción a ${attrLabel}`}
         title={`Añadir nuevo valor a ${attrLabel}`}
-        className="inline-flex items-center justify-center rounded-xl border border-dashed border-[#007aff]/50 bg-[#007aff]/10 px-2.5 py-1 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] hover:bg-[#007aff]/20 active:scale-95 transition-all"
+        className="inline-flex items-center justify-center rounded-xl border border-dashed border-accent/50 bg-accent-subtle px-2.5 py-1 text-xs font-bold text-accent hover:bg-accent/20 active:scale-95 transition-all duration-200"
       >
         +
       </button>
@@ -794,7 +794,7 @@ export default function NewProductModal({
                     setAttrModalConfig({ open: true, tab: "attribute-options" })
                   }
                   aria-label="Abrir banco maestro de atributos"
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#007aff]/30 bg-[#007aff]/10 px-3 py-1.5 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-accent/30 bg-accent-subtle px-3 py-1.5 text-xs font-bold text-accent active:scale-95 transition-all duration-200"
                 >
                   <Sliders size={13} strokeWidth={2.5} className="shrink-0" />
                   <span>Editar banco</span>
@@ -820,7 +820,7 @@ export default function NewProductModal({
                   placeholder="Ej. Relojes Inteligentes, Memorias SSD..."
                   aria-label="Nombre de la nueva categoría"
                   autoFocus
-                  className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-[#007aff]"
+                  className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-accent transition-colors"
                 />
               </div>
 
@@ -851,9 +851,9 @@ export default function NewProductModal({
                         key={attr.key}
                         type="button"
                         onClick={() => toggleNewCategoryAttrKey(attr.key)}
-                        className="inline-flex items-center gap-1 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] dark:text-zinc-200 hover:border-[#007aff] active:scale-95 transition-all"
+                        className="inline-flex items-center gap-1 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] dark:text-zinc-200 hover:border-accent active:scale-95 transition-all duration-200"
                       >
-                        <Plus size={12} strokeWidth={2.5} className="text-[#007aff] shrink-0" />
+                        <Plus size={12} strokeWidth={2.5} className="text-accent shrink-0" />
                         <span>{attr.label}</span>
                       </button>
                     ))}
@@ -863,10 +863,10 @@ export default function NewProductModal({
               {/* 3. Previsualización Dinámica de la Categoría */}
               <div
                 data-testid="new-category-live-preview"
-                className="rounded-2xl border border-[#007aff]/30 bg-[#007aff]/5 dark:bg-zinc-900/80 p-3.5 space-y-2.5"
+                className="rounded-2xl border border-accent/30 bg-accent-subtle dark:bg-zinc-900/80 p-3.5 space-y-2.5 transition-colors duration-200"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 text-[#007aff] dark:text-[#0a84ff]">
+                  <div className="flex items-center gap-1.5 text-accent">
                     <Eye size={14} className="shrink-0" />
                     <span className="text-[11px] font-bold uppercase tracking-wider">
                       Previsualización dinámica
@@ -896,9 +896,9 @@ export default function NewProductModal({
                             {previewOptions.map((opt, i) => (
                               <span
                                 key={opt}
-                                className={`rounded-xl px-2.5 py-0.5 text-[11px] font-medium ${
+                                className={`rounded-xl px-2.5 py-0.5 text-[11px] font-medium transition-colors duration-200 ${
                                   i === 0
-                                    ? "bg-[#007aff] text-white font-semibold"
+                                    ? "bg-accent text-white font-semibold"
                                     : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)] dark:bg-zinc-900 text-[var(--text-secondary)] dark:text-zinc-300"
                                 }`}
                               >
@@ -986,7 +986,7 @@ export default function NewProductModal({
                           }}
                           className={`flex items-center justify-between gap-2.5 rounded-xl border px-3 py-2 select-none transition-all ${
                             isTouchDragging || isDraggedOver
-                              ? "border-[#007aff] bg-[#007aff]/15 dark:bg-[#007aff]/20 scale-[1.01] shadow-md z-10"
+                              ? "border-accent bg-accent-subtle scale-[1.01] shadow-md z-10"
                               : "border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900"
                           }`}
                         >
@@ -1065,7 +1065,7 @@ export default function NewProductModal({
                     data-testid="add-new-category-inline-btn"
                     onClick={handleOpenNewCategoryFlow}
                     aria-label="Crear nueva categoría"
-                    className="inline-flex items-center gap-1 rounded-xl border border-[#007aff]/30 bg-[#007aff]/10 px-2.5 py-1 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform"
+                    className="inline-flex items-center gap-1 rounded-xl border border-accent/30 bg-accent-subtle px-2.5 py-1 text-xs font-bold text-accent active:scale-95 transition-all duration-200"
                   >
                     <Plus size={13} strokeWidth={2.5} />
                     <span>Nueva categoría</span>
@@ -1105,7 +1105,7 @@ export default function NewProductModal({
                       setAttrModalConfig({ open: true, tab: "attribute-options" })
                     }
                     aria-label="Abrir banco maestro de atributos"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-accent hover:underline transition-colors duration-200"
                   >
                     <Sliders size={13} strokeWidth={2.5} className="shrink-0" />
                     <span>Editar banco</span>
@@ -1133,7 +1133,7 @@ export default function NewProductModal({
                       }
                     }}
                     placeholder="Ej. Cubo iPhone 20W"
-                    className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
+                    className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-accent transition-colors"
                   />
                 </div>
 
@@ -1144,7 +1144,7 @@ export default function NewProductModal({
                       size={16}
                       className={
                         includeAttributesInName
-                          ? "mt-0.5 text-[#007aff] shrink-0"
+                          ? "mt-0.5 text-accent shrink-0 transition-colors duration-200"
                           : "mt-0.5 text-[var(--text-secondary)] dark:text-zinc-500 shrink-0"
                       }
                     />
@@ -1200,7 +1200,7 @@ export default function NewProductModal({
                     className={`tabular-nums w-full rounded-xl border bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-medium outline-none transition-colors ${
                       isCostGreaterThanPrice
                         ? "border-[#ff3b30] text-[#ff3b30] focus:border-[#ff3b30]"
-                        : "border-[var(--border-color)] dark:border-zinc-800 text-[var(--text-secondary)] dark:text-zinc-200 focus:border-[#007aff]"
+                        : "border-[var(--border-color)] dark:border-zinc-800 text-[var(--text-secondary)] dark:text-zinc-200 focus:border-accent"
                     }`}
                   />
                 </div>
@@ -1217,7 +1217,7 @@ export default function NewProductModal({
                       setPriceInput(num > 0 ? formatCOP(num) : "");
                     }}
                     placeholder="$0"
-                    className="tabular-nums w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-bold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
+                    className="tabular-nums w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-bold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-accent transition-colors"
                   />
                 </div>
               </div>
@@ -1256,7 +1256,7 @@ export default function NewProductModal({
                     value={stockInput}
                     onChange={(e) => setStockInput(e.target.value)}
                     placeholder="1"
-                    className="tabular-nums w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
+                    className="tabular-nums w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-accent transition-colors"
                   />
                 </div>
                 <div>
@@ -1269,7 +1269,7 @@ export default function NewProductModal({
                     value={warrantyDays}
                     onChange={(e) => setWarrantyDays(e.target.value)}
                     placeholder="15"
-                    className="tabular-nums w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
+                    className="tabular-nums w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-accent transition-colors"
                   />
                 </div>
               </div>
@@ -1283,7 +1283,7 @@ export default function NewProductModal({
                   <button
                     type="button"
                     onClick={onOpenSuppliers}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-accent hover:underline transition-colors duration-200"
                   >
                     <Plus size={13} />
                     <span>Gestionar proveedores</span>
@@ -1299,7 +1299,7 @@ export default function NewProductModal({
                   <select
                     value={selectedSupplierId}
                     onChange={(e) => setSelectedSupplierId(e.target.value)}
-                    className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-medium text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-[#007aff]"
+                    className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-sm font-medium text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-accent transition-colors"
                   >
                     {suppliers.map((sup) => (
                       <option key={sup.id} value={sup.id}>

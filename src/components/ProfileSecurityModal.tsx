@@ -133,7 +133,7 @@ export default function ProfileSecurityModal({
         </div>
         <div className="flex items-center justify-between text-xs">
           <span className="text-[var(--text-secondary)] font-medium">Rol</span>
-          <span className="rounded-full bg-[#007aff]/15 text-[#007aff] dark:text-[#0a84ff] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+          <span className="rounded-full bg-accent-subtle text-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors duration-200">
             {role === "owner" ? "Propietario" : "Colaborador"}
           </span>
         </div>
@@ -180,14 +180,14 @@ export default function ProfileSecurityModal({
               onChange={(e) =>
                 setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, ""))
               }
-              className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors disabled:opacity-50"
+              className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors disabled:opacity-50"
             />
           </div>
         </div>
 
         <div className="border-t border-[var(--border-color)] pt-3">
           <p className="text-xs font-bold text-[var(--text-primary)] mb-2 flex items-center gap-1.5">
-            <ShieldCheck size={16} className="text-[#007aff]" />
+            <ShieldCheck size={16} className="text-accent transition-colors duration-200" />
             <span>Seguridad y Contraseña</span>
           </p>
 
@@ -207,7 +207,7 @@ export default function ProfileSecurityModal({
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-10 py-2.5 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors disabled:opacity-50"
+                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-10 py-2.5 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors disabled:opacity-50"
                 />
                 <button
                   type="button"
@@ -247,7 +247,7 @@ export default function ProfileSecurityModal({
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Dejar en blanco para mantener"
-                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-10 py-2.5 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors disabled:opacity-50"
+                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-10 py-2.5 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors disabled:opacity-50"
                 />
                 <button
                   type="button"
@@ -323,7 +323,7 @@ export default function ProfileSecurityModal({
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Repite la nueva contraseña"
-                    className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-10 py-2.5 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors disabled:opacity-50"
+                    className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-10 py-2.5 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors disabled:opacity-50"
                   />
                   <button
                     type="button"
@@ -343,7 +343,7 @@ export default function ProfileSecurityModal({
         <button
           type="submit"
           disabled={loading || isDemoUser}
-          className="w-full mt-2 rounded-2xl bg-[#007aff] hover:bg-[#0062cc] py-3.5 text-sm font-bold text-white shadow-md active:scale-[0.99] transition-transform disabled:opacity-50 select-none"
+          className="w-full mt-2 rounded-2xl bg-accent hover:bg-accent-hover py-3.5 text-sm font-bold text-white shadow-md active:scale-[0.99] transition-all duration-200 disabled:opacity-50 select-none"
         >
           {loading ? "Guardando cambios..." : "Actualizar Credenciales"}
         </button>

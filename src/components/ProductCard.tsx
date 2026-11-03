@@ -57,9 +57,9 @@ export const ProductCard = React.memo(function ProductCard({
           handleClick();
         }
       }}
-      className={`rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3.5 shadow-sm outline-none transition-colors duration-75 select-none focus-visible:ring-2 focus-visible:ring-[#007aff] ${
+      className={`rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3.5 shadow-sm outline-none transition-colors duration-200 select-none focus-visible:ring-2 focus-visible:ring-accent ${
         isAvailable || mode === "inventory"
-          ? "cursor-pointer active:scale-[0.99] hover:border-blue-500/40"
+          ? "cursor-pointer active:scale-[0.99] hover:border-accent/40"
           : "opacity-50 cursor-not-allowed"
       } ${className}`}
     >
@@ -116,12 +116,12 @@ export const ProductCard = React.memo(function ProductCard({
             {inCart > 0 ? (
               <span
                 aria-label={`${inCart} unidades seleccionadas`}
-                className="flex h-7 min-w-7 px-1.5 items-center justify-center rounded-full bg-blue-500 text-xs font-bold leading-none text-white shadow-sm"
+                className="flex h-7 min-w-7 px-1.5 items-center justify-center rounded-full bg-accent text-xs font-bold leading-none text-white shadow-sm transition-colors duration-200"
               >
                 {inCart}
               </span>
             ) : isAvailable ? (
-              <span className="pointer-events-none rounded-full bg-black/5 dark:bg-white/10 px-2.5 py-1 text-xs font-semibold text-[#007aff] dark:text-[#0a84ff] transition-colors duration-75">
+              <span className="pointer-events-none rounded-full bg-black/5 dark:bg-white/10 px-2.5 py-1 text-xs font-semibold text-accent transition-colors duration-200">
                 + Agregar
               </span>
             ) : (

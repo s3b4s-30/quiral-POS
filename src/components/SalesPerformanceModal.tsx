@@ -200,9 +200,9 @@ export default function SalesPerformanceModal({
           <button
             type="button"
             onClick={() => setSelectedCycleId("actual")}
-            className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-semibold transition-colors duration-75 select-none ${
+            className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-semibold transition-colors duration-200 select-none ${
               selectedCycleId === "actual"
-                ? "bg-[#007aff] text-white shadow-sm"
+                ? "bg-[#007aff] bg-accent text-white shadow-sm"
                 : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10"
             }`}
           >
@@ -215,9 +215,9 @@ export default function SalesPerformanceModal({
                 key={c.id}
                 type="button"
                 onClick={() => setSelectedCycleId(c.id)}
-                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-semibold transition-colors duration-75 select-none ${
+                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-semibold transition-colors duration-200 select-none ${
                   isActive
-                    ? "bg-[#007aff] text-white shadow-sm"
+                    ? "bg-[#007aff] bg-accent text-white shadow-sm"
                     : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10"
                 }`}
               >
@@ -233,9 +233,9 @@ export default function SalesPerformanceModal({
         <button
           type="button"
           onClick={() => setMetricTab("sellers")}
-          className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 active:scale-95 ${
+          className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 active:scale-95 ${
             metricTab === "sellers"
-              ? "bg-[#007aff] text-white shadow-sm"
+              ? "bg-[#007aff] bg-accent text-white shadow-sm"
               : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           }`}
         >
@@ -297,7 +297,7 @@ export default function SalesPerformanceModal({
                     <h4 className="flex-1 min-w-0 text-[15px] font-semibold text-[var(--text-primary)] leading-snug line-clamp-2">
                       {item.name}
                     </h4>
-                    <span className="tabular-nums px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#007aff]/15 text-[#007aff] dark:text-[#0a84ff] shrink-0">
+                    <span className="tabular-nums px-2.5 py-0.5 rounded-full text-xs font-bold bg-accent-subtle text-accent shrink-0 transition-colors duration-200">
                       {item.qty} uds
                     </span>
                   </div>
@@ -318,7 +318,7 @@ export default function SalesPerformanceModal({
                       <button
                         type="button"
                         onClick={() => setOpenTxId(isTxOpen ? null : item.id)}
-                        className="text-xs font-medium text-[#007aff] dark:text-[#0a84ff] hover:underline active:scale-95 transition-transform"
+                        className="text-xs font-medium text-accent hover:underline active:scale-95 transition-all duration-200"
                       >
                         {isTxOpen ? "Ocultar transacciones" : "Ver transacciones"}
                       </button>

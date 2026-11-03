@@ -167,7 +167,7 @@ export default function StoreProfileModal({
                 />
               ) : (
                 <div className="flex flex-col items-center text-[var(--text-secondary)]">
-                  <Store size={36} className="text-[#007aff]" />
+                  <Store size={36} className="text-accent transition-colors duration-200" />
                   <span className="text-[10px] font-bold mt-1 uppercase tracking-wide">Logo</span>
                 </div>
               )}
@@ -177,7 +177,7 @@ export default function StoreProfileModal({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               aria-label="Cambiar foto o logo"
-              className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#007aff] text-white shadow-md transition-transform hover:scale-105 active:scale-95"
+              className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white shadow-md transition-all duration-200 hover:scale-105 active:scale-95"
             >
               <Camera size={15} />
             </button>
@@ -195,7 +195,7 @@ export default function StoreProfileModal({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-1.5 text-[#007aff] hover:underline"
+              className="flex items-center gap-1.5 text-accent hover:underline transition-colors duration-200"
             >
               <Upload size={13} />
               <span>Subir logo</span>
@@ -229,7 +229,7 @@ export default function StoreProfileModal({
                 value={storeName}
                 onChange={(e) => setStoreName(e.target.value)}
                 placeholder="Ej. Quiral POS & Store"
-                className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-3.5 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors"
+                className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-3.5 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
               />
             </div>
             <p className="mt-1 text-[11px] text-[var(--text-secondary)]">
@@ -251,7 +251,7 @@ export default function StoreProfileModal({
                 value={storePhone}
                 onChange={(e) => setStorePhone(e.target.value)}
                 placeholder="Ej. +57 300 123 4567"
-                className="tabular-nums w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-3.5 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors"
+                className="tabular-nums w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-3.5 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
               />
             </div>
           </div>
@@ -270,7 +270,7 @@ export default function StoreProfileModal({
                 value={storeAddress}
                 onChange={(e) => setStoreAddress(e.target.value)}
                 placeholder="Ej. Calle 72 # 10-34, Local 201"
-                className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-3.5 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors"
+                className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-10 pr-3.5 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
               />
             </div>
           </div>

@@ -309,7 +309,7 @@ export default function AttributeConfigModal({
         <button
           type="button"
           onClick={onClose}
-          className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#007aff] text-sm sm:text-base font-bold text-white shadow-lg active:scale-[0.98] transition-transform duration-75"
+          className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-accent hover:bg-accent-hover text-sm sm:text-base font-bold text-white shadow-lg active:scale-[0.98] transition-all duration-200"
         >
           Listo
         </button>
@@ -321,9 +321,9 @@ export default function AttributeConfigModal({
           <button
             type="button"
             onClick={() => setTab("attribute-options")}
-            className={`rounded-xl py-2 text-xs font-bold transition-colors ${
+            className={`rounded-xl py-2 text-xs font-bold transition-colors duration-200 ${
               tab === "attribute-options"
-                ? "bg-[#007aff] text-white shadow-sm"
+                ? "bg-accent text-white shadow-sm"
                 : "text-[var(--text-secondary)] dark:text-zinc-400 hover:text-[var(--text-primary)]"
             }`}
           >
@@ -332,9 +332,9 @@ export default function AttributeConfigModal({
           <button
             type="button"
             onClick={() => setTab("category-order")}
-            className={`rounded-xl py-2 text-xs font-bold transition-colors ${
+            className={`rounded-xl py-2 text-xs font-bold transition-colors duration-200 ${
               tab === "category-order"
-                ? "bg-[#007aff] text-white shadow-sm"
+                ? "bg-accent text-white shadow-sm"
                 : "text-[var(--text-secondary)] dark:text-zinc-400 hover:text-[var(--text-primary)]"
             }`}
           >
@@ -357,9 +357,9 @@ export default function AttributeConfigModal({
                       key={cat}
                       type="button"
                       onClick={() => setSelectedCategory(cat)}
-                      className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors ${
+                      className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors duration-200 ${
                         isSel
-                          ? "bg-[#007aff] text-white shadow-sm"
+                          ? "bg-accent text-white shadow-sm"
                           : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200"
                       }`}
                     >
@@ -425,7 +425,7 @@ export default function AttributeConfigModal({
                       }}
                       className={`flex items-center justify-between gap-2.5 rounded-2xl border px-3 py-2.5 transition-all select-none ${
                         isDragging
-                          ? "border-[#007aff] bg-[#007aff]/15 dark:bg-[#007aff]/20 scale-[1.01] shadow-md z-10"
+                          ? "border-accent bg-accent-subtle scale-[1.01] shadow-md z-10"
                           : "border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900"
                       }`}
                     >
@@ -504,7 +504,7 @@ export default function AttributeConfigModal({
                       key={attr.key}
                       type="button"
                       onClick={() => addCategoryAttr(attr.key)}
-                      className="inline-flex items-center gap-1 rounded-full border border-[#007aff]/40 bg-[#007aff]/10 px-2.5 py-1 text-[11px] font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform"
+                      className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent-subtle px-2.5 py-1 text-[11px] font-bold text-accent active:scale-95 transition-all duration-200"
                     >
                       <Plus size={12} />
                       <span>{attr.label}</span>
@@ -523,7 +523,7 @@ export default function AttributeConfigModal({
               <button
                 type="button"
                 onClick={() => setIsCreatingBlock((prev) => !prev)}
-                className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-[#007aff]/30 bg-[#007aff]/10 px-2.5 py-1.5 text-xs font-bold text-[#007aff] dark:text-[#0a84ff] active:scale-95 transition-transform"
+                className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-accent/30 bg-accent-subtle px-2.5 py-1.5 text-xs font-bold text-accent active:scale-95 transition-all duration-200"
               >
                 <Plus size={14} />
                 <span>Nuevo atributo</span>
@@ -533,10 +533,10 @@ export default function AttributeConfigModal({
             {isCreatingBlock && (
               <form
                 onSubmit={handleCreateBlock}
-                className="rounded-2xl border border-[#007aff]/30 bg-[#007aff]/5 dark:bg-zinc-900 p-3.5 space-y-2.5 animate-in fade-in duration-150"
+                className="rounded-2xl border border-accent/30 bg-accent-subtle/50 dark:bg-zinc-900 p-3.5 space-y-2.5 animate-in fade-in duration-150"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#007aff] dark:text-[#0a84ff] flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-accent flex items-center gap-1.5 transition-colors duration-200">
                     <Tag size={14} />
                     Crear nuevo atributo
                   </span>
@@ -554,20 +554,20 @@ export default function AttributeConfigModal({
                     value={newBlockLabel}
                     onChange={(e) => setNewBlockLabel(e.target.value)}
                     placeholder="Nombre (ej. Resistencia, Pulgadas)"
-                    className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] dark:bg-zinc-950 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-[#007aff]"
+                    className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] dark:bg-zinc-950 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-accent transition-colors"
                   />
                   <input
                     type="text"
                     value={newBlockFirstOption}
                     onChange={(e) => setNewBlockFirstOption(e.target.value)}
                     placeholder="Primer valor (ej. IP68, 45mm)"
-                    className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] dark:bg-zinc-950 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-[#007aff]"
+                    className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] dark:bg-zinc-950 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-accent transition-colors"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={!newBlockLabel.trim()}
-                  className="flex min-h-9 w-full items-center justify-center rounded-xl bg-[#007aff] text-xs font-bold text-white shadow-sm disabled:opacity-40"
+                  className="flex min-h-9 w-full items-center justify-center rounded-xl bg-accent hover:bg-accent-hover text-xs font-bold text-white shadow-sm transition-all duration-200 disabled:opacity-40"
                 >
                   Guardar atributo
                 </button>
@@ -590,9 +590,9 @@ export default function AttributeConfigModal({
                         setSelectedKey(attr.key);
                         setEditingOption(null);
                       }}
-                      className={`whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold transition-colors ${
+                      className={`whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold transition-colors duration-200 ${
                         isSelected
-                          ? "bg-[#007aff] text-white shadow-sm"
+                          ? "bg-accent text-white shadow-sm"
                           : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 text-[var(--text-primary)] dark:text-zinc-200 hover:bg-black/5 dark:hover:bg-zinc-800"
                       }`}
                     >
@@ -625,13 +625,13 @@ export default function AttributeConfigModal({
                     onChange={(e) => setNewOptionInput(e.target.value)}
                     placeholder={`Nuevo valor para ${activeAttr.label}...`}
                     aria-label={`Nuevo valor para ${activeAttr.label}`}
-                    className="flex-1 rounded-xl border border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-primary)]/60 dark:bg-zinc-900 px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-[#007aff]"
+                    className="flex-1 rounded-xl border border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-primary)]/60 dark:bg-zinc-900 px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-accent transition-colors"
                   />
                   <button
                     type="submit"
                     disabled={!newOptionInput.trim()}
                     aria-label="Agregar valor al atributo"
-                    className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl bg-[#007aff] px-3.5 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-transform disabled:opacity-40 shrink-0"
+                    className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-all duration-200 disabled:opacity-40 shrink-0"
                   >
                     <Plus size={16} />
                     <span>Agregar</span>
@@ -687,7 +687,7 @@ export default function AttributeConfigModal({
                         }}
                         className={`flex items-center justify-between gap-2 rounded-xl border px-2.5 py-2 transition-all select-none ${
                           isDragging
-                            ? "border-[#007aff] bg-[#007aff]/15 dark:bg-[#007aff]/20 scale-[1.01] shadow-md z-10"
+                            ? "border-accent bg-accent-subtle scale-[1.01] shadow-md z-10"
                             : "border-[var(--border-color)] dark:border-zinc-800/80 bg-[var(--bg-primary)]/40 dark:bg-zinc-900"
                         }`}
                       >
@@ -706,7 +706,7 @@ export default function AttributeConfigModal({
                                 }
                               }}
                               autoFocus
-                              className="flex-1 rounded-lg border border-[#007aff] bg-[var(--bg-elevated)] dark:bg-zinc-950 px-2.5 py-1 text-xs font-bold text-[var(--text-primary)] dark:text-zinc-100 outline-none"
+                              className="flex-1 rounded-lg border border-accent bg-[var(--bg-elevated)] dark:bg-zinc-950 px-2.5 py-1 text-xs font-bold text-[var(--text-primary)] dark:text-zinc-100 outline-none"
                             />
                             <button
                               type="button"
@@ -751,7 +751,7 @@ export default function AttributeConfigModal({
                                 onClick={() => startRename(opt)}
                                 aria-label={`Renombrar ${opt}`}
                                 title="Renombrar"
-                                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-zinc-800 hover:text-[#007aff]"
+                                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-zinc-800 hover:text-accent transition-colors duration-200"
                               >
                                 <Pencil size={12} />
                               </button>

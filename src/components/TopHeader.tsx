@@ -46,8 +46,8 @@ export default function TopHeader({
 
   return (
     <header
-      className={`quiral-top-header fixed top-0 w-full z-50 backdrop-blur-md pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] select-none transition-colors duration-75 ${
-        isAccent ? "border-b !border-blue-500/20 dark:!border-blue-500/30" : ""
+      className={`quiral-top-header fixed top-0 w-full z-50 backdrop-blur-md pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] select-none transition-colors duration-200 ${
+        isAccent ? "border-b !border-accent/20 dark:!border-accent/30" : ""
       }`}
     >
       <div className="mx-auto flex h-14 w-full max-w-xl md:max-w-4xl lg:max-w-5xl items-center justify-between gap-3">
@@ -67,9 +67,9 @@ export default function TopHeader({
             aria-label={`Volver al inicio de ${title}`}
           >
             <h1
-              className={`text-2xl sm:text-3xl font-extrabold tracking-tight truncate transition-colors duration-75 ${
+              className={`text-2xl sm:text-3xl font-extrabold tracking-tight truncate transition-colors duration-200 ${
                 isAccent
-                  ? "text-blue-500 dark:text-blue-400"
+                  ? "text-accent"
                   : "text-[var(--text-primary)]"
               }`}
             >
@@ -111,7 +111,7 @@ export default function TopHeader({
                 onClick={() => setIsNewProductModalOpen(true)}
                 title="Crear nuevo producto"
                 aria-label="Nuevo producto"
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[#007aff] shadow-sm transition-colors duration-75 hover:opacity-80 active:scale-95 dark:text-[#0a84ff]"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-elevated)] text-accent shadow-sm transition-colors duration-200 hover:opacity-80 active:scale-95"
               >
                 <Plus size={19} strokeWidth={2.5} />
               </button>
@@ -137,7 +137,7 @@ export default function TopHeader({
               {!showCosts ? (
                 <EyeOff size={16} className="shrink-0" />
               ) : (
-                <Eye size={16} className="shrink-0 text-[#007aff] dark:text-[#0a84ff]" />
+                <Eye size={16} className="shrink-0 text-accent transition-colors duration-200" />
               )}
               <span className="hidden min-[420px]:inline whitespace-nowrap leading-none transition-none">
                 {!showCosts ? "Privacidad" : "Visible"}

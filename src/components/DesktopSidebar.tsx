@@ -64,7 +64,7 @@ export default function DesktopSidebar({
       {/* 1. Cabecera / Identidad */}
       <div>
         <div className="flex items-center gap-3 px-2 py-2">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#007aff] text-white shadow-md shadow-[#007aff]/30 border border-[var(--border-color)]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-accent text-white shadow-md shadow-accent/30 border border-[var(--border-color)] transition-colors duration-200">
             {userProfile?.storeLogoUrl ? (
               <img
                 src={userProfile.storeLogoUrl}
@@ -80,7 +80,7 @@ export default function DesktopSidebar({
               <h1 className="text-base font-extrabold tracking-tight text-[var(--text-primary)] truncate">
                 Quiral
               </h1>
-              <span className="rounded bg-[#007aff]/15 px-1.5 py-0.5 text-[10px] font-black text-[#007aff] dark:text-[#0a84ff]">
+              <span className="rounded bg-accent-subtle px-1.5 py-0.5 text-[10px] font-black text-accent transition-colors duration-200">
                 POS
               </span>
             </div>
@@ -108,9 +108,9 @@ export default function DesktopSidebar({
                 type="button"
                 aria-current={isActive ? "page" : undefined}
                 onClick={() => onTabChange(id)}
-                className={`flex w-full items-center justify-between rounded-2xl px-3.5 py-2.5 text-sm font-semibold transition-all active:scale-[0.98] ${
+                className={`flex w-full items-center justify-between rounded-2xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
                   isActive
-                    ? "bg-[#007aff] text-white shadow-md shadow-[#007aff]/25"
+                    ? "bg-accent text-white shadow-md shadow-accent/25"
                     : "text-[var(--text-secondary)] hover:bg-black/5 hover:text-[var(--text-primary)] dark:hover:bg-white/5"
                 }`}
               >
@@ -122,7 +122,7 @@ export default function DesktopSidebar({
                 {id === "sell" && cartCount > 0 && (
                   <span
                     className={`tabular-nums rounded-full px-2 py-0.5 text-xs font-black shadow-sm ${
-                      isActive ? "bg-white text-[#007aff]" : "bg-[#ff3b30] text-white"
+                      isActive ? "bg-white text-accent" : "bg-[#ff3b30] text-white"
                     }`}
                   >
                     {cartCount}
@@ -140,9 +140,9 @@ export default function DesktopSidebar({
         <button
           type="button"
           onClick={() => setShowCosts((prev) => !prev)}
-          className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${
+          className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-colors duration-200 ${
             showCosts
-              ? "bg-[#007aff]/15 text-[#007aff] dark:text-[#0a84ff]"
+              ? "bg-accent-subtle text-accent"
               : "text-[var(--text-secondary)] hover:bg-black/5 hover:text-[var(--text-primary)] dark:hover:bg-white/5"
           }`}
         >

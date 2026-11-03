@@ -186,7 +186,7 @@ export default function PurgeConfirmModal({ onClose }: PurgeConfirmModalProps) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar por nombre o categoría..."
-                  className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 pl-9 pr-8 py-2 text-xs font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-[#007aff] dark:focus:border-[#0a84ff] transition-colors"
+                  className="w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 pl-9 pr-8 py-2 text-xs font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-accent transition-colors"
                 />
                 {searchQuery && (
                   <button
@@ -207,7 +207,7 @@ export default function PurgeConfirmModal({ onClose }: PurgeConfirmModalProps) {
                 >
                   {allFilteredSelected ? (
                     <>
-                      <CheckSquare size={14} className="text-[#007aff] dark:text-[#0a84ff]" />
+                      <CheckSquare size={14} className="text-accent transition-colors duration-200" />
                       <span>Deseleccionar</span>
                     </>
                   ) : (

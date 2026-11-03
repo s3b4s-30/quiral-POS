@@ -12,7 +12,7 @@ export default function FloatingCartFAB({ cartCount, onClick }: FloatingCartFABP
       onClick={onClick}
       aria-label="Ir a vender"
       title="Punto de venta"
-      className="fixed right-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] z-40 md:hidden flex h-14 w-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-[0_6px_20px_rgba(59,130,246,0.5)] border border-white/20 active:scale-95 transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      className="fixed right-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] z-40 md:hidden flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-lg shadow-accent/40 border border-white/20 active:scale-95 transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-accent"
     >
       <ShoppingCart className="w-6 h-6" />
       {cartCount > 0 && (

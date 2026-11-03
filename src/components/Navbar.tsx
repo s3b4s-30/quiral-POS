@@ -43,14 +43,14 @@ export default function Navbar({
               type="button"
               aria-current={isActive ? "page" : undefined}
               onClick={() => onTabChange(id)}
-              className={`relative flex min-h-[50px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1.5 text-xs font-semibold transition-colors duration-75 active:scale-95 ${
+              className={`relative flex min-h-[50px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1.5 text-xs font-semibold transition-colors duration-200 active:scale-95 ${
                 isActive
-                  ? "bg-[#007aff] text-white shadow-sm dark:bg-[var(--bg-elevated)] dark:text-[#0a84ff] dark:border dark:border-blue-500/30 dark:shadow-md"
+                  ? "bg-accent text-white shadow-sm dark:bg-[var(--bg-elevated)] dark:text-accent dark:border dark:border-accent/30 dark:shadow-md"
                   : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
-              <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className="transition-colors duration-75" />
-              <span className="text-[11px] leading-tight tracking-tight transition-colors duration-75">{label}</span>
+              <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className="transition-colors duration-200" />
+              <span className="text-[11px] leading-tight tracking-tight transition-colors duration-200">{label}</span>
               {id === "sell" && cartCount > 0 && (
                 <span className="tabular-nums absolute -top-1 right-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#ff3b30] px-1 text-[10px] font-bold text-white shadow-sm ring-2 ring-white/30 dark:ring-[var(--bg-elevated)]">
                   {cartCount}

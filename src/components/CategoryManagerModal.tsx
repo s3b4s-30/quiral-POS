@@ -280,7 +280,7 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
           <button
             type="button"
             onClick={handleSaveAndClose}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#007aff] text-sm sm:text-base font-bold text-white shadow-lg active:scale-[0.98] transition-transform duration-75"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent hover:bg-accent-hover text-sm sm:text-base font-bold text-white shadow-lg active:scale-[0.98] transition-all duration-200"
           >
             <Check size={18} />
             <span>Confirmar y guardar orden</span>
@@ -347,13 +347,13 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
               onChange={(e) => setNewCategoryName(e.target.value)}
               placeholder="Nueva categoría (ej. Relojes, Baterías Portátiles)..."
               aria-label="Nombre de nueva categoría"
-              className="flex-1 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-[#007aff]"
+              className="flex-1 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[var(--text-primary)] dark:text-zinc-100 placeholder:text-[var(--text-secondary)] dark:placeholder:text-zinc-500 outline-none focus:border-accent transition-colors"
             />
             <button
               type="submit"
               disabled={!newCategoryName.trim()}
               aria-label="Añadir categoría personalizada"
-              className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl bg-[#007aff] px-3.5 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-transform disabled:opacity-40 shrink-0"
+              className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-all duration-200 disabled:opacity-40 shrink-0"
             >
               <Plus size={16} />
               <span>Crear</span>
@@ -369,7 +369,7 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
               <button
                 type="button"
                 onClick={() => setIsAttributeModalOpen(true)}
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-accent hover:underline transition-colors duration-200"
               >
                 <Sliders size={12} />
                 <span>Banco de atributos</span>
@@ -377,13 +377,13 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
             </div>
 
             {/* Píldora Fija "Todos" */}
-            <div className="flex items-center justify-between rounded-2xl border border-[#007aff]/30 bg-[#007aff]/10 dark:bg-[#007aff]/15 px-3.5 py-2.5">
+            <div className="flex items-center justify-between rounded-2xl border border-accent/30 bg-accent-subtle px-3.5 py-2.5 transition-colors duration-200">
               <div className="flex items-center gap-2.5">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#007aff] text-white">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-white transition-colors duration-200">
                   <Lock size={12} />
                 </span>
                 <div>
-                  <p className="text-xs sm:text-sm font-extrabold text-[#007aff] dark:text-[#0a84ff]">
+                  <p className="text-xs sm:text-sm font-extrabold text-accent transition-colors duration-200">
                     Todos
                   </p>
                   <p className="text-[10px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
@@ -391,7 +391,7 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
                   </p>
                 </div>
               </div>
-              <span className="rounded-full bg-[#007aff]/20 px-2.5 py-0.5 text-[10px] font-bold text-[#007aff] dark:text-[#0a84ff]">
+              <span className="rounded-full bg-accent-subtle px-2.5 py-0.5 text-[10px] font-bold text-accent transition-colors duration-200">
                 Posición #1
               </span>
             </div>
@@ -460,7 +460,7 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
                     }}
                     className={`rounded-2xl border px-3 py-2.5 transition-all select-none ${
                       isTouchDragging || isDraggedOver
-                        ? "border-[#007aff] bg-[#007aff]/15 dark:bg-[#007aff]/20 scale-[1.01] shadow-md z-10"
+                        ? "border-accent bg-accent-subtle scale-[1.01] shadow-md z-10"
                         : "border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900/90"
                     }`}
                   >
@@ -497,7 +497,7 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
                             setIsAttributeModalOpen(true);
                           }}
                           aria-label={`Ordenar atributos de ${catName}`}
-                          className="mt-0.5 block max-w-full truncate text-left text-[10px] font-medium text-[var(--text-secondary)] dark:text-zinc-400 hover:text-[#007aff] dark:hover:text-[#0a84ff]"
+                          className="mt-0.5 block max-w-full truncate text-left text-[10px] font-medium text-[var(--text-secondary)] dark:text-zinc-400 hover:text-accent transition-colors duration-200"
                         >
                           {attrLabels ? `Atributos: ${attrLabels}` : "Configurar atributos"}
                         </button>
@@ -564,9 +564,9 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
                                 onClick={() =>
                                   handleToggleCategoryAttributeOrder(catName, attr.key)
                                 }
-                                className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors ${
+                                className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors duration-200 ${
                                   isSelected
-                                    ? "bg-[#007aff] text-white shadow-sm"
+                                    ? "bg-accent text-white shadow-sm"
                                     : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)] dark:bg-zinc-950 text-[var(--text-secondary)] dark:text-zinc-400"
                                 }`}
                               >
@@ -623,7 +623,7 @@ export default function CategoryManagerModal({ onClose }: CategoryManagerModalPr
                       onClick={() => handleRestoreDefaultCategory(baseCat)}
                       aria-label={`Recuperar categoría ${baseCat}`}
                       title={`Volver a agregar ${baseCat} a la barra activa`}
-                      className="inline-flex items-center gap-1 rounded-full border border-[#007aff]/50 bg-[#007aff]/15 px-2.5 py-1 text-[11px] font-bold text-[#007aff] dark:text-[#0a84ff] hover:bg-[#007aff] hover:text-white active:scale-95 transition-all"
+                      className="inline-flex items-center gap-1 rounded-full border border-accent/50 bg-accent-subtle px-2.5 py-1 text-[11px] font-bold text-accent hover:bg-accent hover:text-white active:scale-95 transition-all duration-200"
                     >
                       <Plus size={12} strokeWidth={2.5} />
                       <span>{baseCat}</span>

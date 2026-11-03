@@ -214,7 +214,7 @@ export default function ModalSheet({
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-black/5 text-[#007aff] transition-colors duration-75 hover:bg-black/10 dark:bg-white/10 dark:text-[#0a84ff]"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-black/5 text-accent transition-colors duration-200 hover:bg-black/10 dark:bg-white/10"
                 aria-label="Cerrar modal"
               >
                 <ChevronLeft size={22} />

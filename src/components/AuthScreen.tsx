@@ -178,7 +178,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
       <div className="w-full max-w-md rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-6 sm:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto">
         {/* Cabecera / Marca Quiral */}
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#007aff] text-white shadow-lg shadow-blue-500/30">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-white shadow-lg shadow-accent/30 transition-colors duration-200">
             <Store size={28} />
           </div>
           <h1 className="mt-3 text-2xl font-black tracking-tight text-[var(--text-primary)]">
@@ -225,7 +225,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="ej. demo o correo@tienda.com"
-                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-4 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors"
+                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-4 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
                 />
               </div>
             </div>
@@ -242,7 +242,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                     setSuccessMessage(null);
                     setMode("forgot");
                   }}
-                  className="text-xs font-semibold text-[#007aff] dark:text-[#0a84ff] hover:underline"
+                  className="text-xs font-semibold text-accent hover:underline transition-colors duration-200"
                 >
                   ¿Olvidaste tu clave?
                 </button>
@@ -257,7 +257,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-10 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors"
+                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-10 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
                 />
                 <button
                   type="button"
@@ -274,7 +274,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 flex items-center justify-center gap-2 rounded-2xl bg-[#007aff] hover:bg-[#006ee6] py-3.5 text-sm font-bold text-white shadow-[0_4px_14px_rgba(0,122,255,0.4)] active:scale-[0.99] transition-transform disabled:opacity-50 disabled:pointer-events-none"
+              className="w-full mt-2 flex items-center justify-center gap-2 rounded-2xl bg-accent hover:bg-accent-hover py-3.5 text-sm font-bold text-white shadow-md active:scale-[0.99] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none"
             >
               <LogIn size={18} />
               <span>{loading ? "Iniciando sesión..." : "Iniciar Sesión"}</span>
@@ -304,7 +304,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   setSuccessMessage(null);
                   setMode("register");
                 }}
-                className="text-xs font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
+                className="text-xs font-bold text-accent hover:underline transition-colors duration-200"
               >
                 Crear tienda
               </button>
@@ -340,7 +340,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="propietario@tienda.com"
-                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-4 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors"
+                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-4 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
                 />
               </div>
             </div>
@@ -373,7 +373,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                     setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, ""))
                   }
                   placeholder="ej. juan_pos"
-                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-4 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors"
+                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-4 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
                 />
               </div>
             </div>
@@ -406,7 +406,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   value={registerPassword}
                   onChange={(e) => setRegisterPassword(e.target.value)}
                   placeholder="Mínimo 8 caracteres seguros"
-                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-10 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors"
+                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-10 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
                 />
                 <button
                   type="button"
@@ -544,7 +544,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Repite la contraseña exacta"
-                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-10 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors"
+                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-10 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
                 />
                 <button
                   type="button"
@@ -567,7 +567,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 <button
                   type="button"
                   onClick={() => setIsJoiningStore(!isJoiningStore)}
-                  className="text-xs font-semibold text-[#007aff] dark:text-[#0a84ff] hover:underline"
+                  className="text-xs font-semibold text-accent hover:underline transition-colors duration-200"
                 >
                   {isJoiningStore ? "Crear nueva tienda" : "Unirse a tienda existente"}
                 </button>
@@ -579,7 +579,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   value={storeIdToJoin}
                   onChange={(e) => setStoreIdToJoin(e.target.value)}
                   placeholder="Pega el UUID de la tienda"
-                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors"
+                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
                 />
               ) : (
                 <input
@@ -587,7 +587,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
                   placeholder="ej. Apple Store Medellín"
-                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors"
+                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
                 />
               )}
             </div>
@@ -595,7 +595,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             <button
               type="submit"
               disabled={loading || !isRegisterFormValid}
-              className="w-full mt-2 flex items-center justify-center gap-2 rounded-2xl bg-[#007aff] hover:bg-[#006ee6] py-3.5 text-sm font-bold text-white shadow-[0_4px_14px_rgba(0,122,255,0.4)] active:scale-[0.99] transition-transform disabled:opacity-50 disabled:pointer-events-none"
+              className="w-full mt-2 flex items-center justify-center gap-2 rounded-2xl bg-accent hover:bg-accent-hover py-3.5 text-sm font-bold text-white shadow-md active:scale-[0.99] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none"
             >
               <UserPlus size={18} />
               <span>
@@ -616,7 +616,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   setSuccessMessage(null);
                   setMode("login");
                 }}
-                className="text-xs font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
+                className="text-xs font-bold text-accent hover:underline transition-colors duration-200"
               >
                 Iniciar sesión
               </button>
@@ -641,7 +641,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="correo@tienda.com"
-                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-4 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[#007aff] transition-colors"
+                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-4 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
                 />
               </div>
             </div>
@@ -649,7 +649,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 flex items-center justify-center gap-2 rounded-2xl bg-[#007aff] hover:bg-[#006ee6] py-3.5 text-sm font-bold text-white shadow-[0_4px_14px_rgba(0,122,255,0.4)] active:scale-[0.99] transition-transform disabled:opacity-50 disabled:pointer-events-none"
+              className="w-full mt-2 flex items-center justify-center gap-2 rounded-2xl bg-accent hover:bg-accent-hover py-3.5 text-sm font-bold text-white shadow-md active:scale-[0.99] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none"
             >
               <span>{loading ? "Enviando..." : "Enviar Enlace de Recuperación"}</span>
             </button>
@@ -662,7 +662,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   setSuccessMessage(null);
                   setMode("login");
                 }}
-                className="text-xs font-bold text-[#007aff] dark:text-[#0a84ff] hover:underline"
+                className="text-xs font-bold text-accent hover:underline transition-colors duration-200"
               >
                 Volver a Iniciar sesión
               </button>

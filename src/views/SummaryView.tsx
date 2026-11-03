@@ -135,7 +135,7 @@ export default function SummaryView({ onModalStateChange }: SummaryViewProps) {
             className="w-full rounded-2xl p-4 bg-[var(--bg-elevated)] border border-[var(--border-color)] shadow-sm flex items-center justify-between active:scale-[0.99] transition-transform text-left cursor-pointer select-none"
           >
             <div className="flex items-center gap-3 min-w-0 pr-2">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-subtle text-accent transition-colors duration-200">
                 <BarChart2 size={20} />
               </div>
               <div className="min-w-0">

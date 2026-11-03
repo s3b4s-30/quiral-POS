@@ -112,7 +112,7 @@ export default function ProductDetailModal({
             <button
               type="button"
               onClick={handleSavePrice}
-              className="flex min-h-11 w-full items-center justify-center rounded-2xl bg-[#007aff] text-sm font-bold text-white shadow-lg transition-transform active:scale-[0.98] hover:opacity-95"
+              className="flex min-h-11 w-full items-center justify-center rounded-2xl bg-accent text-sm font-bold text-white shadow-lg transition-all duration-200 active:scale-[0.98] hover:bg-accent-hover"
             >
               Guardar nuevo precio ({formatCOP(currentNumericPrice)})
             </button>
@@ -134,7 +134,7 @@ export default function ProductDetailModal({
           <h1 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)] transition-colors duration-75">
             {currentProduct.name}
           </h1>
-          <p className="mt-1 text-sm font-semibold text-[#007aff] dark:text-[#0a84ff] transition-colors duration-75">
+          <p className="mt-1 text-sm font-semibold text-accent transition-colors duration-200">
             {currentProduct.category}
           </p>
         </div>
@@ -182,10 +182,10 @@ export default function ProductDetailModal({
               const val = parseCOPInput(e.target.value);
               setPriceInput(val > 0 ? formatCOP(val) : "");
             }}
-            className="tabular-nums w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-4 py-3 text-lg font-bold text-[var(--text-primary)] outline-none focus:border-[#007aff]"
+            className="tabular-nums w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-4 py-3 text-lg font-bold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
           />
           {isPriceModified && (
-            <p className="text-xs font-semibold text-[#007aff] dark:text-[#0a84ff]">
+            <p className="text-xs font-semibold text-accent transition-colors duration-200">
               Presiona «Guardar nuevo precio» en la barra inferior para aplicar el cambio.
             </p>
           )}
@@ -212,7 +212,7 @@ export default function ProductDetailModal({
             <button
               type="button"
               onClick={() => setIsAddingBatch((prev) => !prev)}
-              className="text-xs font-bold text-[#007aff] hover:underline dark:text-[#0a84ff]"
+              className="text-xs font-bold text-accent hover:underline transition-colors duration-200"
             >
               {isAddingBatch ? "Cerrar" : "+ Nuevo lote"}
             </button>
@@ -222,10 +222,10 @@ export default function ProductDetailModal({
           {isAddingBatch && (
             <form
               onSubmit={handleCreateBatch}
-              className="rounded-2xl border border-[#007aff]/30 bg-[#007aff]/5 p-3.5 space-y-3 animate-in fade-in duration-150"
+              className="rounded-2xl border border-accent/30 bg-accent-subtle p-3.5 space-y-3 animate-in fade-in duration-150"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#007aff] dark:text-[#0a84ff]">
+                <span className="text-xs font-bold text-accent transition-colors duration-200">
                   Agregar Lote a este Producto
                 </span>
                 <button
@@ -273,7 +273,7 @@ export default function ProductDetailModal({
 
               <button
                 type="submit"
-                className="flex min-h-10 w-full items-center justify-center rounded-xl bg-[#007aff] text-xs font-bold text-white shadow-sm"
+                className="flex min-h-10 w-full items-center justify-center rounded-xl bg-accent hover:bg-accent-hover text-xs font-bold text-white shadow-sm transition-all duration-200"
               >
                 Agregar Lote
               </button>

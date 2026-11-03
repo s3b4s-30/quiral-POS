@@ -247,7 +247,7 @@ export default function CycleClosingModal({
         <button
           type="button"
           onClick={handleConfirm}
-          className="w-full rounded-2xl bg-[#007aff] hover:bg-[#006ee6] py-3.5 text-base font-semibold text-white shadow-[0_4px_14px_rgba(0,122,255,0.4)] active:scale-[0.99] transition-transform select-none"
+          className="w-full rounded-2xl bg-accent hover:bg-accent-hover py-3.5 text-base font-semibold text-white shadow-md active:scale-[0.99] transition-all duration-200 select-none"
         >
           Confirmar Cierre de Ciclo
         </button>
@@ -266,9 +266,9 @@ export default function CycleClosingModal({
                 setCalendarMonth(new Date(startDate));
                 setActiveDateField(activeDateField === "start" ? null : "start");
               }}
-              className={`w-full rounded-2xl border p-3 text-left transition-colors duration-75 select-none ${
+              className={`w-full rounded-2xl border p-3 text-left transition-colors duration-200 select-none ${
                 activeDateField === "start"
-                  ? "border-[#007aff] bg-[#007aff]/10 text-[#007aff] dark:text-[#0a84ff]"
+                  ? "border-accent bg-accent-subtle text-accent"
                   : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)]"
               }`}
             >
@@ -288,9 +288,9 @@ export default function CycleClosingModal({
                 setCalendarMonth(new Date(endDate));
                 setActiveDateField(activeDateField === "end" ? null : "end");
               }}
-              className={`w-full rounded-2xl border p-3 text-left transition-colors duration-75 select-none ${
+              className={`w-full rounded-2xl border p-3 text-left transition-colors duration-200 select-none ${
                 activeDateField === "end"
-                  ? "border-[#007aff] bg-[#007aff]/10 text-[#007aff] dark:text-[#0a84ff]"
+                  ? "border-accent bg-accent-subtle text-accent"
                   : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)]"
               }`}
             >
@@ -355,7 +355,7 @@ export default function CycleClosingModal({
                     onClick={() => handleDaySelect(dayNum)}
                     className={`h-8 w-8 mx-auto flex items-center justify-center rounded-full text-xs font-semibold transition-transform active:scale-90 ${
                       isSelected
-                        ? "bg-[#007aff] text-white font-bold shadow-sm"
+                        ? "bg-accent text-white font-bold shadow-sm"
                         : "text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10"
                     }`}
                   >
@@ -400,7 +400,7 @@ export default function CycleClosingModal({
                 type="button"
                 onClick={() => setActiveDateField(null)}
                 aria-label="Confirmar fecha"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#007aff] text-white shadow-sm active:scale-95"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white shadow-sm active:scale-95 transition-colors duration-200"
               >
                 <Check size={16} />
               </button>
@@ -419,8 +419,8 @@ export default function CycleClosingModal({
           role="switch"
           aria-checked={withTime}
           onClick={() => setWithTime((prev) => !prev)}
-          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-150 active:scale-95 ${
-            withTime ? "bg-[#007aff]" : "bg-neutral-300 dark:bg-neutral-700"
+          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 active:scale-95 ${
+            withTime ? "bg-accent" : "bg-neutral-300 dark:bg-neutral-700"
           }`}
         >
           <span
@@ -464,7 +464,7 @@ export default function CycleClosingModal({
             value={rawCash ? formatCOP(Number(rawCash)) : ""}
             onChange={handleCashChange}
             placeholder={formatCOP(rangeStats.sold)}
-            className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 py-3 text-base font-bold text-[var(--text-primary)] outline-none focus:border-[#007aff] tabular-nums shadow-sm"
+            className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 py-3 text-base font-bold text-[var(--text-primary)] outline-none focus:border-accent tabular-nums shadow-sm transition-colors"
           />
         </div>
 
@@ -477,7 +477,7 @@ export default function CycleClosingModal({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Opcional..."
-            className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 py-3 text-sm font-medium text-[var(--text-primary)] outline-none focus:border-[#007aff] shadow-sm"
+            className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 py-3 text-sm font-medium text-[var(--text-primary)] outline-none focus:border-accent shadow-sm transition-colors"
           />
         </div>
       </section>
