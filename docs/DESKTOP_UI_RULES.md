@@ -202,7 +202,7 @@ Para potenciar la auditoría y diseño con los paquetes upstream oficiales recom
 1. **[`design-taste-frontend`](../.agents/skills/design-taste-frontend/SKILL.md) (`tasteskill/tasteskill`):** Marco Anti-Slop de ingeniería frontend y dirección de arte adaptable a Quiral POS.
 2. **[`web-design-guidelines`](../.agents/skills/web-design-guidelines/SKILL.md) (`tech-leads-club/agent-skills`):** Guías oficiales de Vercel para auditoría a11y, focus states, formularios y tipografía.
 3. **[`awesome-design-skills`](../.agents/skills/awesome-design-skills/SKILL.md) (`bergside/awesome-design-skills`):** 67 sistemas de diseño oficiales (Premium, Sleek, Enterprise, Bento, Shadcn) adaptados a la paleta Dual OLED.
-4. **[`playwright-skill`](../.agents/skills/playwright-skill/SKILL.md) y Servidor MCP Playwright (`@playwright/mcp`):** Configurado en `~/.gemini/config/mcp_config.json` para automatización browser en modo aislado (`--isolated`).
+4. **[`playwright-cli`](../.agents/skills/playwright-cli/SKILL.md) y Servidor MCP Playwright (`@playwright/mcp`):** Configurado para automatización browser en modo aislado (`--isolated`) y suite E2E de 52 pruebas.
 
 ---
 

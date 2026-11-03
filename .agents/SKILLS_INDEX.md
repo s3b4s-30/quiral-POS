@@ -18,40 +18,42 @@
 
 ---
 
-## 1. Visión General del Ecosistema
+## 1. Visión General del Ecosistema Consolidado
 
-El directorio `.agents/skills/` aloja las capacidades modulares que extienden el comportamiento de los agentes de IA dentro de Quiral POS:
+El directorio `.agents/skills/` aloja las 16 capacidades de élite optimizadas que extienden el comportamiento de los agentes de IA dentro de Quiral POS, liberando tokens y previniendo exclusiones de contexto en Antigravity:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                   ECOSISTEMA DE SKILLS — QUIRAL POS                    │
+│             ECOSISTEMA DE SKILLS CONSOLIDADO — QUIRAL POS              │
 ├────────────────────────────────────────────────────────────────────────┤
 │ TIER 1: NÚCLEO ARQUITECTÓNICO QUIRAL (Específico del Proyecto)         │
 │  1. quiral-ui-hig       -> Apple HIG, Dual OLED, Inmunidad iOS SafeArea│
-│  2. quiral-pos-engine   -> Inventario Multi-Lote, CRUD Ventas, Supabase│
-│  3. ui-ux-modern-taste  -> Alta Densidad SaaS Desktop, Nitidez & Scroll │
-│  4. google-stitch       -> Conexión MCP y Pipeline Google Stitch       │
-│  5. stitch-design       -> Traducción Visual Stitch -> Tailwind OLED   │
+│  2. quiral-pos-engine   -> Supabase PostgreSQL Best Practices, RLS,    │
+│                            Offline-First (TanStack Query + Dexie),     │
+│                            Inventario Multi-Lote, RPC Atómico Ventas   │
+│  3. ui-ux-modern-taste  -> Alta Densidad SaaS Desktop (Linear/Vercel), │
+│                            Principios Anti-Slop (Anti-IA Genérica),    │
+│                            Nitidez HD y Scrollbars Sleek               │
+│  4. google-stitch       -> Conexión MCP y Traducción Visual Stitch a   │
+│                            Tailwind Dual OLED (Consolida stitch-design)│
 ├────────────────────────────────────────────────────────────────────────┤
-│ TIER 2: INTELIGENCIA TRANSVERSAL, CRAFT Y TESTING RIGUROSO             │
-│  6. image-to-code       -> Visión de Mostrador -> React 18 + Tailwind  │
-│  7. playwright-cli      -> Automatización E2E (Chromium & Mobile Safari)│
-│  8. impeccable          -> Craft UI/UX, Auditoría Automática y Hooks   │
-│  9. ui-ux-pro-max       -> Inteligencia de Diseño UI/UX Multidisciplina│
-│ 10. ui-styling          -> shadcn/ui, Radix UI & Primitivas Tailwind   │
-│ 11. security-audit      -> Auditoría de Vulnerabilidades y RLS Supabase│
-│ 12. design-system       -> Arquitectura de Tokens en 3 Capas           │
-│ 13. design              -> Hub Integral de Diseño, CIP, Logo e Iconos  │
-│ 14. brand               -> Identidad de Marca, Voz y Directrices       │
-│ 15. banner-design       -> Banners y Creativos Multiformato            │
-│ 16. slides              -> Presentaciones HTML Estratégicas (Chart.js) │
+│ TIER 2: INTELIGENCIA TRANSVERSAL, CRAFT UI/UX Y TESTING RIGUROSO       │
+│  5. image-to-code       -> Visión de Mostrador / Diseños -> React + TS │
+│  6. playwright-cli      -> Automatización E2E (Chromium & Mobile Safari)│
+│  7. impeccable          -> Dirección de Craft UI/UX, Heurísticas y     │
+│                            Refinamiento Profesional de Interfaces      │
+│  8. ui-ux-pro-max       -> Inteligencia de Diseño UI/UX Multidisciplina│
+│  9. ui-styling          -> shadcn/ui, Radix UI & Primitivas Tailwind   │
+│ 10. security-audit      -> Pentesting, OWASP, Auditoría de RLS y Auth  │
+│ 11. design-system       -> Arquitectura de Tokens en 3 Capas           │
+│ 12. design              -> Hub Integral de Diseño, CIP, Logo e Iconos  │
+│ 13. brand               -> Identidad de Marca, Voz y Directrices       │
 ├────────────────────────────────────────────────────────────────────────┤
-│ TIER 3: HABILIDADES OFICIALES ORIGINALES UPSTREAM (Adaptadas a Quiral) │
-│ 17. design-taste-frontend -> tasteskill/tasteskill (Anti-Slop V2)      │
-│ 18. web-design-guidelines -> tech-leads-club/agent-skills (Vercel A11y)│
-│ 19. awesome-design-skills -> bergside/awesome-design-skills (67 Styles)│
-│ 20. playwright-skill      -> tech-leads-club/agent-skills (Auto-Runner)│
-│ 21. @playwright/mcp       -> Servidor MCP Playwright Oficial Microsoft │
+│ TIER 3: HABILIDADES OFICIALES UPSTREAM Y CATÁLOGO CURADO               │
+│ 14. design-taste-frontend -> tasteskill/tasteskill (Anti-Slop V2)      │
+│ 15. web-design-guidelines -> tech-leads-club/agent-skills (Vercel A11y)│
+│ 16. awesome-design-skills -> bergside/awesome-design-skills (Catálogo  │
+│                              Maestro de 67 Estilos en skills/<estilo>/)│
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -72,10 +74,13 @@ El directorio `.agents/skills/` aloja las capacidades modulares que extienden el
 
 ### Protocolo 2: Modificación de Inventario, Carrito, Historial o Supabase
 
-1. **Activar:** [`quiral-pos-engine`](./skills/quiral-pos-engine/SKILL.md).
+1. **Activar:** [`quiral-pos-engine`](./skills/quiral-pos-engine/SKILL.md) y plugin de Supabase.
 2. **Consultar:** [`QUIRAL_V1.0.1_DOCS.md`](../QUIRAL_V1.0.1_DOCS.md).
 3. **Aplicar Estándares:**
    - Candado sincrónico `saleInFlightRef` y `deduplicateSales` en ventas.
+   - Políticas RLS con `TO authenticated` + predicado `is_store_member(store_id)` y `WITH CHECK`.
+   - Vistas PostgreSQL seguras con `WITH (security_invoker = true)`.
+   - Persistencia local offline en Dexie.js y sincronización automática vía TanStack Query.
    - Modal de Confirmación obligatorio antes de eliminar (`deleteSale`) o modificar (`updateSale`) ventas en `HistoryView.tsx`.
    - Distribución determinista de lotes y formateo estricto con `formatCOP` y `.tabular-nums`.
 4. **Validar:** `npx tsc --noEmit`, `npm run test:unit` y `npm run build`.
@@ -87,6 +92,7 @@ El directorio `.agents/skills/` aloja las capacidades modulares que extienden el
 3. **Aplicar Estándares:**
    - Desacoplamiento físico estricto mediante `useIsDesktop.ts` (`*Mobile.tsx` vs `*Desktop.tsx`).
    - Lista negra en PC: prohibido importar `ModalSheet`, `CheckoutSheet`, `CartSummaryBar` o `FloatingCartFAB` en archivos `*Desktop.tsx`.
+   - Principios Anti-Slop: cero clichés de IA genérica, tipografía nítida `.antialiased-hd`, alto contraste sin aberración cromática.
    - Implementar experiencia Keyboard-First tipo Excel en `DesktopInventoryGrid.tsx` y tabla de auditoría en `HistoryViewDesktop.tsx`.
    - Cero doble-scroll (`flex-1 min-h-0 overflow-y-auto`), scrollbars minimalistas `.custom-scrollbar` y ancho de columnas estricto (`table-fixed`).
    - Vistas administrativas completas (`DesktopStoreProfileView`, `DesktopSuppliersView`, `DesktopAttributeConfigView`).
@@ -94,7 +100,7 @@ El directorio `.agents/skills/` aloja las capacidades modulares que extienden el
 
 ### Protocolo 4: Traducción de Diseños y Capturas Visuales a Código
 
-1. **Activar:** [`image-to-code`](./skills/image-to-code/SKILL.md) (versión upstream `tasteskill/tasteskill`), [`ui-ux-modern-taste`](./skills/ui-ux-modern-taste/SKILL.md) y [`awesome-design-skills`](./skills/awesome-design-skills/SKILL.md).
+1. **Activar:** [`image-to-code`](./skills/image-to-code/SKILL.md), [`ui-ux-modern-taste`](./skills/ui-ux-modern-taste/SKILL.md) y [`awesome-design-skills`](./skills/awesome-design-skills/SKILL.md).
 2. **Consultar:** [`DESIGN_GUIDELINES.md`](../DESIGN_GUIDELINES.md) y [`docs/DESKTOP_UI_RULES.md`](../docs/DESKTOP_UI_RULES.md).
 3. **Aplicar Estándares:**
    - Pipeline de 5 fases: descomposición, tokens Dual OLED, Platform Split, maquetación React 18 + TS, y verificación Exit 0.
@@ -103,7 +109,7 @@ El directorio `.agents/skills/` aloja las capacidades modulares que extienden el
 
 ### Protocolo 5: Automatización, Diagnóstico y Ejecución E2E
 
-1. **Activar:** [`playwright-cli`](./skills/playwright-cli/SKILL.md) o [`playwright-skill`](./skills/playwright-skill/SKILL.md) junto con el servidor MCP `@playwright/mcp`.
+1. **Activar:** [`playwright-cli`](./skills/playwright-cli/SKILL.md).
 2. **Consultar:** [`playwright.config.ts`](../playwright.config.ts) y [`AGENTS.md`](../AGENTS.md).
 3. **Aplicar Estándares:**
    - Ejecución autónoma con `npx playwright test` (52/52 tests pasando en Chromium y Mobile Safari).
