@@ -15,7 +15,7 @@
     "prepare": "husky || true"
   },
   "lint-staged": {
-    "{src,tests,docs}/**/*.{ts,tsx,json,css,md}": [
+    "{src,tests,docs,notebook}/**/*.{ts,tsx,json,css,md}": [
       "prettier --write"
     ],
     "./*.{json,css,md,ts}": [
