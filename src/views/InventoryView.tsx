@@ -1,15 +1,30 @@
-import { ChevronDown, Filter, Search, SlidersHorizontal, X } from "lucide-react";
+import {
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Filter,
+  LayoutGrid,
+  Search,
+  Sliders,
+  SlidersHorizontal,
+  Sparkles,
+  Table2,
+  X,
+} from "lucide-react";
 import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import AdvancedFiltersModal, {
   AdvancedFilterValues,
   DEFAULT_ADVANCED_FILTERS,
   InventoryPageSize,
 } from "../components/AdvancedFiltersModal";
+import AttributeConfigModal from "../components/AttributeConfigModal";
 import CategoryManagerModal from "../components/CategoryManagerModal";
+import DesktopInventoryGrid from "../components/DesktopInventoryGrid";
+import DesktopProductDrawer from "../components/DesktopProductDrawer";
 import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
 import ProductCard from "../components/ProductCard";
 import { useInventory } from "../context/InventoryContext";
-import { ProductCategory } from "../types/domain";
+import { Product, ProductCategory } from "../types/domain";
 import { isSameCatalogText } from "../utils/catalogConfig";
 import { formatCOP, parseCOPInput } from "../utils/formatters";
 
@@ -17,6 +32,14 @@ interface InventoryViewProps {
   onOpenSuppliers: () => void;
   onFilterModalStateChange?: (isOpen: boolean) => void;
 }
+
+const DESKTOP_PAGE_SIZES: Array<{ value: InventoryPageSize; label: string }> = [
+  { value: 10, label: "10" },
+  { value: 20, label: "20" },
+  { value: 50, label: "50" },
+  { value: 100, label: "100" },
+  { value: "all", label: "Todos" },
+];
 
 export default function InventoryView({
   onOpenSuppliers: _onOpenSuppliers,
@@ -26,6 +49,7 @@ export default function InventoryView({
     products,
     getSupplier,
     showCosts,
+    setShowCosts,
     setSelectedProduct,
     loading,
     catalogConfig,
@@ -41,6 +65,28 @@ export default function InventoryView({
   );
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isAttributeModalOpen, setIsAttributeModalOpen] = useState(false);
+
+  // Estados exclusivos de la Estación de Trabajo de Escritorio (Data Grid / Excel)
+  const [isDesktopViewport, setIsDesktopViewport] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 768 : false
+  );
+  const [desktopViewMode, setDesktopViewMode] = useState<"table" | "cards">("table");
+  const [quickCountMode, setQuickCountMode] = useState(false);
+  const [inspectedProduct, setInspectedProduct] = useState<Product | null>(null);
+
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const focusQuickAddRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 768px)");
+    const handleViewportChange = (e: MediaQueryListEvent) => {
+      setIsDesktopViewport(e.matches);
+    };
+    setIsDesktopViewport(mql.matches);
+    mql.addEventListener("change", handleViewportChange);
+    return () => mql.removeEventListener("change", handleViewportChange);
+  }, []);
 
   // Paginación controlada: por defecto estrictamente 10 productos para carga instantánea en móvil (iPhone)
   const [pageSize, setPageSize] = useState<InventoryPageSize>(10);
@@ -52,13 +98,67 @@ export default function InventoryView({
 
   const handleOpenFilterModal = (open: boolean) => {
     setIsFilterModalOpen(open);
-    onFilterModalStateChange?.(open || isCategoryModalOpen);
+    onFilterModalStateChange?.(open || isCategoryModalOpen || isAttributeModalOpen);
   };
 
   const handleOpenCategoryModal = (open: boolean) => {
     setIsCategoryModalOpen(open);
-    onFilterModalStateChange?.(open || isFilterModalOpen);
+    onFilterModalStateChange?.(open || isFilterModalOpen || isAttributeModalOpen);
   };
+
+  const handleOpenAttributeModal = (open: boolean) => {
+    setIsAttributeModalOpen(open);
+    onFilterModalStateChange?.(open || isFilterModalOpen || isCategoryModalOpen);
+  };
+
+  // Atajos Globales de Teclado en Escritorio (Ctrl+F / '/', Ctrl+N, Alt+M)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (window.innerWidth < 768) return;
+      const target = e.target as HTMLElement | null;
+      const isInputFocused =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable);
+
+      // Ctrl + F o '/' para enfocar el buscador principal
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+        return;
+      }
+
+      if (e.key === "/" && !isInputFocused && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+        return;
+      }
+
+      // Ctrl + N o Alt + N para enfocar la fila de Creación Rápida en Línea
+      if ((e.ctrlKey || e.altKey) && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        setDesktopViewMode("table");
+        requestAnimationFrame(() => {
+          focusQuickAddRef.current?.();
+        });
+        return;
+      }
+
+      // Alt + M para alternar el Modo Conteo Rápido tipo Excel
+      if (e.altKey && e.key.toLowerCase() === "m") {
+        e.preventDefault();
+        setDesktopViewMode("table");
+        setQuickCountMode((prev) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
 
   const clearLongPressTimer = () => {
     if (longPressTimerRef.current) {
@@ -309,7 +409,7 @@ export default function InventoryView({
   return (
     /* Contenedor Principal: scroll vertical nativo Apple HIG */
     <div id="inventory-scroll" className="quiral-scroll-container transition-colors duration-75">
-      <div className="mx-auto max-w-xl md:max-w-4xl lg:max-w-5xl px-4">
+      <div className="mx-auto max-w-xl md:max-w-6xl lg:max-w-7xl px-4">
         {/* 1. Buscador Instantáneo, Embudo Multifiltro y Categorías Modulares Fijas */}
         <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-3 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
           <div className="flex items-center gap-2 mb-2.5">
@@ -317,6 +417,7 @@ export default function InventoryView({
               <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm transition-colors duration-200 focus-within:border-accent">
                 <Search size={18} className="text-[var(--text-secondary)] shrink-0" />
                 <input
+                  ref={searchInputRef}
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -324,6 +425,11 @@ export default function InventoryView({
                   aria-label="Buscar en catálogo"
                   className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)] transition-colors duration-200"
                 />
+                {!query && (
+                  <kbd className="hidden md:inline-flex items-center gap-0.5 rounded-md border border-[var(--border-color)] bg-[var(--bg-primary)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--text-secondary)] select-none">
+                    / · Ctrl+F
+                  </kbd>
+                )}
                 {query && (
                   <button
                     type="button"
@@ -355,6 +461,153 @@ export default function InventoryView({
                 <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-accent ring-2 ring-[var(--bg-elevated)]" />
               )}
             </button>
+          </div>
+
+          {/* Barra de Herramientas de Alta Productividad (Exclusiva Escritorio >= 768px) */}
+          <div
+            data-testid="desktop-workstation-toolbar"
+            className="hidden md:flex flex-wrap items-center justify-between gap-2 mb-2.5 pb-2 border-b border-[var(--border-color)]/60"
+          >
+            {/* Izquierda: Contador en vivo + Controles de Conteo Rápido, Privacidad, Categorías y Atributos */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                data-testid="desktop-results-counter"
+                className="tabular-nums rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-secondary)]"
+              >
+                Mostrando{" "}
+                <strong className="text-[var(--text-primary)]">
+                  {paginatedProducts.length}
+                </strong>{" "}
+                de{" "}
+                <strong className="text-[var(--text-primary)]">
+                  {filteredProducts.length}
+                </strong>
+              </span>
+
+              {/* Switch Modo Conteo Rápido (Alt + M) */}
+              <button
+                type="button"
+                data-testid="desktop-quick-count-btn"
+                onClick={() => {
+                  setDesktopViewMode("table");
+                  setQuickCountMode((prev) => !prev);
+                }}
+                title="Alternar Modo Conteo Rápido tipo Excel (Alt + M)"
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all duration-150 ${
+                  quickCountMode
+                    ? "border-accent bg-accent text-white shadow-sm"
+                    : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:border-accent/40"
+                }`}
+              >
+                <Sparkles size={14} />
+                <span>Modo Conteo Rápido</span>
+                <kbd
+                  className={`rounded px-1 py-0.5 text-[10px] font-extrabold ${
+                    quickCountMode
+                      ? "bg-white/20 text-white"
+                      : "border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]"
+                  }`}
+                >
+                  Alt+M
+                </kbd>
+              </button>
+
+              {/* Switch Privacidad / Costos (Ojo Abierto / Tachado) */}
+              <button
+                type="button"
+                data-testid="desktop-toggle-costs-btn"
+                onClick={() => setShowCosts((prev) => !prev)}
+                title={
+                  showCosts
+                    ? "Ocultar costos y márgenes (Modo Privacidad)"
+                    : "Revelar costos por mayor y márgenes"
+                }
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all duration-150 ${
+                  showCosts
+                    ? "border-accent/40 bg-accent-subtle text-accent"
+                    : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                {showCosts ? <Eye size={14} /> : <EyeOff size={14} />}
+                <span>{showCosts ? "Costos visibles" : "Costos ocultos"}</span>
+              </button>
+
+              {/* Gestión de Categorías y Atributos */}
+              <button
+                type="button"
+                onClick={() => handleOpenCategoryModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 transition-colors duration-150"
+              >
+                <SlidersHorizontal size={13} className="text-accent" />
+                <span>Categorías</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleOpenAttributeModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 transition-colors duration-150"
+              >
+                <Sliders size={13} className="text-accent" />
+                <span>Atributos</span>
+              </button>
+            </div>
+
+            {/* Derecha: Paginación Densa en Escritorio + Selector de Vista (Tabla Excel / Tarjetas) */}
+            <div className="flex items-center gap-2">
+              <div
+                data-testid="desktop-page-size-bar"
+                className="flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1"
+              >
+                {DESKTOP_PAGE_SIZES.map((item) => {
+                  const active = pageSize === item.value;
+                  return (
+                    <button
+                      key={String(item.value)}
+                      type="button"
+                      onClick={() => handleSelectPageSize(item.value)}
+                      className={`rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums transition-colors duration-150 ${
+                        active
+                          ? "bg-accent text-white shadow-sm"
+                          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1">
+                <button
+                  type="button"
+                  data-testid="desktop-view-table-btn"
+                  onClick={() => setDesktopViewMode("table")}
+                  title="Vista Hoja de Cálculo / Excel (Predeterminada)"
+                  className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-colors duration-150 ${
+                    desktopViewMode === "table"
+                      ? "bg-accent text-white shadow-sm"
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  <Table2 size={13} />
+                  <span>Tabla Excel</span>
+                </button>
+                <button
+                  type="button"
+                  data-testid="desktop-view-cards-btn"
+                  onClick={() => setDesktopViewMode("cards")}
+                  title="Vista Cuadrícula de Tarjetas"
+                  className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-colors duration-150 ${
+                    desktopViewMode === "cards"
+                      ? "bg-accent text-white shadow-sm"
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  <LayoutGrid size={13} />
+                  <span>Tarjetas</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* 2. Chips Horizontales de Selección de Categoría (Soporte Long-Press para Organizar Categorías) */}
@@ -492,83 +745,95 @@ export default function InventoryView({
           </section>
         )}
 
-        {/* 5. Listado Paginado de Tarjetas de Productos + Botón "Ver más productos" */}
+        {/* 5. Contenido Principal: Vista Tabla Excel en Escritorio (>= 768px) o Tarjetas en Móvil (< 768px) */}
         <div className="pb-6 space-y-4">
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {loading ? (
-              Array.from({ length: 6 }).map((_, idx) => (
-                <div
-                  key={`inv-skeleton-${idx}`}
-                  className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-sm animate-pulse flex flex-col justify-between h-40"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="h-4 w-24 rounded-full bg-black/5 dark:bg-white/10" />
-                      <div className="h-5 w-16 rounded-full bg-black/5 dark:bg-white/10" />
+          {isDesktopViewport &&
+          !loading &&
+          filteredProducts.length > 0 &&
+          desktopViewMode === "table" ? (
+            <DesktopInventoryGrid
+              products={paginatedProducts}
+              onInspectProduct={(prod) => setInspectedProduct(prod)}
+              quickCountMode={quickCountMode}
+              focusQuickAddRef={focusQuickAddRef}
+            />
+          ) : (
+            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {loading ? (
+                Array.from({ length: 6 }).map((_, idx) => (
+                  <div
+                    key={`inv-skeleton-${idx}`}
+                    className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-sm animate-pulse flex flex-col justify-between h-40"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="h-4 w-24 rounded-full bg-black/5 dark:bg-white/10" />
+                        <div className="h-5 w-16 rounded-full bg-black/5 dark:bg-white/10" />
+                      </div>
+                      <div className="h-5 w-4/5 rounded-lg bg-black/5 dark:bg-white/10" />
+                      <div className="h-3 w-1/3 rounded bg-black/5 dark:bg-white/10" />
                     </div>
-                    <div className="h-5 w-4/5 rounded-lg bg-black/5 dark:bg-white/10" />
-                    <div className="h-3 w-1/3 rounded bg-black/5 dark:bg-white/10" />
+                    <div className="flex items-center justify-between pt-3 border-t border-[var(--border-color)]">
+                      <div className="h-6 w-28 rounded-lg bg-black/5 dark:bg-white/10" />
+                      <div className="h-7 w-20 rounded-xl bg-black/5 dark:bg-white/10" />
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between pt-3 border-t border-[var(--border-color)]">
-                    <div className="h-6 w-28 rounded-lg bg-black/5 dark:bg-white/10" />
-                    <div className="h-7 w-20 rounded-xl bg-black/5 dark:bg-white/10" />
-                  </div>
-                </div>
-              ))
-            ) : filteredProducts.length === 0 ? (
-              <div className="col-span-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-8 sm:p-10 text-center shadow-sm select-none animate-in fade-in duration-150">
-                <LottiePlayer
-                  animationData={EMPTY_BOX_ANIMATION}
-                  className="w-32 h-32 mx-auto mb-2"
-                  loop={true}
-                />
-                <h4 className="text-base font-bold text-[var(--text-primary)]">
-                  Catálogo sin resultados
-                </h4>
-                <p className="mt-1 text-xs sm:text-sm font-medium text-[var(--text-secondary)] max-w-sm mx-auto">
-                  No se encontraron productos que coincidan con la búsqueda o los filtros activos.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleResetAllFilters}
-                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-all duration-200"
-                >
-                  Restablecer todos los filtros
-                </button>
-              </div>
-            ) : (
-              paginatedProducts.map((product) => {
-                const totalStock = product.batches.reduce((sum, b) => sum + b.stock, 0);
-
-                const supplierColors = new Map(
-                  product.batches.map((b) => [
-                    b.supplierId,
-                    getSupplier(b.supplierId)?.color ?? "#007aff",
-                  ])
-                );
-
-                const totalBatchCost = product.batches.reduce(
-                  (sum, b) => sum + b.cost * b.stock,
-                  0
-                );
-                const avgCost = totalStock > 0 ? Math.round(totalBatchCost / totalStock) : 0;
-                const profitPerUnit = product.price - avgCost;
-
-                return (
-                  <ProductCard
-                    key={product.id}
-                    mode="inventory"
-                    product={product}
-                    onSelectProduct={setSelectedProduct}
-                    supplierColors={supplierColors}
-                    showCosts={showCosts}
-                    avgCost={avgCost}
-                    profitPerUnit={profitPerUnit}
+                ))
+              ) : filteredProducts.length === 0 ? (
+                <div className="col-span-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-8 sm:p-10 text-center shadow-sm select-none animate-in fade-in duration-150">
+                  <LottiePlayer
+                    animationData={EMPTY_BOX_ANIMATION}
+                    className="w-32 h-32 mx-auto mb-2"
+                    loop={true}
                   />
-                );
-              })
-            )}
-          </section>
+                  <h4 className="text-base font-bold text-[var(--text-primary)]">
+                    Catálogo sin resultados
+                  </h4>
+                  <p className="mt-1 text-xs sm:text-sm font-medium text-[var(--text-secondary)] max-w-sm mx-auto">
+                    No se encontraron productos que coincidan con la búsqueda o los filtros activos.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleResetAllFilters}
+                    className="mt-4 inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-sm active:scale-95 transition-all duration-200"
+                  >
+                    Restablecer todos los filtros
+                  </button>
+                </div>
+              ) : (
+                paginatedProducts.map((product) => {
+                  const totalStock = product.batches.reduce((sum, b) => sum + b.stock, 0);
+
+                  const supplierColors = new Map(
+                    product.batches.map((b) => [
+                      b.supplierId,
+                      getSupplier(b.supplierId)?.color ?? "#007aff",
+                    ])
+                  );
+
+                  const totalBatchCost = product.batches.reduce(
+                    (sum, b) => sum + b.cost * b.stock,
+                    0
+                  );
+                  const avgCost = totalStock > 0 ? Math.round(totalBatchCost / totalStock) : 0;
+                  const profitPerUnit = product.price - avgCost;
+
+                  return (
+                    <ProductCard
+                      key={product.id}
+                      mode="inventory"
+                      product={product}
+                      onSelectProduct={setSelectedProduct}
+                      supplierColors={supplierColors}
+                      showCosts={showCosts}
+                      avgCost={avgCost}
+                      profitPerUnit={profitPerUnit}
+                    />
+                  );
+                })
+              )}
+            </section>
+          )}
 
           {/* Botón "Ver más productos" cuando existen más elementos por cargar */}
           {!loading && remainingProductsCount > 0 && pageSize !== "all" && (
@@ -595,6 +860,18 @@ export default function InventoryView({
         </div>
       </div>
 
+      {/* Panel Lateral de Inspección y Edición Completa en Escritorio (Desktop Side Drawer) */}
+      {inspectedProduct && (
+        <DesktopProductDrawer
+          product={inspectedProduct}
+          onClose={() => setInspectedProduct(null)}
+          onOpenAttributeModal={(cat) => {
+            setSelectedCategory(cat);
+            handleOpenAttributeModal(true);
+          }}
+        />
+      )}
+
       {/* Hoja Modal de Filtros Avanzados */}
       {isFilterModalOpen && (
         <AdvancedFiltersModal
@@ -617,6 +894,16 @@ export default function InventoryView({
         <CategoryManagerModal
           onStartClose={() => onFilterModalStateChange?.(false)}
           onClose={() => handleOpenCategoryModal(false)}
+        />
+      )}
+
+      {/* Hoja Modal del Banco Maestro de Atributos */}
+      {isAttributeModalOpen && (
+        <AttributeConfigModal
+          activeCategory={
+            selectedCategory !== "Todos" ? selectedCategory : undefined
+          }
+          onClose={() => handleOpenAttributeModal(false)}
         />
       )}
     </div>
