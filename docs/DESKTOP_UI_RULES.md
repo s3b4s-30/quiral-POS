@@ -75,7 +75,7 @@ En cualquier archivo con sufijo `*Desktop.tsx` o vistas exclusivas de escritorio
 ### D. Jerarquía Visual y Tipografía de Mostrador
 
 - Cifras monetarias en pesos colombianos (COP) deben usar siempre clase `.tabular-nums` y escala elástica legible a distancia (`text-base` a `text-lg` en totales y clientes).
-- Las tablas de auditoría en escritorio (`HistoryViewDesktop.tsx`) utilizan `<table className="w-full text-left border-collapse table-fixed">` con anchos de columna estrictos (`w-24`, `w-44`, `min-w-[300px]`, `w-36`, `w-44`).
+- Las tablas de auditoría en escritorio (`HistoryViewDesktop.tsx`) utilizan `<table className="w-full text-left border-collapse table-fixed">` con anchos de columna estrictos (`w-20 sm:w-24`, `w-36 sm:w-40`, `min-w-[200px]`, `w-28 sm:w-32`, `w-32 sm:w-36`, `w-48 sm:w-52`) para evitar cualquier colisión entre montos y botones de acción.
 
 ### E. Vistas Completas de Escritorio para Flujos Administrativos
 
