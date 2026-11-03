@@ -1,13 +1,26 @@
 import { AlertTriangle, Check, Pencil, Search, Trash2, X } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../../../components/LottiePlayer";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import LottiePlayer, {
+  EMPTY_BOX_ANIMATION,
+} from "../../../components/LottiePlayer";
 import { useInventory } from "../../../context/InventoryContext";
 import { useScrollParentVirtualizer } from "../../../hooks/useScrollParentVirtualizer";
 import { PaymentMethod, Sale, SaleItem } from "../../../types/domain";
 import { formatCOP, parseCOPInput } from "../../../utils/formatters";
 import { HistoryTableRow } from "./HistoryTableRow";
 
-const PAYMENT_METHODS: PaymentMethod[] = ["Efectivo", "Nequi", "Bancolombia", "Tarjeta"];
+const PAYMENT_METHODS: PaymentMethod[] = [
+  "Efectivo",
+  "Nequi",
+  "Bancolombia",
+  "Tarjeta",
+];
 
 export interface HistoryViewDesktopProps {
   onGoToPOS?: () => void;
@@ -18,18 +31,21 @@ export default function HistoryViewDesktop({
   onGoToPOS: _onGoToPOS,
   onModalStateChange,
 }: HistoryViewDesktopProps) {
-  const { sales, toggleItemWarranty, updateSale, deleteSale, loading } = useInventory();
+  const { sales, toggleItemWarranty, updateSale, deleteSale, loading } =
+    useInventory();
   const [openSaleId, setOpenSaleId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
   // Estado para Eliminar Venta en Diálogo de Escritorio
   const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
-  const [restoreStockOnDelete, setRestoreStockOnDelete] = useState<boolean>(true);
+  const [restoreStockOnDelete, setRestoreStockOnDelete] =
+    useState<boolean>(true);
 
   // Estado para Modificar Venta en Diálogo de Escritorio
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [editCustomerName, setEditCustomerName] = useState("");
-  const [editPaymentMethod, setEditPaymentMethod] = useState<PaymentMethod>("Efectivo");
+  const [editPaymentMethod, setEditPaymentMethod] =
+    useState<PaymentMethod>("Efectivo");
   const [editItems, setEditItems] = useState<SaleItem[]>([]);
   const [editTotalInput, setEditTotalInput] = useState("");
   const [editNote, setEditNote] = useState("");
@@ -69,17 +85,20 @@ export default function HistoryViewDesktop({
     setOpenSaleId((prev) => (prev === saleId ? null : saleId));
   }, []);
 
-  const openEditModal = useCallback((sale: Sale, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditingSale(sale);
-    setEditCustomerName(sale.customerName);
-    setEditPaymentMethod(sale.paymentMethod);
-    setEditItems(sale.items.map((it) => ({ ...it })));
-    setEditTotalInput(String(sale.totalAmount));
-    setEditNote(sale.note ?? "");
-    setConfirmSaveEdit(false);
-    onModalStateChange?.(true);
-  }, [onModalStateChange]);
+  const openEditModal = useCallback(
+    (sale: Sale, e: React.MouseEvent) => {
+      e.stopPropagation();
+      setEditingSale(sale);
+      setEditCustomerName(sale.customerName);
+      setEditPaymentMethod(sale.paymentMethod);
+      setEditItems(sale.items.map((it) => ({ ...it })));
+      setEditTotalInput(String(sale.totalAmount));
+      setEditNote(sale.note ?? "");
+      setConfirmSaveEdit(false);
+      onModalStateChange?.(true);
+    },
+    [onModalStateChange]
+  );
 
   const closeEditModal = useCallback(() => {
     setEditingSale(null);
@@ -87,12 +106,15 @@ export default function HistoryViewDesktop({
     onModalStateChange?.(false);
   }, [onModalStateChange]);
 
-  const openDeleteModal = useCallback((sale: Sale, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setRestoreStockOnDelete(true);
-    setSaleToDelete(sale);
-    onModalStateChange?.(true);
-  }, [onModalStateChange]);
+  const openDeleteModal = useCallback(
+    (sale: Sale, e: React.MouseEvent) => {
+      e.stopPropagation();
+      setRestoreStockOnDelete(true);
+      setSaleToDelete(sale);
+      onModalStateChange?.(true);
+    },
+    [onModalStateChange]
+  );
 
   const closeDeleteModal = useCallback(() => {
     setSaleToDelete(null);
@@ -108,11 +130,20 @@ export default function HistoryViewDesktop({
     }
     setSaleToDelete(null);
     onModalStateChange?.(false);
-  }, [deleteSale, onModalStateChange, openSaleId, restoreStockOnDelete, saleToDelete]);
+  }, [
+    deleteSale,
+    onModalStateChange,
+    openSaleId,
+    restoreStockOnDelete,
+    saleToDelete,
+  ]);
 
-  const handleToggleWarranty = useCallback((saleId: string, itemId: string) => {
-    toggleItemWarranty(saleId, itemId);
-  }, [toggleItemWarranty]);
+  const handleToggleWarranty = useCallback(
+    (saleId: string, itemId: string) => {
+      toggleItemWarranty(saleId, itemId);
+    },
+    [toggleItemWarranty]
+  );
 
   // Virtualización de la tabla de auditoría sobre el scroll existente (#history-scroll)
   const getSaleKey = useCallback(
@@ -129,14 +160,19 @@ export default function HistoryViewDesktop({
     getItemKey: getSaleKey,
   });
 
-  const measureRowRef = virtual.enabled ? virtual.virtualizer.measureElement : undefined;
+  const measureRowRef = virtual.enabled
+    ? virtual.virtualizer.measureElement
+    : undefined;
 
   const updateEditItemQty = (itemId: string, delta: number) => {
     setEditItems((prev) => {
       const next = prev.map((it) =>
         it.id === itemId ? { ...it, qty: Math.max(1, it.qty + delta) } : it
       );
-      const newSubtotal = next.reduce((acc, it) => acc + it.qty * it.unitPrice, 0);
+      const newSubtotal = next.reduce(
+        (acc, it) => acc + it.qty * it.unitPrice,
+        0
+      );
       setEditTotalInput(String(newSubtotal));
       return next;
     });
@@ -145,9 +181,14 @@ export default function HistoryViewDesktop({
   const updateEditItemPrice = (itemId: string, newPrice: number) => {
     setEditItems((prev) => {
       const next = prev.map((it) =>
-        it.id === itemId ? { ...it, unitPrice: Math.max(0, Math.round(newPrice)) } : it
+        it.id === itemId
+          ? { ...it, unitPrice: Math.max(0, Math.round(newPrice)) }
+          : it
       );
-      const newSubtotal = next.reduce((acc, it) => acc + it.qty * it.unitPrice, 0);
+      const newSubtotal = next.reduce(
+        (acc, it) => acc + it.qty * it.unitPrice,
+        0
+      );
       setEditTotalInput(String(newSubtotal));
       return next;
     });
@@ -157,7 +198,10 @@ export default function HistoryViewDesktop({
     if (editItems.length <= 1) return;
     setEditItems((prev) => {
       const next = prev.filter((it) => it.id !== itemId);
-      const newSubtotal = next.reduce((acc, it) => acc + it.qty * it.unitPrice, 0);
+      const newSubtotal = next.reduce(
+        (acc, it) => acc + it.qty * it.unitPrice,
+        0
+      );
       setEditTotalInput(String(newSubtotal));
       return next;
     });
@@ -188,13 +232,19 @@ export default function HistoryViewDesktop({
   };
 
   return (
-    <div id="history-scroll" className="w-full h-full overflow-y-auto transition-colors duration-75">
+    <div
+      id="history-scroll"
+      className="w-full h-full overflow-y-auto transition-colors duration-75"
+    >
       <div className="w-full px-6 lg:px-8 py-6 flex flex-col animate-in fade-in duration-200">
         {/* Header sticky con fondo sólido opaco nativo (Apple HIG) */}
         <div className="sticky top-0 z-20 -mx-6 lg:-mx-8 px-6 lg:px-8 pt-1 pb-3 mb-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
           <div className="relative">
             <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm transition-colors duration-200 focus-within:border-accent">
-              <Search size={18} className="text-[var(--text-secondary)] shrink-0" />
+              <Search
+                size={18}
+                className="text-[var(--text-secondary)] shrink-0"
+              />
               <input
                 type="text"
                 value={query}
@@ -258,12 +308,20 @@ export default function HistoryViewDesktop({
               <table className="w-full text-left border-collapse table-fixed">
                 <thead>
                   <tr className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]/80 text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
-                    <th className="py-3.5 px-4 sm:px-5 w-24 sm:w-28">Ticket</th>
-                    <th className="py-3.5 px-4 sm:px-5 w-44">Fecha y Hora</th>
-                    <th className="py-3.5 px-4 sm:px-5 min-w-[300px]">Cliente / Detalle de Artículos</th>
-                    <th className="py-3.5 px-4 sm:px-5 w-36">Método</th>
-                    <th className="py-3.5 px-4 sm:px-5 w-44 text-right pr-6">Total</th>
-                    <th className="py-3.5 px-4 sm:px-5 w-60 min-w-[220px] text-right">Acciones</th>
+                    <th className="py-3.5 px-3 sm:px-4 w-20 sm:w-24">Ticket</th>
+                    <th className="py-3.5 px-3 sm:px-4 w-36 sm:w-40">
+                      Fecha y Hora
+                    </th>
+                    <th className="py-3.5 px-3 sm:px-4 min-w-[200px]">
+                      Cliente / Detalle de Artículos
+                    </th>
+                    <th className="py-3.5 px-3 sm:px-4 w-28 sm:w-32">Método</th>
+                    <th className="py-3.5 px-3 sm:px-4 w-32 sm:w-36 text-right pr-4">
+                      Total
+                    </th>
+                    <th className="py-3.5 px-3 sm:px-4 w-48 sm:w-52 text-right pr-3">
+                      Acciones
+                    </th>
                   </tr>
                 </thead>
                 <tbody
@@ -272,7 +330,14 @@ export default function HistoryViewDesktop({
                 >
                   {virtual.paddingTop > 0 && (
                     <tr aria-hidden="true" data-virtual-spacer="top">
-                      <td colSpan={6} style={{ height: virtual.paddingTop, padding: 0, border: 0 }} />
+                      <td
+                        colSpan={6}
+                        style={{
+                          height: virtual.paddingTop,
+                          padding: 0,
+                          border: 0,
+                        }}
+                      />
                     </tr>
                   )}
 
@@ -295,7 +360,14 @@ export default function HistoryViewDesktop({
 
                   {virtual.paddingBottom > 0 && (
                     <tr aria-hidden="true" data-virtual-spacer="bottom">
-                      <td colSpan={6} style={{ height: virtual.paddingBottom, padding: 0, border: 0 }} />
+                      <td
+                        colSpan={6}
+                        style={{
+                          height: virtual.paddingBottom,
+                          padding: 0,
+                          border: 0,
+                        }}
+                      />
                     </tr>
                   )}
                 </tbody>
@@ -334,11 +406,17 @@ export default function HistoryViewDesktop({
               <div className="flex items-start gap-3 rounded-2xl border border-[#ff3b30]/30 bg-[#ff3b30]/10 p-4 text-[#ff3b30]">
                 <AlertTriangle size={22} className="shrink-0 mt-0.5" />
                 <div className="text-xs leading-relaxed">
-                  <p className="font-bold text-sm">Acción destructiva permanente</p>
+                  <p className="font-bold text-sm">
+                    Acción destructiva permanente
+                  </p>
                   <p className="mt-0.5 opacity-90">
                     Estás a punto de eliminar el registro de la venta{" "}
-                    <strong>#{saleToDelete.saleNumber}</strong> ({saleToDelete.customerName}) por{" "}
-                    <strong className="tabular-nums">{formatCOP(saleToDelete.totalAmount)}</strong>.
+                    <strong>#{saleToDelete.saleNumber}</strong> (
+                    {saleToDelete.customerName}) por{" "}
+                    <strong className="tabular-nums">
+                      {formatCOP(saleToDelete.totalAmount)}
+                    </strong>
+                    .
                   </p>
                 </div>
               </div>
@@ -349,7 +427,8 @@ export default function HistoryViewDesktop({
                     Restituir unidades al inventario
                   </p>
                   <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                    Devuelve automáticamente el stock descontado en esta venta a sus lotes originales.
+                    Devuelve automáticamente el stock descontado en esta venta a
+                    sus lotes originales.
                   </p>
                 </div>
                 <input
@@ -413,32 +492,44 @@ export default function HistoryViewDesktop({
               <div className="space-y-4 py-2 animate-in fade-in duration-150">
                 <div className="rounded-2xl border border-accent/30 bg-accent-subtle p-4 space-y-1.5">
                   <p className="text-sm font-bold text-accent">
-                    ¿Confirmas la actualización de la venta #{editingSale.saleNumber}?
+                    ¿Confirmas la actualización de la venta #
+                    {editingSale.saleNumber}?
                   </p>
                   <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                    Los totales financieros y las diferencias de stock en inventario se ajustarán de forma inmediata.
+                    Los totales financieros y las diferencias de stock en
+                    inventario se ajustarán de forma inmediata.
                   </p>
                 </div>
 
                 <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-4 space-y-2.5 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">Cliente:</span>
+                    <span className="text-[var(--text-secondary)]">
+                      Cliente:
+                    </span>
                     <span className="font-bold text-[var(--text-primary)]">
                       {editCustomerName.trim() || "Cliente General"}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">Método de pago:</span>
-                    <span className="font-bold text-[var(--text-primary)]">{editPaymentMethod}</span>
+                    <span className="text-[var(--text-secondary)]">
+                      Método de pago:
+                    </span>
+                    <span className="font-bold text-[var(--text-primary)]">
+                      {editPaymentMethod}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">Unidades totales:</span>
+                    <span className="text-[var(--text-secondary)]">
+                      Unidades totales:
+                    </span>
                     <span className="tabular-nums font-bold text-[var(--text-primary)]">
                       {editItems.reduce((acc, it) => acc + it.qty, 0)} uds
                     </span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-[var(--border-color)] text-sm">
-                    <span className="font-semibold text-[var(--text-secondary)]">Nuevo Total:</span>
+                    <span className="font-semibold text-[var(--text-secondary)]">
+                      Nuevo Total:
+                    </span>
                     <span className="tabular-nums font-extrabold text-[var(--text-primary)]">
                       {formatCOP(effectiveEditTotal)}
                     </span>
@@ -506,7 +597,10 @@ export default function HistoryViewDesktop({
                             inputMode="numeric"
                             value={formatCOP(item.unitPrice)}
                             onChange={(e) =>
-                              updateEditItemPrice(item.id, parseCOPInput(e.target.value))
+                              updateEditItemPrice(
+                                item.id,
+                                parseCOPInput(e.target.value)
+                              )
                             }
                             className="tabular-nums mt-0.5 w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
                           />
@@ -561,7 +655,9 @@ export default function HistoryViewDesktop({
                       type="text"
                       inputMode="numeric"
                       value={formatCOP(effectiveEditTotal)}
-                      onChange={(e) => setEditTotalInput(String(parseCOPInput(e.target.value)))}
+                      onChange={(e) =>
+                        setEditTotalInput(String(parseCOPInput(e.target.value)))
+                      }
                       className="tabular-nums mt-1.5 w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-2.5 text-base font-extrabold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
                     />
                   </div>
@@ -615,7 +711,10 @@ export default function HistoryViewDesktop({
                     onClick={() => setConfirmSaveEdit(true)}
                     className="px-6 py-2.5 rounded-xl bg-accent text-sm font-bold text-white shadow-lg shadow-accent/25 hover:bg-accent-hover active:scale-95 transition-all"
                   >
-                    Revisar y guardar · <span className="tabular-nums">{formatCOP(effectiveEditTotal)}</span>
+                    Revisar y guardar ·{" "}
+                    <span className="tabular-nums">
+                      {formatCOP(effectiveEditTotal)}
+                    </span>
                   </button>
                 </>
               )}

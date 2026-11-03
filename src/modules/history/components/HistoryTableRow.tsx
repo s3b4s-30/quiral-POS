@@ -38,21 +38,24 @@ export const HistoryTableRow = memo(
           onClick={() => onToggleOpen(sale.id)}
           className="group hover:bg-black/[0.035] dark:hover:bg-white/[0.045] cursor-pointer transition-all duration-150"
         >
-          <td className="py-4 px-4 sm:px-5">
-            <span className="tabular-nums font-black text-sm text-accent bg-accent-subtle px-2.5 py-1 rounded-lg">
+          <td className="py-3.5 px-3 sm:px-4 w-20 sm:w-24">
+            <span className="tabular-nums font-black text-xs sm:text-sm text-accent bg-accent-subtle px-2 py-0.5 rounded-lg">
               #{sale.saleNumber}
             </span>
           </td>
-          <td className="py-4 px-4 sm:px-5 tabular-nums text-xs sm:text-sm font-bold text-[var(--text-secondary)] whitespace-nowrap">
-            {formatDateWithTime(sale.createdAt) || formatShortDate(sale.createdAt)}
+          <td className="py-3.5 px-3 sm:px-4 w-36 sm:w-40 tabular-nums text-xs sm:text-sm font-bold text-[var(--text-secondary)] whitespace-nowrap">
+            {formatDateWithTime(sale.createdAt) ||
+              formatShortDate(sale.createdAt)}
           </td>
-          <td className="py-4 px-4 sm:px-5 min-w-0">
+          <td className="py-3.5 px-3 sm:px-4 min-w-0">
             <p className="text-base sm:text-lg font-bold text-[var(--text-primary)] leading-snug truncate">
               {sale.customerName}
             </p>
             <p className="text-xs sm:text-sm font-semibold text-[var(--text-secondary)] mt-0.5 truncate">
               {totalUnits} {totalUnits === 1 ? "artículo" : "artículos"}:{" "}
-              {sale.items.map((it) => `${it.qty}x ${it.productName}`).join(", ")}
+              {sale.items
+                .map((it) => `${it.qty}x ${it.productName}`)
+                .join(", ")}
             </p>
             {sale.note && (
               <p className="text-xs italic text-[var(--text-secondary)] mt-1 truncate">
@@ -60,19 +63,19 @@ export const HistoryTableRow = memo(
               </p>
             )}
           </td>
-          <td className="py-4 px-4 sm:px-5 whitespace-nowrap">
-            <span className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs sm:text-sm font-bold text-[var(--text-primary)]">
+          <td className="py-3.5 px-3 sm:px-4 w-28 sm:w-32 whitespace-nowrap">
+            <span className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1 text-xs font-bold text-[var(--text-primary)]">
               {sale.paymentMethod}
             </span>
           </td>
-          <td className="py-4 px-4 sm:px-5 text-right whitespace-nowrap pr-6">
+          <td className="py-3.5 px-3 sm:px-4 w-32 sm:w-36 text-right whitespace-nowrap pr-4">
             <span className="tabular-nums font-black text-base sm:text-lg lg:text-xl text-[var(--text-primary)] leading-none select-none">
               {formatCOP(sale.totalAmount)}
             </span>
           </td>
-          <td className="py-4 px-4 sm:px-5 text-right whitespace-nowrap w-60 min-w-[220px]">
+          <td className="py-3.5 px-3 sm:px-4 w-48 sm:w-52 text-right whitespace-nowrap pr-3">
             <div
-              className="flex items-center justify-end gap-2 shrink-0"
+              className="flex items-center justify-end gap-1.5 shrink-0"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -80,7 +83,7 @@ export const HistoryTableRow = memo(
                 onClick={(e) => onOpenEdit(sale, e)}
                 aria-label={`Modificar venta #${sale.saleNumber}`}
                 title="Modificar venta"
-                className="inline-flex h-8 sm:h-9 items-center gap-1.5 rounded-xl border border-transparent bg-accent-subtle px-3 text-xs font-bold text-accent hover:border-accent-subtle active:scale-95 transition-all"
+                className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-transparent bg-accent-subtle px-2.5 text-xs font-bold text-accent hover:border-accent-subtle active:scale-95 transition-all"
               >
                 <Pencil size={13} />
                 <span>Modificar</span>
@@ -90,7 +93,7 @@ export const HistoryTableRow = memo(
                 onClick={(e) => onOpenDelete(sale, e)}
                 aria-label={`Eliminar venta #${sale.saleNumber}`}
                 title="Eliminar venta"
-                className="inline-flex h-8 sm:h-9 items-center gap-1.5 rounded-xl border border-transparent bg-red-500/10 px-3 text-xs font-bold text-red-500 hover:border-red-500/20 active:scale-95 transition-all"
+                className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-transparent bg-red-500/10 px-2.5 text-xs font-bold text-red-500 hover:border-red-500/20 active:scale-95 transition-all"
               >
                 <Trash2 size={13} />
                 <span>Eliminar</span>
@@ -106,7 +109,8 @@ export const HistoryTableRow = memo(
               <div className="space-y-3 border-l-2 border-accent pl-4 py-1">
                 <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
                   Desglose del Ticket #{sale.saleNumber} ({sale.items.length}{" "}
-                  {sale.items.length === 1 ? "referencia" : "referencias"} · {totalUnits} unidades)
+                  {sale.items.length === 1 ? "referencia" : "referencias"} ·{" "}
+                  {totalUnits} unidades)
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {sale.items.map((item) => {
@@ -141,8 +145,8 @@ export const HistoryTableRow = memo(
                               w.status === "claimed"
                                 ? "bg-[#ff3b30]/15 text-[#ff3b30]"
                                 : w.status === "expired"
-                                ? "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)]"
-                                : "bg-[#30d158]/15 text-[#30d158]"
+                                  ? "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)]"
+                                  : "bg-[#30d158]/15 text-[#30d158]"
                             }`}
                           >
                             {w.label}
@@ -158,7 +162,9 @@ export const HistoryTableRow = memo(
                                   : "bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30]/25"
                               }`}
                             >
-                              {item.warrantyClaimed ? "Revertir reclamo" : "Marcar reclamo"}
+                              {item.warrantyClaimed
+                                ? "Revertir reclamo"
+                                : "Marcar reclamo"}
                             </button>
                           )}
                         </div>
