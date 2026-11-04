@@ -401,11 +401,12 @@ export default function InventoryView({
     productSearchIndex,
   ]);
 
-  // Subconjunto visible según la paginación activa (predeterminado 10 productos)
+  // Subconjunto visible según la paginación activa (en desktop siempre todo el catálogo con virtualización)
   const paginatedProducts = useMemo(() => {
+    if (isDesktopViewport) return filteredProducts;
     if (pageSize === "all") return filteredProducts;
     return filteredProducts.slice(0, visibleCount);
-  }, [filteredProducts, pageSize, visibleCount]);
+  }, [isDesktopViewport, filteredProducts, pageSize, visibleCount]);
 
   const remainingProductsCount = Math.max(
     0,
@@ -469,6 +470,15 @@ export default function InventoryView({
           selectedCategory !== "Todos" ? selectedCategory : undefined
         }
         onBack={() => setIsDesktopAttributeView(false)}
+      />
+    );
+  }
+
+  if (isDesktopViewport && isDesktopNewProductModalOpen) {
+    return (
+      <DesktopNewProductModal
+        onClose={() => setIsDesktopNewProductModalOpen(false)}
+        onOpenSuppliers={_onOpenSuppliers}
       />
     );
   }
@@ -547,24 +557,10 @@ export default function InventoryView({
           {/* Barra de Herramientas de Alta Productividad (Exclusiva Escritorio >= 768px) */}
           <div
             data-testid="desktop-workstation-toolbar"
-            className="hidden md:flex flex-wrap items-center justify-between gap-2 mb-2.5 pb-2 border-b border-[var(--border-color)]/60"
+            className="hidden md:flex flex-wrap items-center justify-between gap-2 mb-2.5 pb-2 border-b border-[var(--border-color)]/60 select-none"
           >
-            {/* Izquierda: Contador en vivo + Controles de Conteo Rápido, Privacidad, Categorías y Atributos */}
+            {/* Izquierda: Controles de Conteo Rápido, Categorías, Atributos y Nuevo Producto */}
             <div className="flex flex-wrap items-center gap-2">
-              <span
-                data-testid="desktop-results-counter"
-                className="tabular-nums rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-secondary)]"
-              >
-                Mostrando{" "}
-                <strong className="text-[var(--text-primary)]">
-                  {paginatedProducts.length}
-                </strong>{" "}
-                de{" "}
-                <strong className="text-[var(--text-primary)]">
-                  {filteredProducts.length}
-                </strong>
-              </span>
-
               {/* Switch Modo Conteo Rápido (Alt + M) */}
               <button
                 type="button"
@@ -615,7 +611,7 @@ export default function InventoryView({
                 <span>Atributos</span>
               </button>
 
-              {/* Boton "+ Nuevo Producto" Destacado en Escritorio */}
+              {/* Botón Destacado de Acción Principal: Nuevo Producto */}
               <button
                 type="button"
                 data-testid="desktop-toolbar-new-product-btn"
@@ -623,36 +619,12 @@ export default function InventoryView({
                 className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-accent-glow hover:bg-accent-hover active:scale-95 transition-all duration-150"
               >
                 <Plus size={13} strokeWidth={2.5} />
-                <span>+ Nuevo Producto</span>
+                <span>Nuevo Producto</span>
               </button>
             </div>
 
-            {/* Derecha: Paginación Densa en Escritorio + Selector de Vista (Tabla Excel / Tarjetas) */}
+            {/* Derecha: Selector de Vista (Tabla Excel / Tarjetas) */}
             <div className="flex items-center gap-2">
-              {/* Selector de cantidad de registros a visualizar */}
-              <div
-                data-testid="desktop-page-size-bar"
-                className="flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1"
-              >
-                {DESKTOP_PAGE_SIZES.map((item) => {
-                  const active = pageSize === item.value;
-                  return (
-                    <button
-                      key={String(item.value)}
-                      type="button"
-                      onClick={() => handleSelectPageSize(item.value)}
-                      className={`rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums transition-colors duration-150 ${
-                        active
-                          ? "bg-accent text-white shadow-sm"
-                          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </div>
-
               <div className="flex items-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1">
                 <button
                   type="button"
@@ -1008,14 +980,6 @@ export default function InventoryView({
             selectedCategory !== "Todos" ? selectedCategory : undefined
           }
           onClose={() => handleOpenAttributeModal(false)}
-        />
-      )}
-
-      {/* Modal Centrado de Creación Avanzada para Escritorio */}
-      {isDesktopViewport && isDesktopNewProductModalOpen && (
-        <DesktopNewProductModal
-          onClose={() => setIsDesktopNewProductModalOpen(false)}
-          onOpenSuppliers={_onOpenSuppliers}
         />
       )}
     </div>

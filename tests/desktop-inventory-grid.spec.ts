@@ -66,27 +66,9 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     const stockCell1 = page.getByTestId("grid-cell-stock-1");
     await expect(stockCell1).toHaveClass(/ring-accent/);
 
-    // Validar paginación predeterminada a 10 productos y alternancia reactiva (10, 20, 30, 50, 100, Todos)
-    const resultsCounter = page.getByTestId("desktop-results-counter");
-    await expect(resultsCounter).toContainText("10");
-
-    const pageSizeBar = page.getByTestId("desktop-page-size-bar");
-    await expect(pageSizeBar).toBeVisible();
-    await expect(
-      pageSizeBar.getByRole("button", { name: "10", exact: true })
-    ).toHaveClass(/bg-accent/);
-    await expect(
-      pageSizeBar.getByRole("button", { name: "30", exact: true })
-    ).toBeVisible();
-
-    // Probar cambio reactivo a 20 registros
-    await pageSizeBar.getByRole("button", { name: "20", exact: true }).click();
-    await expect(resultsCounter).toContainText("20");
-
-    // Seleccionar "Todos" para visualizar todo el inventario
-    await pageSizeBar
-      .getByRole("button", { name: "Todos", exact: true })
-      .click();
+    // Validar barra de herramientas limpia y sin contadores redundantes ni selectores innecesarios
+    await expect(page.getByTestId("desktop-results-counter")).not.toBeVisible();
+    await expect(page.getByTestId("desktop-page-size-bar")).not.toBeVisible();
 
     // Probar Fila de Creación Rápida en Línea (Quick-Add Inline Row)
     const quickNameInput = page.getByTestId("quick-add-name-input");

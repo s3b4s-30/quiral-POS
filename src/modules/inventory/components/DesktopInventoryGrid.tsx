@@ -29,7 +29,6 @@ import {
 } from "./DesktopInventoryGridParts";
 
 export type { EditableColKey } from "./DesktopInventoryGridParts";
-import DesktopNewProductModal from "./DesktopNewProductModal";
 
 type SortColumn =
   "index" | "name" | "category" | "stock" | "cost" | "price" | "profit";
@@ -88,7 +87,6 @@ export default function DesktopInventoryGrid({
 
   // Feedback visual al agregar al carrito desde la fila
   const [addedCartId, setAddedCartId] = useState<string | null>(null);
-  const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
 
   const quickNameInputRef = useRef<HTMLInputElement | null>(null);
   const rowsBodyRef = useRef<HTMLTableSectionElement>(null);
@@ -261,13 +259,10 @@ export default function DesktopInventoryGrid({
 
     const applyFocus = () => {
       if (isEditingCell) {
-        activeInputRef.current?.focus();
-        if (!hasSelectedInputRef.current) {
-          activeInputRef.current?.select();
+        if (!hasSelectedInputRef.current && activeInputRef.current) {
+          activeInputRef.current.focus();
+          activeInputRef.current.select();
           hasSelectedInputRef.current = true;
-        } else if (activeInputRef.current) {
-          const len = activeInputRef.current.value.length;
-          activeInputRef.current.setSelectionRange?.(len, len);
         }
       } else {
         hasSelectedInputRef.current = false;
@@ -593,6 +588,11 @@ export default function DesktopInventoryGrid({
 
   const registerActiveInput = useCallback((el: HTMLInputElement | null) => {
     activeInputRef.current = el;
+    if (el && !hasSelectedInputRef.current) {
+      el.focus();
+      el.select();
+      hasSelectedInputRef.current = true;
+    }
   }, []);
 
   // Objeto de manejadores con identidad constante para toda la vida del componente
@@ -775,25 +775,6 @@ export default function DesktopInventoryGrid({
               </button>
             </div>
           )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Botón Destacado de Acción Principal: + Nuevo Producto */}
-          <button
-            type="button"
-            data-testid="desktop-new-product-btn"
-            onClick={() => {
-              if (onOpenNewProduct) {
-                onOpenNewProduct();
-              } else {
-                setIsNewProductModalOpen(true);
-              }
-            }}
-            className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-accent-glow hover:bg-accent-hover active:scale-95 transition-all duration-150"
-          >
-            <Plus size={15} strokeWidth={2.5} />
-            <span>+ Nuevo Producto</span>
-          </button>
         </div>
       </div>
 
@@ -1000,9 +981,7 @@ export default function DesktopInventoryGrid({
           >
             <ShoppingCart size={13} strokeWidth={2.5} />
             <span>
-              {bulkCartSuccess
-                ? "¡Añadidos al carrito!"
-                : "+ Añadir al carrito"}
+              {bulkCartSuccess ? "¡Añadidos al carrito!" : "Añadir al carrito"}
             </span>
           </button>
 
@@ -1070,13 +1049,6 @@ export default function DesktopInventoryGrid({
             </button>
           </div>
         </div>
-      )}
-
-      {/* Modal Centrado de Creación Avanzada de Productos para Escritorio */}
-      {isNewProductModalOpen && (
-        <DesktopNewProductModal
-          onClose={() => setIsNewProductModalOpen(false)}
-        />
       )}
     </div>
   );

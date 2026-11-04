@@ -1,5 +1,6 @@
 import {
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
   Check,
   ChevronRight,
@@ -246,550 +247,569 @@ export default function DesktopNewProductModal({
     onClose();
   };
 
+  // Atajo de teclado: Escape para cerrar, Ctrl+Enter para guardar
+  const submitProductRef = useRef(submitProduct);
+  submitProductRef.current = submitProduct;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        submitProductRef.current();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="desktop-new-product-title"
+      role="region"
+      aria-label="Nuevo Producto — Estación de Trabajo Desktop"
       data-testid="desktop-new-product-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:p-6 bg-black/80 backdrop-blur-xs select-none animate-in fade-in duration-150"
+      className="w-full h-full flex flex-col overflow-hidden bg-[var(--bg-primary)] pt-[var(--quiral-header-offset,4rem)] antialiased-hd"
     >
-      <div
-        data-testid="desktop-new-product-dialog"
-        className="relative flex flex-col w-full max-w-5xl h-[88vh] max-h-[850px] rounded-3xl border border-white/10 dark:border-white/5 bg-[var(--bg-elevated)] shadow-2xl overflow-hidden antialiased-hd animate-in zoom-in-95 duration-150"
-      >
-        {/* 1. Cabecera Fija del Diálogo */}
-        <div className="shrink-0 flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-elevated)] px-6 py-3.5 select-none">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/15 text-accent border border-accent/25">
-              <Zap size={20} className="fill-accent/20" />
+      {/* 1. Cabecera Fija de la Estación de Trabajo (Estilo Banco Maestro) */}
+      <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-elevated)]/90 backdrop-blur-md px-6 py-4 flex items-center justify-between select-none">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all"
+          >
+            <ArrowLeft size={16} />
+            <span>Regresar al Inventario</span>
+            <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] px-1 py-0.5 text-[10px] text-[var(--text-secondary)]">
+              Esc
+            </kbd>
+          </button>
+          <div className="h-5 w-px bg-[var(--border-color)]" />
+          <div>
+            <div className="flex items-center gap-2">
+              <h2
+                id="desktop-new-product-title"
+                className="text-lg font-black text-[var(--text-primary)]"
+              >
+                Nuevo Producto
+              </h2>
+              <span className="rounded-md bg-accent-subtle px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-accent border border-accent/20">
+                Estación Desktop
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2
-                  id="desktop-new-product-title"
-                  className="text-base sm:text-lg font-black text-[var(--text-primary)] tracking-tight"
-                >
-                  Nuevo Producto
-                </h2>
-                <span className="rounded-md bg-accent-subtle px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-accent border border-accent/20">
-                  Estación Desktop · Split View
-                </span>
-              </div>
-              <p className="text-xs text-[var(--text-secondary)]">
-                Registro integral con gestión multi-lote, banco de atributos y
-                análisis de márgenes
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:inline-flex items-center rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1 text-xs font-bold text-accent tabular-nums">
-              {technicalSubtitle}
-            </span>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Cerrar modal de creación"
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all"
-            >
-              <X size={16} />
-            </button>
+            <p className="text-xs text-[var(--text-secondary)]">
+              Registro integral con taxonomía modular, multi-lote y análisis
+              financiero en tiempo real
+            </p>
           </div>
         </div>
 
-        {/* 2. Cuerpo del Diálogo en Formato Split-Layout (2 Columnas) */}
-        <div className="grid grid-cols-1 md:grid-cols-12 flex-1 min-h-0 overflow-hidden divide-y md:divide-y-0 md:divide-x divide-[var(--border-color)]">
-          {/* COLUMNA IZQUIERDA (7 cols): Área de Catálogo y Atributos Dinámicos */}
-          <div className="md:col-span-7 flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-6 space-y-6 bg-[var(--bg-elevated)]">
-            {/* SECCIÓN A: Categoría de Producto y Creación Rápida */}
-            <div className="space-y-2.5">
+        <div className="flex items-center gap-3">
+          <span className="hidden sm:inline-flex items-center rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1 text-xs font-bold text-accent tabular-nums">
+            {technicalSubtitle}
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar ventana de creación"
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Cuerpo en Formato Split-Layout (2 Columnas Fijas) */}
+      <div className="flex-1 min-h-0 overflow-hidden max-w-7xl mx-auto w-full p-4 lg:p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* COLUMNA IZQUIERDA (7 cols): Área de Catálogo y Atributos Dinámicos */}
+        <div className="md:col-span-7 flex flex-col min-h-0 overflow-y-auto custom-scrollbar rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-6 space-y-6">
+          {/* SECCIÓN A: Categoría de Producto y Creación Rápida */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
+                <Tag size={13} className="text-accent" />
+                <span>1. Categoría de Catálogo</span>
+              </label>
+
+              {!isAddingCategory ? (
+                <button
+                  type="button"
+                  onClick={() => setIsAddingCategory(true)}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-accent hover:underline"
+                >
+                  <Plus size={12} strokeWidth={2.5} />
+                  <span>Nueva Categoría</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsAddingCategory(false)}
+                  className="text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
+
+            {/* Formulario Inline para Crear Nueva Categoría */}
+            {isAddingCategory && (
+              <form
+                onSubmit={handleCreateCategory}
+                className="flex items-center gap-2 p-3 rounded-2xl border border-accent/40 bg-accent-subtle animate-in fade-in duration-150"
+              >
+                <input
+                  type="text"
+                  autoFocus
+                  value={newCatNameInput}
+                  onChange={(e) => setNewCatNameInput(e.target.value)}
+                  placeholder="Nombre de la nueva categoría..."
+                  className="flex-1 rounded-xl border border-accent bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={!newCatNameInput.trim()}
+                  className="rounded-xl bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-accent-hover disabled:opacity-40"
+                >
+                  Crear
+                </button>
+              </form>
+            )}
+
+            {/* Selector Horizontal de Categorías con Chevrons */}
+            <HorizontalScrollNav
+              testId="desktop-new-product-category-nav"
+              className="flex items-center gap-2 overflow-x-auto scroll-smooth custom-scrollbar pb-1"
+              scrollAmount={220}
+            >
+              {catalogConfig.categoryOrder.map((cat) => {
+                const isSelected = isSameCatalogText(cat, category);
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setCategory(cat)}
+                    className={`whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold transition-all duration-150 select-none ${
+                      isSelected
+                        ? "bg-accent text-white shadow-accent-glow"
+                        : "border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </HorizontalScrollNav>
+          </div>
+
+          {/* SECCIÓN B: Banco de Atributos Dinámicos de la Categoría */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
+                <Sliders size={13} className="text-accent" />
+                <span>2. Atributos Dinámicos de {category}</span>
+              </label>
+              <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
+                {activeAttributeKeys.length} grupos configurados
+              </span>
+            </div>
+
+            {activeAttributeKeys.length === 0 ? (
+              <div className="p-4 rounded-2xl border border-dashed border-[var(--border-color)] text-center text-xs text-[var(--text-secondary)]">
+                Esta categoría no requiere atributos dinámicos obligatorios.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {activeAttributeKeys.map((attrKey) => {
+                  const attrConfig = catalogConfig.attributes[attrKey];
+                  const label = attrConfig?.label || attrKey;
+                  const options = attrConfig?.options || [];
+                  const currentSelected = attributeSelections[attrKey] || "";
+                  const isAddingThis = addingOptionKey === attrKey;
+
+                  return (
+                    <div
+                      key={attrKey}
+                      className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/50 p-3.5 space-y-2.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                          <span>{label}</span>
+                        </span>
+
+                        {!isAddingThis ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAddingOptionKey(attrKey);
+                              setNewOptionValue("");
+                            }}
+                            className="inline-flex items-center gap-0.5 text-[10px] font-bold text-accent hover:underline"
+                          >
+                            <Plus size={11} />
+                            <span>Nueva opción</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setAddingOptionKey(null)}
+                            className="text-[10px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                          >
+                            Cerrar
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Input inline para agregar nueva opción */}
+                      {isAddingThis && (
+                        <div className="flex items-center gap-1.5 py-1">
+                          <input
+                            type="text"
+                            autoFocus
+                            value={newOptionValue}
+                            onChange={(e) => setNewOptionValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleConfirmInlineOption(attrKey);
+                              }
+                            }}
+                            placeholder={`Nuevo valor para ${label}...`}
+                            className="flex-1 rounded-lg border border-accent bg-[var(--bg-primary)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleConfirmInlineOption(attrKey)}
+                            disabled={!newOptionValue.trim()}
+                            className="rounded-lg bg-accent px-2.5 py-1 text-xs font-bold text-white shadow-2xs hover:bg-accent-hover disabled:opacity-40"
+                          >
+                            Guardar
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Lista Horizontal de Opciones del Atributo */}
+                      <HorizontalScrollNav
+                        className="flex items-center gap-1.5 overflow-x-auto scroll-smooth custom-scrollbar pb-1"
+                        scrollAmount={180}
+                      >
+                        {options.map((opt) => {
+                          const isOptSelected = currentSelected === opt;
+                          return (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => {
+                                setAttributeSelections((prev) => ({
+                                  ...prev,
+                                  [attrKey]: opt,
+                                }));
+                              }}
+                              className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all duration-150 select-none ${
+                                isOptSelected
+                                  ? "bg-accent text-white font-bold shadow-2xs"
+                                  : "border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/30"
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          );
+                        })}
+                      </HorizontalScrollNav>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* COLUMNA DERECHA (5 cols): Panel Fijo de Control y Datos Críticos */}
+        <div className="md:col-span-5 flex flex-col min-h-0 overflow-y-auto custom-scrollbar rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-6 space-y-5 justify-between">
+          <div className="space-y-5">
+            {/* SECCIÓN C: Nombre Comercial y Switch de Autogeneración */}
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
-                  <Tag size={13} className="text-accent" />
-                  <span>1. Categoría de Catálogo</span>
+                <label className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
+                  3. Nombre / Referencia Comercial
                 </label>
 
-                {!isAddingCategory ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextState = !autoGenerateName;
+                    setAutoGenerateName(nextState);
+                    if (nextState) {
+                      setName(autoGeneratedName);
+                    }
+                  }}
+                  className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[11px] font-bold transition-all ${
+                    autoGenerateName
+                      ? "border-accent/40 bg-accent-subtle text-accent"
+                      : "border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]"
+                  }`}
+                >
+                  <Sparkles size={12} />
+                  <span>{autoGenerateName ? "Autogenerado" : "Manual"}</span>
+                </button>
+              </div>
+
+              <input
+                type="text"
+                data-testid="desktop-new-product-name-input"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (autoGenerateName) setAutoGenerateName(false);
+                }}
+                placeholder="Ej. Cubo iPhone 20W USB-C..."
+                className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-2.5 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
+              />
+            </div>
+
+            {/* SECCIÓN D: Proveedor del Lote Inicial */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
+                  4. Proveedor del Lote Inicial
+                </label>
+                {onOpenSuppliers && (
                   <button
                     type="button"
-                    onClick={() => setIsAddingCategory(true)}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-accent hover:underline"
+                    onClick={onOpenSuppliers}
+                    className="text-[11px] font-bold text-accent hover:underline"
                   >
-                    <Plus size={12} strokeWidth={2.5} />
-                    <span>+ Nueva Categoría</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setIsAddingCategory(false)}
-                    className="text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                  >
-                    Cancelar
+                    Gestionar
                   </button>
                 )}
               </div>
 
-              {/* Formulario Inline para Crear Nueva Categoría */}
-              {isAddingCategory && (
-                <form
-                  onSubmit={handleCreateCategory}
-                  className="flex items-center gap-2 p-3 rounded-2xl border border-accent/40 bg-accent-subtle animate-in fade-in duration-150"
-                >
-                  <input
-                    type="text"
-                    autoFocus
-                    value={newCatNameInput}
-                    onChange={(e) => setNewCatNameInput(e.target.value)}
-                    placeholder="Nombre de la nueva categoría..."
-                    className="flex-1 rounded-xl border border-accent bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!newCatNameInput.trim()}
-                    className="rounded-xl bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-accent-hover disabled:opacity-40"
-                  >
-                    Crear
-                  </button>
-                </form>
-              )}
-
-              {/* Selector Horizontal de Categorías con Chevrons */}
-              <HorizontalScrollNav
-                testId="desktop-new-product-category-nav"
-                className="flex items-center gap-2 overflow-x-auto scroll-smooth custom-scrollbar pb-1"
-                scrollAmount={220}
-              >
-                {catalogConfig.categoryOrder.map((cat) => {
-                  const isSelected = isSameCatalogText(cat, category);
+              <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto custom-scrollbar pr-1">
+                {suppliers.map((sup) => {
+                  const isSelected = selectedSupplierId === sup.id;
                   return (
                     <button
-                      key={cat}
+                      key={sup.id}
                       type="button"
-                      onClick={() => setCategory(cat)}
-                      className={`whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold transition-all duration-150 select-none ${
+                      onClick={() => setSelectedSupplierId(sup.id)}
+                      className={`flex items-center gap-2 rounded-xl border p-2 text-left text-xs transition-all ${
                         isSelected
-                          ? "bg-accent text-white shadow-accent-glow"
-                          : "border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
+                          ? "border-accent bg-accent-subtle text-[var(--text-primary)] font-bold shadow-2xs"
+                          : "border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/30"
                       }`}
                     >
-                      {cat}
+                      <span
+                        className="h-3 w-3 rounded-full shrink-0 shadow-2xs"
+                        style={{ backgroundColor: sup.color }}
+                      />
+                      <span className="truncate flex-1">{sup.name}</span>
+                      {isSelected && (
+                        <Check size={13} className="text-accent shrink-0" />
+                      )}
                     </button>
                   );
                 })}
-              </HorizontalScrollNav>
+              </div>
             </div>
 
-            {/* SECCIÓN B: Banco de Atributos Dinámicos de la Categoría */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
-                  <Sliders size={13} className="text-accent" />
-                  <span>2. Atributos Dinámicos de {category}</span>
+            {/* SECCIÓN E: Stock Inicial y Garantía */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Cantidad / Unidades */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-black uppercase tracking-wider text-[var(--text-secondary)]">
+                  Stock Inicial
                 </label>
-                <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
-                  {activeAttributeKeys.length} grupos configurados
-                </span>
+                <div className="flex items-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setStockInput(String(Math.max(0, parsedStock - 1)))
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] active:scale-95 transition-all"
+                  >
+                    <Minus size={14} />
+                  </button>
+                  <input
+                    type="number"
+                    min={0}
+                    data-testid="desktop-new-product-stock-input"
+                    value={stockInput}
+                    onChange={(e) => setStockInput(e.target.value)}
+                    className="tabular-nums min-w-0 flex-1 bg-transparent text-center text-sm font-black text-[var(--text-primary)] outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setStockInput(String(parsedStock + 1))}
+                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] active:scale-95 transition-all"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
               </div>
 
-              {activeAttributeKeys.length === 0 ? (
-                <div className="p-4 rounded-2xl border border-dashed border-[var(--border-color)] text-center text-xs text-[var(--text-secondary)]">
-                  Esta categoría no requiere atributos dinámicos obligatorios.
+              {/* Garantía (Días) */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-black uppercase tracking-wider text-[var(--text-secondary)]">
+                  Garantía
+                </label>
+                <select
+                  value={warrantyDays}
+                  onChange={(e) =>
+                    setWarrantyDays(parseInt(e.target.value, 10))
+                  }
+                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                >
+                  <option value={15}>15 días</option>
+                  <option value={30}>30 días</option>
+                  <option value={60}>60 días</option>
+                  <option value={90}>90 días</option>
+                  <option value={180}>6 meses</option>
+                  <option value={365}>1 año</option>
+                </select>
+              </div>
+            </div>
+
+            {/* SECCIÓN F: Costos, Precios y Análisis Financiero */}
+            <div className="space-y-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4">
+              <div className="grid grid-cols-2 gap-3">
+                {/* Costo Unitario */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[var(--text-secondary)]">
+                    Costo Compra
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-[var(--text-secondary)] select-none">
+                      $
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      data-testid="desktop-new-product-cost-input"
+                      value={costInput}
+                      onChange={(e) => setCostInput(e.target.value)}
+                      placeholder="0"
+                      className="tabular-nums w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-7 pr-3 py-2 text-xs font-black text-[var(--text-primary)] outline-none focus:border-accent"
+                    />
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {activeAttributeKeys.map((attrKey) => {
-                    const attrConfig = catalogConfig.attributes[attrKey];
-                    const label = attrConfig?.label || attrKey;
-                    const options = attrConfig?.options || [];
-                    const currentSelected = attributeSelections[attrKey] || "";
-                    const isAddingThis = addingOptionKey === attrKey;
 
-                    return (
-                      <div
-                        key={attrKey}
-                        className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)]/50 p-3.5 space-y-2.5"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-                            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                            <span>{label}</span>
-                          </span>
+                {/* Precio Venta */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-accent">
+                    Precio Público
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-accent select-none">
+                      $
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      data-testid="desktop-new-product-price-input"
+                      value={priceInput}
+                      onChange={(e) => setPriceInput(e.target.value)}
+                      placeholder="0"
+                      className="tabular-nums w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-7 pr-3 py-2 text-xs font-black text-[var(--text-primary)] outline-none focus:border-accent"
+                    />
+                  </div>
+                </div>
+              </div>
 
-                          {!isAddingThis ? (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setAddingOptionKey(attrKey);
-                                setNewOptionValue("");
-                              }}
-                              className="inline-flex items-center gap-0.5 text-[10px] font-bold text-accent hover:underline"
-                            >
-                              <Plus size={11} />
-                              <span>Nueva opción</span>
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setAddingOptionKey(null)}
-                              className="text-[10px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                            >
-                              Cerrar
-                            </button>
-                          )}
-                        </div>
+              {/* Tarjeta de Métricas de Margen en Tiempo Real */}
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--border-color)]">
+                <div className="p-2 rounded-xl bg-[var(--bg-primary)]/80">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                    Utilidad Unitaria
+                  </p>
+                  <p
+                    className={`tabular-nums text-xs font-black mt-0.5 truncate ${
+                      unitProfit >= 0 ? "text-[#30d158]" : "text-[#ff453a]"
+                    }`}
+                  >
+                    {unitProfit >= 0
+                      ? `+${formatCOP(unitProfit)}`
+                      : formatCOP(unitProfit)}
+                  </p>
+                </div>
 
-                        {/* Input inline para agregar nueva opción */}
-                        {isAddingThis && (
-                          <div className="flex items-center gap-1.5 py-1">
-                            <input
-                              type="text"
-                              autoFocus
-                              value={newOptionValue}
-                              onChange={(e) =>
-                                setNewOptionValue(e.target.value)
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.preventDefault();
-                                  handleConfirmInlineOption(attrKey);
-                                }
-                              }}
-                              placeholder={`Nuevo valor para ${label}...`}
-                              className="flex-1 rounded-lg border border-accent bg-[var(--bg-primary)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] outline-none"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleConfirmInlineOption(attrKey)}
-                              disabled={!newOptionValue.trim()}
-                              className="rounded-lg bg-accent px-2.5 py-1 text-xs font-bold text-white shadow-2xs hover:bg-accent-hover disabled:opacity-40"
-                            >
-                              Guardar
-                            </button>
-                          </div>
-                        )}
+                <div className="p-2 rounded-xl bg-[var(--bg-primary)]/80">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                    Margen (%)
+                  </p>
+                  <p
+                    className={`tabular-nums text-xs font-black mt-0.5 truncate ${
+                      marginPct >= 0 ? "text-[#30d158]" : "text-[#ff453a]"
+                    }`}
+                  >
+                    {marginPct >= 0 ? `+${marginPct}%` : `${marginPct}%`}
+                  </p>
+                </div>
 
-                        {/* Lista Horizontal de Opciones del Atributo */}
-                        <HorizontalScrollNav
-                          className="flex items-center gap-1.5 overflow-x-auto scroll-smooth custom-scrollbar pb-1"
-                          scrollAmount={180}
-                        >
-                          {options.map((opt) => {
-                            const isOptSelected = currentSelected === opt;
-                            return (
-                              <button
-                                key={opt}
-                                type="button"
-                                onClick={() => {
-                                  setAttributeSelections((prev) => ({
-                                    ...prev,
-                                    [attrKey]: opt,
-                                  }));
-                                }}
-                                className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all duration-150 select-none ${
-                                  isOptSelected
-                                    ? "bg-accent text-white font-bold shadow-2xs"
-                                    : "border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/30"
-                                }`}
-                              >
-                                {opt}
-                              </button>
-                            );
-                          })}
-                        </HorizontalScrollNav>
-                      </div>
-                    );
-                  })}
+                <div className="p-2 rounded-xl bg-[var(--bg-primary)]/80">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                    Inversión Lote
+                  </p>
+                  <p className="tabular-nums text-xs font-black text-amber-500 mt-0.5 truncate">
+                    {formatCOP(totalBatchCost)}
+                  </p>
+                </div>
+
+                <div className="p-2 rounded-xl bg-[var(--bg-primary)]/80">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                    Ingreso Lote
+                  </p>
+                  <p className="tabular-nums text-xs font-black text-accent mt-0.5 truncate">
+                    {formatCOP(totalBatchRevenue)}
+                  </p>
+                </div>
+              </div>
+
+              {isCostHigherThanPrice && (
+                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-amber-500/10 text-amber-500 text-[10px] font-bold">
+                  <AlertTriangle size={12} className="shrink-0" />
+                  <span>El costo ingresado supera el precio de venta.</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* COLUMNA DERECHA (5 cols): Panel Fijo de Control y Datos Críticos */}
-          <div className="md:col-span-5 flex flex-col min-h-0 overflow-y-auto custom-scrollbar bg-[var(--bg-primary)]/40 p-6 space-y-5 justify-between">
-            <div className="space-y-5">
-              {/* SECCIÓN C: Nombre Comercial y Switch de Autogeneración */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
-                    3. Nombre / Referencia Comercial
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const nextState = !autoGenerateName;
-                      setAutoGenerateName(nextState);
-                      if (nextState) {
-                        setName(autoGeneratedName);
-                      }
-                    }}
-                    className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[11px] font-bold transition-all ${
-                      autoGenerateName
-                        ? "border-accent/40 bg-accent-subtle text-accent"
-                        : "border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]"
-                    }`}
-                  >
-                    <Sparkles size={12} />
-                    <span>{autoGenerateName ? "Autogenerado" : "Manual"}</span>
-                  </button>
-                </div>
-
-                <input
-                  type="text"
-                  data-testid="desktop-new-product-name-input"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    if (autoGenerateName) setAutoGenerateName(false);
-                  }}
-                  placeholder="Ej. Cubo iPhone 20W USB-C..."
-                  className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-2.5 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
-                />
+          {/* 3. Panel Inferior Fijo de Acciones */}
+          <div className="pt-4 border-t border-[var(--border-color)] space-y-3">
+            {errorMessage && (
+              <div className="flex items-center gap-2 p-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-xs font-bold text-red-500 animate-in fade-in duration-150">
+                <AlertTriangle size={14} className="shrink-0" />
+                <span>{errorMessage}</span>
               </div>
+            )}
 
-              {/* SECCIÓN D: Proveedor del Lote Inicial */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
-                    4. Proveedor del Lote Inicial
-                  </label>
-                  {onOpenSuppliers && (
-                    <button
-                      type="button"
-                      onClick={onOpenSuppliers}
-                      className="text-[11px] font-bold text-accent hover:underline"
-                    >
-                      Gestionar
-                    </button>
-                  )}
-                </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[11px] text-[var(--text-secondary)] font-medium">
+                <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-primary)] px-1.5 py-0.5 text-[10px] font-bold">
+                  Ctrl+Enter
+                </kbd>{" "}
+                guardar
+              </span>
 
-                <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto custom-scrollbar pr-1">
-                  {suppliers.map((sup) => {
-                    const isSelected = selectedSupplierId === sup.id;
-                    return (
-                      <button
-                        key={sup.id}
-                        type="button"
-                        onClick={() => setSelectedSupplierId(sup.id)}
-                        className={`flex items-center gap-2 rounded-xl border p-2 text-left text-xs transition-all ${
-                          isSelected
-                            ? "border-accent bg-accent-subtle text-[var(--text-primary)] font-bold shadow-2xs"
-                            : "border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/30"
-                        }`}
-                      >
-                        <span
-                          className="h-3 w-3 rounded-full shrink-0 shadow-2xs"
-                          style={{ backgroundColor: sup.color }}
-                        />
-                        <span className="truncate flex-1">{sup.name}</span>
-                        {isSelected && (
-                          <Check size={13} className="text-accent shrink-0" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3.5 py-2 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all"
+                >
+                  Cancelar (Esc)
+                </button>
 
-              {/* SECCIÓN E: Stock Inicial y Garantía */}
-              <div className="grid grid-cols-2 gap-3">
-                {/* Cantidad / Unidades */}
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-black uppercase tracking-wider text-[var(--text-secondary)]">
-                    Stock Inicial
-                  </label>
-                  <div className="flex items-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-1">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setStockInput(String(Math.max(0, parsedStock - 1)))
-                      }
-                      className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] active:scale-95 transition-all"
-                    >
-                      <Minus size={14} />
-                    </button>
-                    <input
-                      type="number"
-                      min={0}
-                      data-testid="desktop-new-product-stock-input"
-                      value={stockInput}
-                      onChange={(e) => setStockInput(e.target.value)}
-                      className="tabular-nums min-w-0 flex-1 bg-transparent text-center text-sm font-black text-[var(--text-primary)] outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setStockInput(String(parsedStock + 1))}
-                      className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] active:scale-95 transition-all"
-                    >
-                      <Plus size={14} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Garantía (Días) */}
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-black uppercase tracking-wider text-[var(--text-secondary)]">
-                    Garantía
-                  </label>
-                  <select
-                    value={warrantyDays}
-                    onChange={(e) =>
-                      setWarrantyDays(parseInt(e.target.value, 10))
-                    }
-                    className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
-                  >
-                    <option value={15}>15 días</option>
-                    <option value={30}>30 días</option>
-                    <option value={60}>60 días</option>
-                    <option value={90}>90 días</option>
-                    <option value={180}>6 meses</option>
-                    <option value={365}>1 año</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* SECCIÓN F: Costos, Precios y Análisis Financiero */}
-              <div className="space-y-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4">
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Costo Unitario */}
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-[var(--text-secondary)]">
-                      Costo Compra
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-[var(--text-secondary)] select-none">
-                        $
-                      </span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        data-testid="desktop-new-product-cost-input"
-                        value={costInput}
-                        onChange={(e) => setCostInput(e.target.value)}
-                        placeholder="0"
-                        className="tabular-nums w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-7 pr-3 py-2 text-xs font-black text-[var(--text-primary)] outline-none focus:border-accent"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Precio Venta */}
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-accent">
-                      Precio Público
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-accent select-none">
-                        $
-                      </span>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        data-testid="desktop-new-product-price-input"
-                        value={priceInput}
-                        onChange={(e) => setPriceInput(e.target.value)}
-                        placeholder="0"
-                        className="tabular-nums w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-7 pr-3 py-2 text-xs font-black text-[var(--text-primary)] outline-none focus:border-accent"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tarjeta de Métricas de Margen en Tiempo Real */}
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--border-color)]">
-                  <div className="p-2 rounded-xl bg-[var(--bg-primary)]/80">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-                      Utilidad Unitaria
-                    </p>
-                    <p
-                      className={`tabular-nums text-xs font-black mt-0.5 truncate ${
-                        unitProfit >= 0 ? "text-[#30d158]" : "text-[#ff453a]"
-                      }`}
-                    >
-                      {unitProfit >= 0
-                        ? `+${formatCOP(unitProfit)}`
-                        : formatCOP(unitProfit)}
-                    </p>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-[var(--bg-primary)]/80">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-                      Margen (%)
-                    </p>
-                    <p
-                      className={`tabular-nums text-xs font-black mt-0.5 truncate ${
-                        marginPct >= 0 ? "text-[#30d158]" : "text-[#ff453a]"
-                      }`}
-                    >
-                      {marginPct >= 0 ? `+${marginPct}%` : `${marginPct}%`}
-                    </p>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-[var(--bg-primary)]/80">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-                      Inversión Lote
-                    </p>
-                    <p className="tabular-nums text-xs font-black text-amber-500 mt-0.5 truncate">
-                      {formatCOP(totalBatchCost)}
-                    </p>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-[var(--bg-primary)]/80">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-                      Ingreso Lote
-                    </p>
-                    <p className="tabular-nums text-xs font-black text-accent mt-0.5 truncate">
-                      {formatCOP(totalBatchRevenue)}
-                    </p>
-                  </div>
-                </div>
-
-                {isCostHigherThanPrice && (
-                  <div className="flex items-center gap-1.5 p-2 rounded-xl bg-amber-500/10 text-amber-500 text-[10px] font-bold">
-                    <AlertTriangle size={12} className="shrink-0" />
-                    <span>El costo ingresado supera el precio de venta.</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 3. Panel Inferior Fijo de Acciones */}
-            <div className="pt-4 border-t border-[var(--border-color)] space-y-3">
-              {errorMessage && (
-                <div className="flex items-center gap-2 p-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-xs font-bold text-red-500 animate-in fade-in duration-150">
-                  <AlertTriangle size={14} className="shrink-0" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] text-[var(--text-secondary)] font-medium">
-                  <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-primary)] px-1.5 py-0.5 text-[10px] font-bold">
-                    Ctrl+Enter
-                  </kbd>{" "}
-                  guardar
-                </span>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3.5 py-2 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all"
-                  >
-                    Cancelar (Esc)
-                  </button>
-
-                  <button
-                    type="button"
-                    data-testid="desktop-new-product-submit-btn"
-                    onClick={submitProduct}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-accent px-5 py-2.5 text-xs font-bold text-white shadow-accent-glow hover:bg-accent-hover active:scale-95 transition-all duration-150"
-                  >
-                    <Plus size={15} strokeWidth={2.5} />
-                    <span>Crear Producto</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  data-testid="desktop-new-product-submit-btn"
+                  onClick={submitProduct}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-accent px-5 py-2.5 text-xs font-bold text-white shadow-accent-glow hover:bg-accent-hover active:scale-95 transition-all duration-150"
+                >
+                  <Plus size={15} strokeWidth={2.5} />
+                  <span>Crear Producto</span>
+                </button>
               </div>
             </div>
           </div>
