@@ -315,12 +315,29 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       managerView.getByRole("heading", { name: "Prueba Desktop" })
     ).toBeVisible();
 
-    // 4. Columna 3 (Derecha): Agregar nueva opción al atributo activo
+    // 4. Columna 2: Acceso Universal a Atributos Globales (Clic directo sin vinculación forzada)
+    const globalBankHeading = managerView.getByText(
+      /Banco Global de Atributos/i
+    );
+    await expect(globalBankHeading).toBeVisible();
+
+    // Seleccionar directamente un atributo global desde el banco inferior
+    const materialAttrCard = managerView
+      .getByText("Material", { exact: false })
+      .first();
+    await materialAttrCard.click();
+
+    // Columna 3 (Derecha): Verificar carga instantánea y agregar nueva opción al atributo activo
+    await expect(
+      managerView.getByRole("heading", { name: "Material" })
+    ).toBeVisible();
+
     const newOptionInput = managerView.getByPlaceholder("Nueva opción...");
     await expect(newOptionInput).toBeVisible();
     await newOptionInput.fill("Opción Alfa");
 
     const addOptionBtn = managerView.getByRole("button", { name: "Agregar" });
+    await expect(addOptionBtn).toHaveClass(/bg-accent/);
     await addOptionBtn.click();
     await expect(
       managerView.getByText("Opción Alfa", { exact: true })

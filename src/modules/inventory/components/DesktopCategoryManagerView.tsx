@@ -33,6 +33,10 @@ export interface DesktopCategoryManagerViewProps {
  * Cero Scroll Horizontal (100% vertical y adaptativo), Platform Split (>= 768px),
  * Paleta Dual OLED (#000000) y consistencia total con el Banco Maestro de Catálogo.
  */
+// Estándar de diseño para botones de acción principal, creación y guardado (Design System UI)
+const PRIMARY_ACTION_BTN_CLASS =
+  "inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-accent-glow active:scale-95 transition-all duration-150 cursor-pointer select-none disabled:opacity-50 disabled:pointer-events-none shrink-0";
+
 export default function DesktopCategoryManagerView({
   onBack,
   initialCategory,
@@ -121,22 +125,23 @@ export default function DesktopCategoryManagerView({
     );
   }, [currentCategoryConfig, selectedCategory]);
 
+  // Atributos del banco maestro disponibles en todo el catálogo global
+  const allAttributesList = Object.values(catalogConfig.attributes);
+
   // Atributo activo actualmente seleccionado en Columna 2 para inspeccionar en Columna 3
   const [activeAttrKey, setActiveAttrKey] = useState<string>(
-    categoryAttrKeys[0] || "chargerSubtypes"
+    categoryAttrKeys[0] || allAttributesList[0]?.key || "brands"
   );
 
+  // Garantizar que activeAttrKey apunte a un atributo existente en el catálogo global
   useEffect(() => {
     if (
-      !categoryAttrKeys.includes(activeAttrKey) &&
-      categoryAttrKeys.length > 0
+      (!activeAttrKey || !catalogConfig.attributes[activeAttrKey]) &&
+      allAttributesList.length > 0
     ) {
-      setActiveAttrKey(categoryAttrKeys[0]);
+      setActiveAttrKey(allAttributesList[0].key);
     }
-  }, [categoryAttrKeys, activeAttrKey]);
-
-  // Atributos del banco maestro disponibles en todo el catálogo
-  const allAttributesList = Object.values(catalogConfig.attributes);
+  }, [catalogConfig.attributes, activeAttrKey, allAttributesList]);
 
   // Atributos disponibles que aún NO están vinculados a selectedCategory
   const availableAttrsToLink = useMemo(() => {
@@ -471,9 +476,9 @@ export default function DesktopCategoryManagerView({
             data-testid="save-category-order-btn"
             aria-label="Guardar orden de categorías"
             onClick={handleSaveAndClose}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-4 py-1.5 text-xs font-bold text-white shadow-xs active:scale-95 transition-all cursor-pointer"
+            className={PRIMARY_ACTION_BTN_CLASS}
           >
-            <Check size={15} strokeWidth={2.5} />
+            <Check size={14} strokeWidth={2.5} />
             <span>Guardar y Confirmar</span>
           </button>
         </div>
@@ -569,9 +574,9 @@ export default function DesktopCategoryManagerView({
               <button
                 type="button"
                 onClick={() => setIsCreatingCategory((prev) => !prev)}
-                className="inline-flex items-center gap-1 rounded-xl bg-accent px-2.5 py-1 text-[11px] font-bold text-white shadow-xs hover:bg-accent-hover transition-all cursor-pointer"
+                className={PRIMARY_ACTION_BTN_CLASS}
               >
-                <Plus size={13} />
+                <Plus size={14} strokeWidth={2.5} />
                 <span>Nueva Categoría</span>
               </button>
             </div>
@@ -604,9 +609,10 @@ export default function DesktopCategoryManagerView({
                   <button
                     type="submit"
                     disabled={!newCategoryName.trim()}
-                    className="px-3 py-1 rounded-lg bg-accent text-[11px] font-bold text-white disabled:opacity-50 cursor-pointer"
+                    className={PRIMARY_ACTION_BTN_CLASS}
                   >
-                    Crear Categoría
+                    <Plus size={14} strokeWidth={2.5} />
+                    <span>Crear Categoría</span>
                   </button>
                 </div>
               </form>
@@ -734,9 +740,9 @@ export default function DesktopCategoryManagerView({
                 <button
                   type="button"
                   onClick={() => setIsCreatingAttribute((prev) => !prev)}
-                  className="inline-flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1 text-[11px] font-bold text-accent hover:border-accent transition-all cursor-pointer shrink-0"
+                  className={PRIMARY_ACTION_BTN_CLASS}
                 >
-                  <Plus size={12} />
+                  <Plus size={14} strokeWidth={2.5} />
                   <span>Crear Atributo</span>
                 </button>
               </div>
@@ -785,9 +791,10 @@ export default function DesktopCategoryManagerView({
                   <button
                     type="submit"
                     disabled={!newAttributeLabel.trim()}
-                    className="px-3 py-1 rounded-lg bg-accent text-[11px] font-bold text-white disabled:opacity-50 cursor-pointer"
+                    className={PRIMARY_ACTION_BTN_CLASS}
                   >
-                    Crear y Vincular
+                    <Plus size={14} strokeWidth={2.5} />
+                    <span>Crear y Vincular</span>
                   </button>
                 </div>
               </form>
@@ -874,32 +881,64 @@ export default function DesktopCategoryManagerView({
               })}
             </div>
 
-            {/* Sección Inferior: Panel de Vinculación de Atributos Disponibles (CERO SCROLL HORIZONTAL) */}
+            {/* Sección Inferior: Banco Global de Atributos (Acceso Universal CERO SCROLL HORIZONTAL) */}
             <div className="mt-3 pt-3 border-t border-[var(--border-color)] shrink-0">
-              <h4 className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
-                Vincular Atributos Disponibles ({availableAttrsToLink.length})
-              </h4>
-              {availableAttrsToLink.length === 0 ? (
-                <p className="text-[11px] text-[var(--text-secondary)] italic">
-                  Todos los atributos del catálogo están vinculados a esta
-                  categoría.
-                </p>
-              ) : (
-                /* Grid Vertical / Flex Wrap sin desbordamiento */
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-36 overflow-y-auto custom-scrollbar p-0.5">
-                  {availableAttrsToLink.map((attr) => (
-                    <button
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+                  Banco Global de Atributos ({allAttributesList.length})
+                </h4>
+                <span className="text-[10px] text-[var(--text-secondary)] font-medium">
+                  Clic para editar en Columna 3
+                </span>
+              </div>
+
+              {/* Grid Vertical / Adaptativo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-40 overflow-y-auto custom-scrollbar p-0.5">
+                {allAttributesList.map((attr) => {
+                  const isSelected = activeAttrKey === attr.key;
+                  const isLinked = categoryAttrKeys.includes(attr.key);
+                  return (
+                    <div
                       key={attr.key}
-                      type="button"
-                      onClick={() => addCategoryAttr(attr.key)}
-                      className="inline-flex items-center justify-between rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent hover:text-accent transition-all cursor-pointer text-left min-w-0"
+                      onClick={() => setActiveAttrKey(attr.key)}
+                      className={`group flex items-center justify-between rounded-xl border px-2.5 py-1.5 text-xs transition-all cursor-pointer min-w-0 ${
+                        isSelected
+                          ? "border-accent bg-accent/15 text-accent font-black shadow-xs ring-1 ring-accent/30"
+                          : "border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] hover:border-accent/40"
+                      }`}
                     >
-                      <span className="truncate">{attr.label}</span>
-                      <Plus size={12} className="shrink-0 ml-1 opacity-70" />
-                    </button>
-                  ))}
-                </div>
-              )}
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <span className="truncate font-bold">{attr.label}</span>
+                        <span className="text-[10px] text-[var(--text-secondary)] font-medium tabular-nums shrink-0">
+                          ({attr.options.length})
+                        </span>
+                      </div>
+
+                      {isLinked ? (
+                        <span
+                          title={`Vinculado a ${selectedCategory}`}
+                          className="shrink-0 ml-1 text-[10px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded-md"
+                        >
+                          Vinculado
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addCategoryAttr(attr.key);
+                          }}
+                          title={`Vincular "${attr.label}" a ${selectedCategory}`}
+                          className="shrink-0 ml-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-accent-subtle hover:bg-accent text-accent hover:text-white transition-colors text-[10px] font-bold cursor-pointer"
+                        >
+                          <Plus size={11} />
+                          <span>Vincular</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -914,11 +953,26 @@ export default function DesktopCategoryManagerView({
                   <h3 className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
                     3. Valores y Opciones
                   </h3>
-                  <h4 className="text-sm lg:text-base font-black text-[var(--text-primary)] truncate mt-0.5">
-                    {activeAttr?.label || activeAttrKey}
-                  </h4>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <h4 className="text-sm lg:text-base font-black text-[var(--text-primary)] truncate">
+                      {activeAttr?.label || activeAttrKey}
+                    </h4>
+                    {categoryAttrKeys.includes(activeAttrKey) ? (
+                      <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0">
+                        En «{selectedCategory}»
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => addCategoryAttr(activeAttrKey)}
+                        className="text-[10px] font-bold text-accent bg-accent/10 hover:bg-accent hover:text-white px-2 py-0.5 rounded-full transition-colors cursor-pointer shrink-0"
+                      >
+                        + Vincular a «{selectedCategory}»
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <span className="text-[11px] text-[var(--text-secondary)] font-bold">
+                <span className="text-[11px] text-[var(--text-secondary)] font-bold tabular-nums">
                   {activeAttr?.options.length ?? 0} opciones
                 </span>
               </div>
@@ -938,9 +992,9 @@ export default function DesktopCategoryManagerView({
                 <button
                   type="submit"
                   disabled={!newOptionInput.trim()}
-                  className="inline-flex items-center gap-1 rounded-xl bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-accent-hover transition-all disabled:opacity-50 cursor-pointer shrink-0"
+                  className={PRIMARY_ACTION_BTN_CLASS}
                 >
-                  <Plus size={13} />
+                  <Plus size={14} strokeWidth={2.5} />
                   <span>Agregar</span>
                 </button>
               </form>
