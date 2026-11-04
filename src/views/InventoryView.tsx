@@ -401,9 +401,8 @@ export default function InventoryView({
     productSearchIndex,
   ]);
 
-  // Subconjunto visible según la paginación activa
+  // Subconjunto visible según la paginación activa (predeterminado 10 productos)
   const paginatedProducts = useMemo(() => {
-    if (isDesktopViewport) return filteredProducts;
     if (pageSize === "all") return filteredProducts;
     return filteredProducts.slice(0, visibleCount);
   }, [filteredProducts, pageSize, visibleCount]);
