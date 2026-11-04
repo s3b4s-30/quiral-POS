@@ -401,12 +401,11 @@ export default function InventoryView({
     productSearchIndex,
   ]);
 
-  // Subconjunto visible según la paginación activa (en desktop siempre todo el catálogo con virtualización)
+  // Subconjunto visible según la paginación activa (predeterminado 10 productos)
   const paginatedProducts = useMemo(() => {
-    if (isDesktopViewport) return filteredProducts;
     if (pageSize === "all") return filteredProducts;
     return filteredProducts.slice(0, visibleCount);
-  }, [isDesktopViewport, filteredProducts, pageSize, visibleCount]);
+  }, [filteredProducts, pageSize, visibleCount]);
 
   const remainingProductsCount = Math.max(
     0,
@@ -623,8 +622,32 @@ export default function InventoryView({
               </button>
             </div>
 
-            {/* Derecha: Selector de Vista (Tabla Excel / Tarjetas) */}
+            {/* Derecha: Selector de Cantidad de Filas + Selector de Vista (Tabla Excel / Tarjetas) */}
             <div className="flex items-center gap-2">
+              {/* Selector de cantidad de registros a visualizar (10, 20, 30, 50, 100, Todos) */}
+              <div
+                data-testid="desktop-page-size-bar"
+                className="flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1"
+              >
+                {DESKTOP_PAGE_SIZES.map((item) => {
+                  const active = pageSize === item.value;
+                  return (
+                    <button
+                      key={String(item.value)}
+                      type="button"
+                      onClick={() => handleSelectPageSize(item.value)}
+                      className={`rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums transition-colors duration-150 ${
+                        active
+                          ? "bg-accent text-white shadow-sm"
+                          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+
               <div className="flex items-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1">
                 <button
                   type="button"
