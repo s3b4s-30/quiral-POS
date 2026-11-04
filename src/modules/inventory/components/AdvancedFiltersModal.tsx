@@ -1,12 +1,23 @@
-import { Check, Filter, RotateCcw, SlidersHorizontal, Tag, Truck, Shield, DollarSign, Layers } from "lucide-react";
+import {
+  Check,
+  Filter,
+  RotateCcw,
+  SlidersHorizontal,
+  Tag,
+  Truck,
+  Shield,
+  DollarSign,
+  Layers,
+} from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { useInventory } from "../../../context/InventoryContext";
 import { formatCOP, parseCOPInput } from "../../../utils/formatters";
 import ModalSheet from "../../../components/ModalSheet";
 
-export type StockStatusFilter = "all" | "in_stock" | "low_stock" | "out_of_stock";
+export type StockStatusFilter =
+  "all" | "in_stock" | "low_stock" | "out_of_stock";
 
-export type InventoryPageSize = 10 | 20 | 50 | 100 | "all";
+export type InventoryPageSize = 10 | 20 | 30 | 50 | 100 | "all";
 
 export interface PageSizeOption {
   label: string;
@@ -16,6 +27,7 @@ export interface PageSizeOption {
 export const PAGE_SIZE_OPTIONS: PageSizeOption[] = [
   { label: "10", value: 10 },
   { label: "20", value: 20 },
+  { label: "30", value: 30 },
   { label: "50", value: 50 },
   { label: "100", value: 100 },
   { label: "Todos", value: "all" },
@@ -48,7 +60,11 @@ interface AdvancedFiltersModalProps {
   onPageSizeChange?: (size: InventoryPageSize) => void;
 }
 
-const STOCK_STATUS_OPTIONS: Array<{ id: StockStatusFilter; label: string; desc: string }> = [
+const STOCK_STATUS_OPTIONS: Array<{
+  id: StockStatusFilter;
+  label: string;
+  desc: string;
+}> = [
   { id: "all", label: "Todos", desc: "Sin filtro de existencias" },
   { id: "in_stock", label: "Con stock", desc: "Más de 0 unidades" },
   { id: "low_stock", label: "Stock crítico", desc: "3 o menos unidades" },
@@ -74,9 +90,12 @@ export default function AdvancedFiltersModal({
 }: AdvancedFiltersModalProps) {
   const { suppliers, products } = useInventory();
 
-  const [selectedPageSize, setSelectedPageSize] = useState<InventoryPageSize>(pageSize);
+  const [selectedPageSize, setSelectedPageSize] =
+    useState<InventoryPageSize>(pageSize);
   const [supplierId, setSupplierId] = useState(filters.supplierId);
-  const [stockStatus, setStockStatus] = useState<StockStatusFilter>(filters.stockStatus);
+  const [stockStatus, setStockStatus] = useState<StockStatusFilter>(
+    filters.stockStatus
+  );
   const [minPrice, setMinPrice] = useState(filters.minPrice);
   const [maxPrice, setMaxPrice] = useState(filters.maxPrice);
   const [minWarranty, setMinWarranty] = useState(filters.minWarranty);
@@ -95,7 +114,8 @@ export default function AdvancedFiltersModal({
       }
 
       if (stockStatus === "in_stock" && totalStock <= 0) return false;
-      if (stockStatus === "low_stock" && (totalStock <= 0 || totalStock > 3)) return false;
+      if (stockStatus === "low_stock" && (totalStock <= 0 || totalStock > 3))
+        return false;
       if (stockStatus === "out_of_stock" && totalStock > 0) return false;
 
       if (minP > 0 && p.price < minP) return false;
@@ -160,7 +180,11 @@ export default function AdvancedFiltersModal({
         </div>
       }
     >
-      <form id="advanced-filters-form" onSubmit={handleApply} className="space-y-5">
+      <form
+        id="advanced-filters-form"
+        onSubmit={handleApply}
+        className="space-y-5"
+      >
         {/* 0. Límite de Productos por Vista (Paginación Móvil) */}
         <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-3">
           <div className="mb-2 flex items-center justify-between">
@@ -169,7 +193,9 @@ export default function AdvancedFiltersModal({
               <span>Productos por vista</span>
             </label>
             <span className="text-[11px] font-semibold text-[var(--text-secondary)] tabular-nums">
-              {selectedPageSize === "all" ? "Todos los productos" : `Bloques de ${selectedPageSize}`}
+              {selectedPageSize === "all"
+                ? "Todos los productos"
+                : `Bloques de ${selectedPageSize}`}
             </span>
           </div>
           <div
@@ -203,7 +229,8 @@ export default function AdvancedFiltersModal({
             })}
           </div>
           <p className="mt-2 text-[10px] text-[var(--text-secondary)]">
-            Configuración de carga progresiva para dispositivos móviles. Valor inicial recomendado: 10 productos.
+            Configuración de carga progresiva para dispositivos móviles. Valor
+            inicial recomendado: 10 productos.
           </p>
         </div>
 
@@ -269,8 +296,12 @@ export default function AdvancedFiltersModal({
                       : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
-                  <p className="text-xs font-bold text-[var(--text-primary)]">{opt.label}</p>
-                  <p className="text-[10px] text-[var(--text-secondary)] mt-0.5">{opt.desc}</p>
+                  <p className="text-xs font-bold text-[var(--text-primary)]">
+                    {opt.label}
+                  </p>
+                  <p className="text-[10px] text-[var(--text-secondary)] mt-0.5">
+                    {opt.desc}
+                  </p>
                 </button>
               );
             })}
@@ -285,7 +316,9 @@ export default function AdvancedFiltersModal({
           </label>
           <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <p className="mb-1 text-[11px] text-[var(--text-secondary)]">Precio mínimo</p>
+              <p className="mb-1 text-[11px] text-[var(--text-secondary)]">
+                Precio mínimo
+              </p>
               <input
                 type="text"
                 value={minPrice}
@@ -298,7 +331,9 @@ export default function AdvancedFiltersModal({
               />
             </div>
             <div>
-              <p className="mb-1 text-[11px] text-[var(--text-secondary)]">Precio máximo</p>
+              <p className="mb-1 text-[11px] text-[var(--text-secondary)]">
+                Precio máximo
+              </p>
               <input
                 type="text"
                 value={maxPrice}

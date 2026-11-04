@@ -1,4 +1,13 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, Trash2, X, Zap } from "lucide-react";
+import {
+  ArrowDown,
+  ShoppingCart,
+  ArrowUp,
+  ArrowUpDown,
+  Plus,
+  Trash2,
+  X,
+  Zap,
+} from "lucide-react";
 import React, {
   useCallback,
   useEffect,
@@ -35,6 +44,7 @@ interface DesktopInventoryGridProps {
   onInspectProduct: (product: Product) => void;
   quickCountMode: boolean;
   focusQuickAddRef?: React.MutableRefObject<(() => void) | null>;
+  onOpenNewProduct?: () => void;
 }
 
 /** Altura estimada (px) de una fila antes de su medición real en el DOM. */
@@ -45,6 +55,7 @@ export default function DesktopInventoryGrid({
   onInspectProduct,
   quickCountMode,
   focusQuickAddRef,
+  onOpenNewProduct,
 }: DesktopInventoryGridProps) {
   const {
     suppliers,
@@ -83,6 +94,7 @@ export default function DesktopInventoryGrid({
   // Referencias para enfoque programático de celdas e inputs
   const cellRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const activeInputRef = useRef<HTMLInputElement | null>(null);
+  const hasSelectedInputRef = useRef(false);
 
   // Exponer disparador para Ctrl + N hacia el campo Nombre de Quick-Add
   useEffect(() => {
@@ -247,9 +259,13 @@ export default function DesktopInventoryGrid({
 
     const applyFocus = () => {
       if (isEditingCell) {
-        activeInputRef.current?.focus();
-        activeInputRef.current?.select();
+        if (!hasSelectedInputRef.current && activeInputRef.current) {
+          activeInputRef.current.focus();
+          activeInputRef.current.select();
+          hasSelectedInputRef.current = true;
+        }
       } else {
+        hasSelectedInputRef.current = false;
         const el = cellRefs.current.get(
           `${activeCell.rowIndex}:${activeCell.colKey}`
         );
@@ -275,7 +291,8 @@ export default function DesktopInventoryGrid({
     }
     applyFocus();
     return undefined;
-  }, [activeCell, isEditingCell, isVirtualized, virtualizer]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCell?.rowIndex, activeCell?.colKey, isEditingCell, isVirtualized]);
 
   // Limpiar selecciones huérfanas si cambian los productos
   useEffect(() => {
@@ -330,6 +347,7 @@ export default function DesktopInventoryGrid({
       const { showCosts: costsVisible, enrichedRows: rows } = latestRef.current;
       if (colKey === "cost" && !costsVisible) return;
       if (!rows[rowIndex]) return;
+      hasSelectedInputRef.current = initialOverride !== undefined;
       setActiveCell({ rowIndex, colKey });
       setEditDraftValue(
         initialOverride !== undefined
@@ -570,6 +588,11 @@ export default function DesktopInventoryGrid({
 
   const registerActiveInput = useCallback((el: HTMLInputElement | null) => {
     activeInputRef.current = el;
+    if (el && !hasSelectedInputRef.current) {
+      el.focus();
+      el.select();
+      hasSelectedInputRef.current = true;
+    }
   }, []);
 
   // Objeto de manejadores con identidad constante para toda la vida del componente
@@ -641,6 +664,21 @@ export default function DesktopInventoryGrid({
     }
   };
 
+  const [bulkCartSuccess, setBulkCartSuccess] = useState(false);
+
+  const handleBulkAddToCart = useCallback(() => {
+    if (selectedIds.size === 0) return;
+    let addedCount = 0;
+    selectedIds.forEach((id) => {
+      const ok = latestRef.current.addToCart(id);
+      if (ok) addedCount++;
+    });
+    if (addedCount > 0) {
+      setBulkCartSuccess(true);
+      setTimeout(() => setBulkCartSuccess(false), 2000);
+    }
+  }, [selectedIds]);
+
   const handleBulkCategoryChange = () => {
     if (selectedIds.size === 0) return;
     selectedIds.forEach((id) => {
@@ -707,6 +745,39 @@ export default function DesktopInventoryGrid({
       data-virtualized={virtual.enabled ? "true" : "false"}
       className="relative rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] shadow-sm overflow-hidden antialiased-hd"
     >
+      {/* Barra de Acciones y Creación de la Estación de Trabajo Desktop */}
+      <div
+        data-testid="desktop-grid-action-bar"
+        className="flex items-center justify-between border-b border-white/10 bg-black/40 backdrop-blur-md px-4 py-3 select-none"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs sm:text-sm font-extrabold text-[var(--text-primary)]">
+              Catálogo de Inventario
+            </span>
+            <span className="tabular-nums rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-2 py-0.5 text-[11px] font-bold text-[var(--text-secondary)]">
+              {enrichedRows.length} referencias
+            </span>
+          </div>
+
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2 animate-in fade-in duration-100">
+              <span className="tabular-nums rounded-md bg-accent-subtle px-2 py-0.5 text-[11px] font-extrabold text-accent">
+                {selectedIds.size} seleccionados
+              </span>
+              <button
+                type="button"
+                onClick={handleBulkDelete}
+                className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1 text-[11px] font-bold text-red-500 hover:bg-red-500/20 active:scale-95 transition-all"
+              >
+                <Trash2 size={12} />
+                <span>Eliminar en lote</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Banner informativo sutil cuando Modo Conteo Rápido está activo */}
       {quickCountMode && (
         <div
@@ -739,7 +810,7 @@ export default function DesktopInventoryGrid({
           className="w-full border-collapse text-left"
         >
           {/* Cabecera con Desenfoque Translúcido y Bordes Milimétricos */}
-          <thead className="sticky top-0 z-10 backdrop-blur-md bg-[var(--bg-elevated)]/95 border-b border-[var(--border-color)] select-none">
+          <thead className="sticky top-0 z-10 backdrop-blur-md bg-black/60 border-b border-white/10 select-none">
             <tr className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
               {/* 1. [✓] / Nº (48px) */}
               <th className="w-12 border-r border-[var(--border-color)] px-2.5 py-2.5 text-center">
@@ -892,28 +963,50 @@ export default function DesktopInventoryGrid({
         </div>
       </footer>
 
-      {/* Barra Flotante de Acciones en Lote (Bulk Actions Bar) */}
+      {/* Barra Flotante de Acciones en Lote (Glassmorfismo Puro & Layout Inflexible en 1 Fila) */}
       {selectedIds.size > 0 && (
         <div
           data-testid="desktop-bulk-actions-bar"
-          className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 flex items-center gap-3 rounded-2xl border border-accent bg-[var(--bg-elevated)] px-4 py-2.5 shadow-accent-glow animate-in fade-in duration-150"
+          className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 flex flex-row items-center justify-between gap-3 flex-nowrap w-max max-w-[95vw] mx-auto rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md px-4 py-2.5 shadow-2xl select-none animate-in fade-in slide-in-from-bottom-2 duration-150"
         >
-          <span className="rounded-lg bg-accent px-2.5 py-1 text-xs font-extrabold text-white tabular-nums">
+          {/* Badge contador */}
+          <span className="shrink-0 whitespace-nowrap rounded-xl bg-accent px-3 py-1.5 text-xs font-extrabold text-white tabular-nums shadow-xs">
             {selectedIds.size} seleccionados
           </span>
 
-          {/* Cambiar categoría en lote */}
-          <div className="flex items-center gap-1.5 border-l border-[var(--border-color)] pl-3">
+          <div className="h-4 w-px bg-white/10 shrink-0" />
+
+          {/* Adición Masiva al Carrito de POS */}
+          <button
+            type="button"
+            data-testid="desktop-bulk-add-to-cart-btn"
+            onClick={handleBulkAddToCart}
+            className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-accent-glow active:scale-95 transition-all duration-150 cursor-pointer tabular-nums"
+          >
+            <ShoppingCart size={13} strokeWidth={2.5} />
+            <span>
+              {bulkCartSuccess ? "¡Añadidos al carrito!" : "Añadir al carrito"}
+            </span>
+          </button>
+
+          <div className="h-4 w-px bg-white/10 shrink-0" />
+
+          {/* Cambiar categoría en lote con Menú Desplegable Glassmorphic */}
+          <div className="shrink-0 flex items-center gap-2 whitespace-nowrap">
             <select
               value={bulkCategory}
               onChange={(e) =>
                 setBulkCategory(e.target.value as ProductCategory)
               }
               aria-label="Seleccionar nueva categoría en lote"
-              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+              className="shrink-0 rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm px-2.5 py-1.5 text-xs font-bold text-white outline-none focus:border-accent max-w-[145px] truncate cursor-pointer"
             >
               {catalogConfig.categoryOrder.map((cat) => (
-                <option key={cat} value={cat}>
+                <option
+                  key={cat}
+                  value={cat}
+                  className="bg-zinc-900 text-white"
+                >
                   {cat}
                 </option>
               ))}
@@ -921,36 +1014,40 @@ export default function DesktopInventoryGrid({
             <button
               type="button"
               onClick={handleBulkCategoryChange}
-              className="rounded-xl bg-accent-subtle px-3 py-1.5 text-xs font-bold text-accent hover:bg-accent hover:text-white transition-colors duration-150"
+              className="shrink-0 whitespace-nowrap rounded-xl border border-accent/40 bg-accent/15 px-3 py-1.5 text-xs font-bold text-accent hover:bg-accent hover:text-white transition-all duration-150 cursor-pointer active:scale-95"
             >
               Mover categoría
             </button>
           </div>
 
+          <div className="h-4 w-px bg-white/10 shrink-0" />
+
           {/* Ajustar stock en lote */}
-          <div className="flex items-center gap-1 border-l border-[var(--border-color)] pl-3">
+          <div className="shrink-0 flex items-center gap-1.5 whitespace-nowrap">
             <button
               type="button"
               onClick={() => handleBulkStockDelta(-1)}
-              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent transition-colors duration-150"
+              className="shrink-0 whitespace-nowrap rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
             >
               -1 Stock
             </button>
             <button
               type="button"
               onClick={() => handleBulkStockDelta(1)}
-              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent transition-colors duration-150"
+              className="shrink-0 whitespace-nowrap rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
             >
               +1 Stock
             </button>
           </div>
 
-          {/* Eliminar seleccionados */}
-          <div className="flex items-center gap-2 border-l border-[var(--border-color)] pl-3">
+          <div className="h-4 w-px bg-white/10 shrink-0" />
+
+          {/* Eliminar seleccionados y limpiar */}
+          <div className="shrink-0 flex items-center gap-2 whitespace-nowrap">
             <button
               type="button"
               onClick={handleBulkDelete}
-              className="inline-flex items-center gap-1 rounded-xl bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-500 hover:bg-red-500 hover:text-white transition-colors duration-150"
+              className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded-xl border border-red-500/30 bg-red-500/15 px-3 py-1.5 text-xs font-bold text-red-400 hover:bg-red-500 hover:text-white transition-all duration-150 cursor-pointer active:scale-95"
             >
               <Trash2 size={13} />
               <span>Eliminar</span>
@@ -960,7 +1057,8 @@ export default function DesktopInventoryGrid({
               type="button"
               onClick={() => setSelectedIds(new Set())}
               title="Limpiar selección"
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              aria-label="Limpiar selección"
+              className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-zinc-400 hover:text-white hover:border-accent active:scale-95 transition-all cursor-pointer"
             >
               <X size={15} />
             </button>

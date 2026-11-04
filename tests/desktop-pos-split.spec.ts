@@ -29,7 +29,9 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
 
     const ticket = page.getByTestId("desktop-pos-ticket");
     await expect(ticket).toBeVisible();
-    await expect(ticket.getByRole("heading", { name: "Ticket de Venta" })).toBeVisible();
+    await expect(
+      ticket.getByRole("heading", { name: "Ticket de Venta" })
+    ).toBeVisible();
     await expect(ticket.getByText("Ticket Vacío")).toBeVisible();
 
     // El botón Completar Venta debe estar deshabilitado cuando el carrito está vacío
@@ -37,7 +39,9 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
     await expect(completeBtn).toBeDisabled();
 
     // Agregar un producto desde el catálogo haciendo clic en su botón/tarjeta
-    const productCard = page.getByRole("button", { name: /Agregar Cubo iPhone 20W al carrito/i });
+    const productCard = page.getByRole("button", {
+      name: /Agregar Cubo iPhone 20W al carrito/i,
+    });
     await expect(productCard).toBeVisible();
     await productCard.click();
 
@@ -77,7 +81,9 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
 
     // Probar atajo de teclado '/' para enfocar el buscador
     await page.keyboard.press("/");
-    const searchInput = page.getByPlaceholder(/Buscar referencia, cargador, funda/i);
+    const searchInput = page.getByPlaceholder(
+      /Buscar referencia, cargador, funda/i
+    );
     await expect(searchInput).toBeFocused();
 
     // Escribir un filtro
@@ -85,7 +91,9 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
     await expect(page.getByText("Cubo Anker 30W")).toBeVisible();
 
     // Agregar producto al ticket
-    const ankerCard = page.getByRole("button", { name: /Agregar Cubo Anker 30W al carrito/i });
+    const ankerCard = page.getByRole("button", {
+      name: /Agregar Cubo Anker 30W al carrito/i,
+    });
     await expect(ankerCard).toBeVisible();
     await ankerCard.click();
 
@@ -102,5 +110,119 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
 
     // El ticket vuelve a estar vacío
     await expect(ticket.getByText("Ticket Vacío")).toBeVisible();
+  });
+
+  test("3. Vista Tabla por Defecto en POS, Subfiltros de Atributos por Categoría y Alternancia a Tarjetas", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const desktopSidebar = page.getByRole("complementary", {
+      name: /Navegación principal de escritorio/i,
+    });
+    await expect(desktopSidebar).toBeVisible({ timeout: 10000 });
+    await desktopSidebar.getByRole("button", { name: "Vender" }).click();
+
+    // 1. Validar que la Vista de Tabla de Ventas está activa por defecto a la izquierda
+    const tableView = page.getByTestId("pos-products-table-view");
+    await expect(tableView).toBeVisible();
+    const cardsGrid = page.getByTestId("pos-products-cards-grid");
+    await expect(cardsGrid).not.toBeVisible();
+
+    // 2. Probar subfiltros de atributos cuando se selecciona una categoría específica
+    const cargadoresChip = page.getByRole("button", {
+      name: "Cargadores y Cables",
+    });
+    await expect(cargadoresChip).toBeVisible();
+    await cargadoresChip.click();
+
+    // Aparece la segunda barra de subfiltros de atributos/subtipos de la categoría
+    const subfiltersNav = page.getByTestId("pos-category-attribute-subfilters");
+    await expect(subfiltersNav).toBeVisible();
+
+    // Filtrar por subtipo (ejemplo: Anker)
+    const ankerSubfilter = subfiltersNav.getByRole("button", { name: "Anker" });
+    if (await ankerSubfilter.isVisible()) {
+      await ankerSubfilter.click();
+      await expect(tableView.getByText("Cubo Anker 30W")).toBeVisible();
+    }
+
+    // Restablecer subfiltro con "Todos en Cargadores y Cables"
+    const resetSubfilterBtn = subfiltersNav.getByRole("button", {
+      name: /Todos en Cargadores y Cables/i,
+    });
+    await expect(resetSubfilterBtn).toBeVisible();
+    await resetSubfilterBtn.click();
+
+    // 3. Agregar producto haciendo clic en la fila de la tabla
+    const tableRow = tableView.getByRole("button", {
+      name: /Agregar Cubo iPhone 20W al carrito/i,
+    });
+    await expect(tableRow).toBeVisible();
+    await tableRow.click();
+
+    // Verificar que el ticket se actualiza con el producto
+    const ticket = page.getByTestId("desktop-pos-ticket");
+    await expect(ticket.getByText(/1 artículo/i)).toBeVisible();
+
+    // 4. Alternar a Vista de Tarjetas (3 Columnas)
+    const cardsBtn = page.getByTestId("pos-view-cards-btn");
+    await expect(cardsBtn).toBeVisible();
+    await cardsBtn.click();
+    await expect(cardsGrid).toBeVisible();
+    await expect(tableView).not.toBeVisible();
+
+    // 5. Alternar de vuelta a Vista de Tabla
+    const tableBtn = page.getByTestId("pos-view-table-btn");
+    await expect(tableBtn).toBeVisible();
+    await tableBtn.click();
+    await expect(tableView).toBeVisible();
+    await expect(cardsGrid).not.toBeVisible();
+  });
+
+  test("4. Ergonomía de Teclado, Ajuste de Total y Atajo Ctrl+Enter para Cobro Directo en Estación Desktop", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const desktopSidebar = page.getByRole("complementary", {
+      name: /Navegación principal de escritorio/i,
+    });
+    await expect(desktopSidebar).toBeVisible({ timeout: 10000 });
+    await desktopSidebar.getByRole("button", { name: "Vender" }).click();
+
+    // 1. Agregar un producto al ticket
+    const tableView = page.getByTestId("pos-products-table-view");
+    await expect(tableView).toBeVisible();
+
+    const tableRow = tableView.getByRole("button", {
+      name: /Agregar Cubo iPhone 20W al carrito/i,
+    });
+    await expect(tableRow).toBeVisible();
+    await tableRow.click();
+
+    const ticket = page.getByTestId("desktop-pos-ticket");
+    await expect(ticket.getByText(/1 artículo/i)).toBeVisible();
+
+    // 2. Asignar cliente institucional
+    const customerInput = page.getByTestId("pos-customer-input");
+    await customerInput.fill("Cliente Corporativo Express");
+
+    // 3. Ajustar monto total a cobrar con descuento en pos-custom-total-input
+    const customTotalInput = page.getByTestId("pos-custom-total-input");
+    await expect(customTotalInput).toBeVisible();
+    await customTotalInput.fill("60000");
+
+    // Verificar que el botón de completar venta refleja el nuevo monto con clase tabular-nums
+    const completeBtn = page.getByTestId("complete-sale-desktop-btn");
+    await expect(completeBtn).toContainText("60.000");
+
+    // 4. Completar venta usando el atajo de teclado Ctrl+Enter
+    await page.keyboard.press("Control+Enter");
+
+    // 5. Verificar flash de éxito instantáneo y reseteo del ticket a vacío
+    await expect(page.getByText(/¡Venta registrada con éxito!/i)).toBeVisible();
+    await expect(ticket.getByText("Ticket Vacío")).toBeVisible();
+    await expect(completeBtn).toBeDisabled();
   });
 });

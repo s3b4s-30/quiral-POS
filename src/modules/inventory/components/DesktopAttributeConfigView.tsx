@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useRef, useState } from "react";
+import HorizontalScrollNav from "../../../components/HorizontalScrollNav";
 import { useInventory } from "../../../context/InventoryContext";
 import { ProductCategory } from "../../../types/domain";
 import {
@@ -42,7 +43,9 @@ export default function DesktopAttributeConfigView({
     createCustomAttribute,
   } = useInventory();
 
-  const [tab, setTab] = useState<"category-order" | "attribute-options">(initialTab);
+  const [tab, setTab] = useState<"category-order" | "attribute-options">(
+    initialTab
+  );
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory>(
     activeCategory || catalogConfig.categoryOrder[0] || "Cargadores y Cables"
   );
@@ -73,7 +76,8 @@ export default function DesktopAttributeConfigView({
     isSameCatalogText(c.name, selectedCategory)
   );
   const categoryAttrKeys =
-    currentCategoryConfig?.attributeKeys ?? inferAttributeKeysForCategory(selectedCategory);
+    currentCategoryConfig?.attributeKeys ??
+    inferAttributeKeysForCategory(selectedCategory);
 
   const showFeedback = (type: "success" | "warning", text: string) => {
     setFeedbackMsg({ type, text });
@@ -212,7 +216,8 @@ export default function DesktopAttributeConfigView({
               Banco Maestro de Atributos y Modularidad
             </h1>
             <p className="text-xs text-[var(--text-secondary)]">
-              Configura los atributos y valores desplegables por categoría de productos
+              Configura los atributos y valores desplegables por categoría de
+              productos
             </p>
           </div>
         </div>
@@ -333,7 +338,9 @@ export default function DesktopAttributeConfigView({
                       <span className="text-xs truncate">{attr.label}</span>
                       <span
                         className={`text-[10px] px-2 py-0.5 rounded-full tabular-nums font-bold ${
-                          isActive ? "bg-white/20 text-white" : "bg-black/5 dark:bg-white/10"
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : "bg-black/5 dark:bg-white/10"
                         }`}
                       >
                         {attr.options.length}
@@ -352,11 +359,15 @@ export default function DesktopAttributeConfigView({
                     {activeAttr?.label || "Atributo"}
                   </h2>
                   <p className="text-xs text-[var(--text-secondary)]">
-                    {activeAttr?.options.length ?? 0} opciones configuradas en el catálogo
+                    {activeAttr?.options.length ?? 0} opciones configuradas en
+                    el catálogo
                   </p>
                 </div>
 
-                <form onSubmit={handleAddOption} className="flex items-center gap-2">
+                <form
+                  onSubmit={handleAddOption}
+                  className="flex items-center gap-2"
+                >
                   <input
                     type="text"
                     value={newOptionInput}
@@ -499,7 +510,8 @@ export default function DesktopAttributeConfigView({
                   Atributos activos en: {selectedCategory}
                 </h2>
                 <p className="text-xs text-[var(--text-secondary)]">
-                  Define el orden en que se solicitan y muestran los atributos para esta categoría
+                  Define el orden en que se solicitan y muestran los atributos
+                  para esta categoría
                 </p>
               </div>
 
@@ -557,7 +569,12 @@ export default function DesktopAttributeConfigView({
                   <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
                     Agregar otro atributo a esta categoría:
                   </p>
-                  <div className="flex flex-wrap gap-2">
+                  <HorizontalScrollNav
+                    testId="desktop-attr-config-available-nav"
+                    className="flex items-center gap-2 overflow-x-auto scroll-smooth custom-scrollbar py-1 flex-1"
+                    containerClassName="relative flex items-center w-full min-w-0"
+                    scrollAmount={220}
+                  >
                     {attributeList
                       .filter((a) => !categoryAttrKeys.includes(a.key))
                       .map((a) => (
@@ -571,7 +588,7 @@ export default function DesktopAttributeConfigView({
                           <span>{a.label}</span>
                         </button>
                       ))}
-                  </div>
+                  </HorizontalScrollNav>
                 </div>
               )}
             </div>

@@ -11,7 +11,10 @@ import {
 } from "lucide-react";
 import React, { useRef, useState } from "react";
 import AttributeConfigModal from "./AttributeConfigModal";
+import DesktopCategoryManagerView from "./DesktopCategoryManagerView";
+import HorizontalScrollNav from "../../../components/HorizontalScrollNav";
 import ModalSheet from "../../../components/ModalSheet";
+import useIsDesktop from "../../../hooks/useIsDesktop";
 import { useInventory } from "../../../context/InventoryContext";
 import { ProductCategory } from "../../../types/domain";
 import {
@@ -22,15 +25,19 @@ import {
   normalizeCatalogText,
 } from "../../../utils/catalogConfig";
 
-interface CategoryManagerModalProps {
+export interface CategoryManagerModalProps {
   onClose: () => void;
   onStartClose?: () => void;
+  initialCategory?: ProductCategory;
 }
 
 export default function CategoryManagerModal({
   onClose,
   onStartClose,
+  initialCategory,
 }: CategoryManagerModalProps) {
+  const isDesktop = useIsDesktop();
+
   const {
     products,
     catalogConfig,
@@ -40,6 +47,18 @@ export default function CategoryManagerModal({
     updateCategoryAttributes,
     resetCatalogConfigToDefault,
   } = useInventory();
+
+  if (isDesktop) {
+    return (
+      <DesktopCategoryManagerView
+        initialCategory={initialCategory}
+        onBack={() => {
+          onStartClose?.();
+          onClose();
+        }}
+      />
+    );
+  }
 
   const [draftOrder, setDraftOrder] = useState<ProductCategory[]>(() => [
     ...catalogConfig.categoryOrder,
@@ -56,9 +75,8 @@ export default function CategoryManagerModal({
   const listContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Categoría cuyo orden de atributos se está configurando en vivo
-  const [editingAttrCategory, setEditingAttrCategory] = useState<ProductCategory | null>(
-    null
-  );
+  const [editingAttrCategory, setEditingAttrCategory] =
+    useState<ProductCategory | null>(null);
 
   // Estado para alerta de protección contra categorías huérfanas (Riesgo 1)
   const [categoryPendingDelete, setCategoryPendingDelete] = useState<{
@@ -70,7 +88,8 @@ export default function CategoryManagerModal({
 
   // Mapa de cantidad de productos activos por categoría
   const productCountByCategory = (catName: ProductCategory): number => {
-    return products.filter((p) => isSameCatalogText(p.category, catName)).length;
+    return products.filter((p) => isSameCatalogText(p.category, catName))
+      .length;
   };
 
   const isFactoryCategory = (catName: ProductCategory): boolean => {
@@ -129,7 +148,11 @@ export default function CategoryManagerModal({
   };
 
   // Procesar deslizamiento vertical del dedo sobre la lista para reordenar en tiempo real
-  const handleTouchMovePoint = (clientX: number, clientY: number, e?: React.TouchEvent) => {
+  const handleTouchMovePoint = (
+    clientX: number,
+    clientY: number,
+    e?: React.TouchEvent
+  ) => {
     const activeIdx = touchDragIndexRef.current;
     if (activeIdx === null) {
       // Si el usuario movió el dedo antes de cumplirse el long-press, cancelar timer para permitir scroll normal
@@ -146,7 +169,9 @@ export default function CategoryManagerModal({
     // Buscar sobre qué fila se encuentra el dedo por coordenadas o por hit-testing
     let targetIdx: number | null = null;
     const elUnderFinger = document.elementFromPoint(clientX, clientY);
-    const rowEl = elUnderFinger?.closest("[data-category-index]") as HTMLElement | null;
+    const rowEl = elUnderFinger?.closest(
+      "[data-category-index]"
+    ) as HTMLElement | null;
     if (rowEl && rowEl.dataset.categoryIndex !== undefined) {
       const parsed = parseInt(rowEl.dataset.categoryIndex, 10);
       if (!Number.isNaN(parsed)) {
@@ -154,7 +179,9 @@ export default function CategoryManagerModal({
       }
     } else if (listContainerRef.current) {
       const rows = Array.from(
-        listContainerRef.current.querySelectorAll<HTMLElement>("[data-category-index]")
+        listContainerRef.current.querySelectorAll<HTMLElement>(
+          "[data-category-index]"
+        )
       );
       for (const r of rows) {
         const rect = r.getBoundingClientRect();
@@ -215,7 +242,9 @@ export default function CategoryManagerModal({
     await deleteCategory(targetName, FALLBACK_ORPHAN_CATEGORY);
     setDraftOrder((prev) => {
       const filtered = prev.filter((c) => !isSameCatalogText(c, targetName));
-      if (!filtered.some((c) => isSameCatalogText(c, FALLBACK_ORPHAN_CATEGORY))) {
+      if (
+        !filtered.some((c) => isSameCatalogText(c, FALLBACK_ORPHAN_CATEGORY))
+      ) {
         filtered.push(FALLBACK_ORPHAN_CATEGORY);
       }
       return filtered;
@@ -346,7 +375,10 @@ export default function CategoryManagerModal({
           )}
 
           {/* Crear nueva categoría rápida */}
-          <form onSubmit={handleCreateCategory} className="flex items-center gap-2">
+          <form
+            onSubmit={handleCreateCategory}
+            className="flex items-center gap-2"
+          >
             <input
               type="text"
               value={newCategoryName}
@@ -423,13 +455,18 @@ export default function CategoryManagerModal({
                   isSameCatalogText(c.name, catName)
                 );
                 const currentAttrKeys =
-                  catConfig?.attributeKeys ?? inferAttributeKeysForCategory(catName);
+                  catConfig?.attributeKeys ??
+                  inferAttributeKeysForCategory(catName);
                 const attrLabels = currentAttrKeys
-                  .map((k, i) => `${i + 1}. ${catalogConfig.attributes[k]?.label || k}`)
+                  .map(
+                    (k, i) =>
+                      `${i + 1}. ${catalogConfig.attributes[k]?.label || k}`
+                  )
                   .filter(Boolean)
                   .join(" · ");
 
-                const isDraggedOver = dragOverIndex === idx && draggedIndex !== idx;
+                const isDraggedOver =
+                  dragOverIndex === idx && draggedIndex !== idx;
                 const isTouchDragging = touchDragIndex === idx;
                 const isEditingAttrs =
                   editingAttrCategory !== null &&
@@ -483,7 +520,11 @@ export default function CategoryManagerModal({
                         }
                         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30] hover:text-white active:scale-90 transition-all"
                       >
-                        <Minus size={15} strokeWidth={2.75} className="shrink-0" />
+                        <Minus
+                          size={15}
+                          strokeWidth={2.75}
+                          className="shrink-0"
+                        />
                       </button>
 
                       {/* Centro: Nombre de la categoría + Metadatos y Orden de Atributos */}
@@ -505,7 +546,9 @@ export default function CategoryManagerModal({
                           aria-label={`Ordenar atributos de ${catName}`}
                           className="mt-0.5 block max-w-full truncate text-left text-[10px] font-medium text-[var(--text-secondary)] dark:text-zinc-400 hover:text-accent transition-colors duration-200"
                         >
-                          {attrLabels ? `Atributos: ${attrLabels}` : "Configurar atributos"}
+                          {attrLabels
+                            ? `Atributos: ${attrLabels}`
+                            : "Configurar atributos"}
                         </button>
                       </div>
 
@@ -557,35 +600,48 @@ export default function CategoryManagerModal({
                     {isEditingAttrs && (
                       <div className="mt-2.5 border-t border-[var(--border-color)] dark:border-zinc-800 pt-2.5 space-y-1.5 animate-in fade-in duration-100">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
-                          Toca los atributos en el orden exacto en que deseas verlos:
+                          Toca los atributos en el orden exacto en que deseas
+                          verlos:
                         </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {Object.values(catalogConfig.attributes).map((attr) => {
-                            const orderIdx = currentAttrKeys.indexOf(attr.key);
-                            const isSelected = orderIdx !== -1;
-                            return (
-                              <button
-                                key={attr.key}
-                                type="button"
-                                onClick={() =>
-                                  handleToggleCategoryAttributeOrder(catName, attr.key)
-                                }
-                                className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors duration-200 ${
-                                  isSelected
-                                    ? "bg-accent text-white shadow-sm"
-                                    : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)] dark:bg-zinc-950 text-[var(--text-secondary)] dark:text-zinc-400"
-                                }`}
-                              >
-                                {isSelected && (
-                                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/25 text-[10px] font-extrabold">
-                                    {orderIdx + 1}
-                                  </span>
-                                )}
-                                <span>{attr.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
+                        <HorizontalScrollNav
+                          testId="category-manager-attributes-nav"
+                          className="flex items-center gap-1.5 overflow-x-auto scroll-smooth custom-scrollbar py-1"
+                          containerClassName="relative flex items-center w-full min-w-0"
+                          scrollAmount={200}
+                        >
+                          {Object.values(catalogConfig.attributes).map(
+                            (attr) => {
+                              const orderIdx = currentAttrKeys.indexOf(
+                                attr.key
+                              );
+                              const isSelected = orderIdx !== -1;
+                              return (
+                                <button
+                                  key={attr.key}
+                                  type="button"
+                                  onClick={() =>
+                                    handleToggleCategoryAttributeOrder(
+                                      catName,
+                                      attr.key
+                                    )
+                                  }
+                                  className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors duration-200 ${
+                                    isSelected
+                                      ? "bg-accent text-white shadow-sm"
+                                      : "border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)] dark:bg-zinc-950 text-[var(--text-secondary)] dark:text-zinc-400"
+                                  }`}
+                                >
+                                  {isSelected && (
+                                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/25 text-[10px] font-extrabold">
+                                      {orderIdx + 1}
+                                    </span>
+                                  )}
+                                  <span>{attr.label}</span>
+                                </button>
+                              );
+                            }
+                          )}
+                        </HorizontalScrollNav>
                       </div>
                     )}
                   </div>
@@ -602,7 +658,8 @@ export default function CategoryManagerModal({
                   Valores Predeterminados Fijos (Respaldo)
                 </p>
                 <p className="text-[11px] text-[var(--text-secondary)] dark:text-zinc-400 mt-0.5">
-                  Toca cualquier categoría en respaldo para volver a agregarla a la barra.
+                  Toca cualquier categoría en respaldo para volver a agregarla a
+                  la barra.
                 </p>
               </div>
               <button
@@ -616,7 +673,12 @@ export default function CategoryManagerModal({
               </button>
             </div>
 
-            <div className="flex flex-wrap gap-1.5">
+            <HorizontalScrollNav
+              testId="category-manager-backup-nav"
+              className="flex items-center gap-1.5 overflow-x-auto scroll-smooth custom-scrollbar py-1"
+              containerClassName="relative flex items-center w-full min-w-0"
+              scrollAmount={200}
+            >
               {FACTORY_BASE_CATEGORIES.map((baseCat) => {
                 const isActiveInBar = draftOrder.some((c) =>
                   isSameCatalogText(c, baseCat)
@@ -647,7 +709,7 @@ export default function CategoryManagerModal({
                   </span>
                 );
               })}
-            </div>
+            </HorizontalScrollNav>
           </div>
         </div>
       </ModalSheet>
@@ -655,7 +717,9 @@ export default function CategoryManagerModal({
       {isAttributeModalOpen && (
         <AttributeConfigModal
           activeCategory={editingAttrCategory || undefined}
-          initialTab={editingAttrCategory ? "category-order" : "attribute-options"}
+          initialTab={
+            editingAttrCategory ? "category-order" : "attribute-options"
+          }
           onClose={() => {
             setIsAttributeModalOpen(false);
             setEditingAttrCategory(null);

@@ -7,6 +7,7 @@ import {
   Search,
   Sliders,
   SlidersHorizontal,
+  Plus,
   Table2,
   X,
   Zap,
@@ -26,10 +27,13 @@ import {
   AttributeConfigModal,
   CategoryManagerModal,
   DesktopAttributeConfigView,
+  DesktopCategoryManagerView,
   DesktopInventoryGrid,
+  DesktopNewProductModal,
   DesktopProductDrawer,
   ProductCard,
 } from "../modules/inventory";
+import HorizontalScrollNav from "../components/HorizontalScrollNav";
 import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
 import { useInventory } from "../context/InventoryContext";
 import { Product, ProductCategory } from "../types/domain";
@@ -45,6 +49,7 @@ interface InventoryViewProps {
 const DESKTOP_PAGE_SIZES: Array<{ value: InventoryPageSize; label: string }> = [
   { value: 10, label: "10" },
   { value: 20, label: "20" },
+  { value: 30, label: "30" },
   { value: 50, label: "50" },
   { value: 100, label: "100" },
   { value: "all", label: "Todos" },
@@ -77,6 +82,8 @@ export default function InventoryView({
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isAttributeModalOpen, setIsAttributeModalOpen] = useState(false);
+  const [isDesktopNewProductModalOpen, setIsDesktopNewProductModalOpen] =
+    useState(false);
 
   // Estados exclusivos de la Estación de Trabajo de Escritorio (Data Grid / Excel)
   const isDesktopViewport = useIsDesktop();
@@ -395,7 +402,7 @@ export default function InventoryView({
     productSearchIndex,
   ]);
 
-  // Subconjunto visible según la paginación activa
+  // Subconjunto visible según la paginación activa (predeterminado 10 productos)
   const paginatedProducts = useMemo(() => {
     if (pageSize === "all") return filteredProducts;
     return filteredProducts.slice(0, visibleCount);
@@ -458,11 +465,20 @@ export default function InventoryView({
 
   if (isDesktopViewport && isDesktopAttributeView) {
     return (
-      <DesktopAttributeConfigView
-        activeCategory={
+      <DesktopCategoryManagerView
+        initialCategory={
           selectedCategory !== "Todos" ? selectedCategory : undefined
         }
         onBack={() => setIsDesktopAttributeView(false)}
+      />
+    );
+  }
+
+  if (isDesktopViewport && isDesktopNewProductModalOpen) {
+    return (
+      <DesktopNewProductModal
+        onClose={() => setIsDesktopNewProductModalOpen(false)}
+        onOpenSuppliers={_onOpenSuppliers}
       />
     );
   }
@@ -541,24 +557,10 @@ export default function InventoryView({
           {/* Barra de Herramientas de Alta Productividad (Exclusiva Escritorio >= 768px) */}
           <div
             data-testid="desktop-workstation-toolbar"
-            className="hidden md:flex flex-wrap items-center justify-between gap-2 mb-2.5 pb-2 border-b border-[var(--border-color)]/60"
+            className="hidden md:flex flex-wrap items-center justify-between gap-2 mb-2.5 pb-2 border-b border-[var(--border-color)]/60 select-none"
           >
-            {/* Izquierda: Contador en vivo + Controles de Conteo Rápido, Privacidad, Categorías y Atributos */}
+            {/* Izquierda: Controles de Conteo Rápido, Categorías, Atributos y Nuevo Producto */}
             <div className="flex flex-wrap items-center gap-2">
-              <span
-                data-testid="desktop-results-counter"
-                className="tabular-nums rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-secondary)]"
-              >
-                Mostrando{" "}
-                <strong className="text-[var(--text-primary)]">
-                  {paginatedProducts.length}
-                </strong>{" "}
-                de{" "}
-                <strong className="text-[var(--text-primary)]">
-                  {filteredProducts.length}
-                </strong>
-              </span>
-
               {/* Switch Modo Conteo Rápido (Alt + M) */}
               <button
                 type="button"
@@ -590,48 +592,33 @@ export default function InventoryView({
                 </kbd>
               </button>
 
-              {/* Switch Privacidad / Costos (Ojo Abierto / Tachado) */}
+              {/* Gestión Unificada de Catálogo en 3 Columnas */}
               <button
                 type="button"
-                data-testid="desktop-toggle-costs-btn"
-                onClick={() => setShowCosts((prev) => !prev)}
-                title={
-                  showCosts
-                    ? "Ocultar costos y márgenes (Modo Privacidad)"
-                    : "Revelar costos por mayor y márgenes"
-                }
-                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all duration-150 ${
-                  showCosts
-                    ? "border-accent/40 bg-accent-subtle text-accent"
-                    : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                }`}
-              >
-                {showCosts ? <Eye size={14} /> : <EyeOff size={14} />}
-                <span>{showCosts ? "Costos visibles" : "Costos ocultos"}</span>
-              </button>
-
-              {/* Gestión de Categorías y Atributos */}
-              <button
-                type="button"
+                data-testid="desktop-catalog-settings-btn"
                 onClick={() => handleOpenCategoryModal(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 transition-colors duration-150"
+                title="Configuración y Ajustes de Catálogo (Categorías, Atributos y Opciones)"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all duration-150 shadow-xs cursor-pointer"
               >
                 <SlidersHorizontal size={13} className="text-accent" />
-                <span>Categorías</span>
+                <span>Ajustes de Catálogo</span>
               </button>
 
+              {/* Botón Destacado de Acción Principal: Nuevo Producto */}
               <button
                 type="button"
-                onClick={() => handleOpenAttributeModal(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 transition-colors duration-150"
+                data-testid="desktop-toolbar-new-product-btn"
+                onClick={() => setIsDesktopNewProductModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-accent-glow hover:bg-accent-hover active:scale-95 transition-all duration-150"
               >
-                <Sliders size={13} className="text-accent" />
-                <span>Atributos</span>
+                <Plus size={13} strokeWidth={2.5} />
+                <span>Nuevo Producto</span>
               </button>
             </div>
 
-            {/* Derecha: Paginación Densa en Escritorio + Selector de Vista (Tabla Excel / Tarjetas) */}
+            {/* Derecha: Selector de Cantidad de Filas + Selector de Vista (Tabla Excel / Tarjetas) */}
             <div className="flex items-center gap-2">
+              {/* Selector de cantidad de registros a visualizar (10, 20, 30, 50, 100, Todos) */}
               <div
                 data-testid="desktop-page-size-bar"
                 className="flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1"
@@ -689,7 +676,14 @@ export default function InventoryView({
           </div>
 
           {/* 2. Chips Horizontales de Selección de Categoría (Soporte Long-Press para Organizar Categorías) */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          <HorizontalScrollNav
+            testId="desktop-category-chips-nav"
+            variant="none"
+            enableDrag={true}
+            className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth pb-1 flex-1"
+            containerClassName="relative flex items-center w-full min-w-0"
+            scrollAmount={240}
+          >
             {sortedCategories.map((cat) => {
               const isActive = selectedCategory === cat;
               const isZeroStock =
@@ -702,6 +696,14 @@ export default function InventoryView({
                   onPointerUp={handleCategoryPressEnd}
                   onPointerLeave={handleCategoryPressEnd}
                   onPointerCancel={handleCategoryPressEnd}
+                  onPointerMove={(e) => {
+                    if (
+                      Math.abs(e.movementX) > 2 ||
+                      Math.abs(e.movementY) > 2
+                    ) {
+                      clearLongPressTimer();
+                    }
+                  }}
                   onTouchMove={handleCategoryPressEnd}
                   onContextMenu={(e) => {
                     e.preventDefault();
@@ -738,14 +740,18 @@ export default function InventoryView({
             >
               <SlidersHorizontal size={14} />
             </button>
-          </div>
+          </HorizontalScrollNav>
 
           {/* Subfiltros rápidos de atributos/subtipos cuando hay una categoría activa */}
           {selectedCategory !== "Todos" &&
             availableAttributeTags.length > 0 && (
-              <div
-                data-testid="category-attribute-subfilters"
-                className="mt-2 flex items-center gap-1.5 overflow-x-auto pt-1.5 border-t border-[var(--border-color)]/60 no-scrollbar"
+              <HorizontalScrollNav
+                testId="category-attribute-subfilters"
+                variant="none"
+                enableDrag={true}
+                className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1"
+                containerClassName="relative flex items-center w-full min-w-0 mt-2 border-t border-[var(--border-color)]/60 pt-1.5"
+                scrollAmount={200}
               >
                 <button
                   type="button"
@@ -780,7 +786,7 @@ export default function InventoryView({
                     </button>
                   );
                 })}
-              </div>
+              </HorizontalScrollNav>
             )}
         </div>
 
@@ -845,6 +851,7 @@ export default function InventoryView({
               onInspectProduct={(prod) => setInspectedProduct(prod)}
               quickCountMode={quickCountMode}
               focusQuickAddRef={focusQuickAddRef}
+              onOpenNewProduct={() => setIsDesktopNewProductModalOpen(true)}
             />
           ) : (
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -987,9 +994,12 @@ export default function InventoryView({
         />
       )}
 
-      {/* Hoja Modal de Gestión y Reordenamiento de Categorías (Long-Press) */}
+      {/* Hoja Modal / Banco Maestro de Gestión y Reordenamiento de Categorías */}
       {isCategoryModalOpen && (
         <CategoryManagerModal
+          initialCategory={
+            selectedCategory !== "Todos" ? selectedCategory : undefined
+          }
           onStartClose={() => onFilterModalStateChange?.(false)}
           onClose={() => handleOpenCategoryModal(false)}
         />
