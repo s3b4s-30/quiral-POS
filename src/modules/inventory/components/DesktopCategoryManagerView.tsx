@@ -13,7 +13,6 @@ import {
   X,
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
-import HorizontalScrollNav from "../../../components/HorizontalScrollNav";
 import { useInventory } from "../../../context/InventoryContext";
 import { ProductCategory } from "../../../types/domain";
 import {
@@ -30,8 +29,9 @@ export interface DesktopCategoryManagerViewProps {
 }
 
 /**
- * DesktopCategoryManagerView — Estación de Trabajo en Panel Dual para Gestión de Categorías
- * Cumple con el estándar de Banco Maestro, Platform Split (>= 768px) y Paleta Dual OLED.
+ * DesktopCategoryManagerView — Estación de Trabajo Desktop en 3 Columnas Claras
+ * Cero Scroll Horizontal (100% vertical y adaptativo), Platform Split (>= 768px),
+ * Paleta Dual OLED (#000000) y consistencia total con el Banco Maestro de Catálogo.
  */
 export default function DesktopCategoryManagerView({
   onBack,
@@ -48,6 +48,7 @@ export default function DesktopCategoryManagerView({
     renameAttributeOption,
     deleteAttributeOption,
     reorderAttributeOptions,
+    createCustomAttribute,
     resetCatalogConfigToDefault,
   } = useInventory();
 
@@ -56,7 +57,7 @@ export default function DesktopCategoryManagerView({
     ...catalogConfig.categoryOrder,
   ]);
 
-  // Categoría actualmente seleccionada para inspección/detalle
+  // Categoría actualmente seleccionada en Columna 1
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory>(
     () => {
       if (
@@ -70,11 +71,16 @@ export default function DesktopCategoryManagerView({
     }
   );
 
-  // Creación de nueva categoría en panel izquierdo
+  // Creación de nueva categoría en Columna 1
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
 
-  // Opciones de atributos en panel derecho
+  // Creación de nuevo atributo personalizado en Columna 2
+  const [isCreatingAttribute, setIsCreatingAttribute] = useState(false);
+  const [newAttributeLabel, setNewAttributeLabel] = useState("");
+  const [newAttributeFirstOption, setNewAttributeFirstOption] = useState("");
+
+  // Opciones de atributos en Columna 3
   const [newOptionInput, setNewOptionInput] = useState("");
   const [editingOption, setEditingOption] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState("");
@@ -115,7 +121,7 @@ export default function DesktopCategoryManagerView({
     );
   }, [currentCategoryConfig, selectedCategory]);
 
-  // Atributo activo dentro del panel derecho para gestionar sus opciones
+  // Atributo activo actualmente seleccionado en Columna 2 para inspeccionar en Columna 3
   const [activeAttrKey, setActiveAttrKey] = useState<string>(
     categoryAttrKeys[0] || "chargerSubtypes"
   );
@@ -132,7 +138,14 @@ export default function DesktopCategoryManagerView({
   // Atributos del banco maestro disponibles en todo el catálogo
   const allAttributesList = Object.values(catalogConfig.attributes);
 
-  // Atributo activo actualmente inspeccionado
+  // Atributos disponibles que aún NO están vinculados a selectedCategory
+  const availableAttrsToLink = useMemo(() => {
+    return allAttributesList.filter(
+      (attr) => !categoryAttrKeys.includes(attr.key)
+    );
+  }, [allAttributesList, categoryAttrKeys]);
+
+  // Atributo activo seleccionado
   const activeAttr =
     catalogConfig.attributes[activeAttrKey] || allAttributesList[0];
 
@@ -152,6 +165,8 @@ export default function DesktopCategoryManagerView({
           setCategoryPendingDelete(null);
         } else if (isCreatingCategory) {
           setIsCreatingCategory(false);
+        } else if (isCreatingAttribute) {
+          setIsCreatingAttribute(false);
         } else if (editingOption) {
           setEditingOption(null);
         } else {
@@ -161,15 +176,21 @@ export default function DesktopCategoryManagerView({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [categoryPendingDelete, isCreatingCategory, editingOption, draftOrder]);
+  }, [
+    categoryPendingDelete,
+    isCreatingCategory,
+    isCreatingAttribute,
+    editingOption,
+    draftOrder,
+  ]);
 
-  // Guardar y cerrar
+  // Guardar orden y cerrar
   const handleSaveAndClose = () => {
     updateCategoryOrder(draftOrder);
     onBack();
   };
 
-  // Reordenar categoría en panel izquierdo
+  // Reordenar categoría en Columna 1
   const moveCategory = (index: number, direction: -1 | 1) => {
     const targetIndex = index + direction;
     if (targetIndex < 0 || targetIndex >= draftOrder.length) return;
@@ -181,7 +202,7 @@ export default function DesktopCategoryManagerView({
     });
   };
 
-  // Crear nueva categoría
+  // Crear nueva categoría en Columna 1
   const handleCreateCategory = (e: React.FormEvent) => {
     e.preventDefault();
     const clean = normalizeCatalogText(newCategoryName);
@@ -220,7 +241,7 @@ export default function DesktopCategoryManagerView({
     showFeedback("success", `Categoría "${catName}" eliminada.`);
   };
 
-  // Confirmar eliminación de categoría con huérfanos
+  // Confirmar eliminación de categoría con productos huérfanos
   const handleConfirmOrphanMoveAndDelete = async () => {
     if (!categoryPendingDelete) return;
     const catName = categoryPendingDelete.name;
@@ -261,7 +282,7 @@ export default function DesktopCategoryManagerView({
     showFeedback("success", "Categorías restablecidas a valores de fábrica.");
   };
 
-  // Atributos de categoría: mover orden
+  // Reordenar atributos de la categoría seleccionada en Columna 2
   const moveCategoryAttr = (fromIdx: number, toIdx: number) => {
     if (
       fromIdx === toIdx ||
@@ -276,9 +297,10 @@ export default function DesktopCategoryManagerView({
     const [moved] = next.splice(fromIdx, 1);
     next.splice(toIdx, 0, moved);
     updateCategoryAttributes(selectedCategory, next);
+    showFeedback("success", "Prioridad de atributo actualizada.");
   };
 
-  // Atributos de categoría: desvincular
+  // Desvincular atributo de la categoría
   const removeCategoryAttr = (keyToRemove: string) => {
     if (categoryAttrKeys.length <= 1) {
       showFeedback(
@@ -295,7 +317,7 @@ export default function DesktopCategoryManagerView({
     showFeedback("success", "Atributo desvinculado de la categoría.");
   };
 
-  // Atributos de categoría: vincular nuevo
+  // Vincular atributo existente a la categoría
   const addCategoryAttr = (keyToAdd: string) => {
     if (categoryAttrKeys.includes(keyToAdd)) return;
     const next = [...categoryAttrKeys, keyToAdd];
@@ -304,7 +326,36 @@ export default function DesktopCategoryManagerView({
     showFeedback("success", "Atributo vinculado a la categoría.");
   };
 
-  // Opciones del atributo activo: agregar opción rápida
+  // Crear y vincular un nuevo atributo personalizado en el banco maestro
+  const handleCreateCustomAttr = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanLabel = normalizeCatalogText(newAttributeLabel);
+    if (!cleanLabel) return;
+
+    const initialOpts = newAttributeFirstOption.trim()
+      ? [normalizeCatalogText(newAttributeFirstOption)]
+      : undefined;
+
+    const newKey = createCustomAttribute(cleanLabel, initialOpts);
+    if (!newKey) {
+      showFeedback(
+        "warning",
+        `Ya existe un atributo con el nombre "${cleanLabel}".`
+      );
+      return;
+    }
+
+    // Vincular automáticamente a la categoría actual
+    const next = [...categoryAttrKeys, newKey];
+    updateCategoryAttributes(selectedCategory, next);
+    setActiveAttrKey(newKey);
+    setIsCreatingAttribute(false);
+    setNewAttributeLabel("");
+    setNewAttributeFirstOption("");
+    showFeedback("success", `Atributo "${cleanLabel}" creado y vinculado.`);
+  };
+
+  // Opciones del atributo en Columna 3: agregar opción rápida
   const handleAddOption = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newOptionInput.trim();
@@ -320,10 +371,13 @@ export default function DesktopCategoryManagerView({
 
     addAttributeOption(activeAttr.key, trimmed);
     setNewOptionInput("");
-    showFeedback("success", `Opción "${trimmed}" agregada.`);
+    showFeedback(
+      "success",
+      `Opción "${trimmed}" agregada a «${activeAttr.label}».`
+    );
   };
 
-  // Opciones del atributo activo: reordenar
+  // Opciones del atributo en Columna 3: reordenar
   const moveOption = (index: number, direction: "up" | "down") => {
     if (!activeAttr) return;
     const targetIndex = direction === "up" ? index - 1 : index + 1;
@@ -335,7 +389,7 @@ export default function DesktopCategoryManagerView({
     reorderAttributeOptions(activeAttr.key, next);
   };
 
-  // Opciones del atributo activo: guardar edición
+  // Opciones del atributo en Columna 3: guardar edición
   const handleSaveEdit = (oldOption: string) => {
     const trimmed = editingValue.trim();
     if (!trimmed || !activeAttr) {
@@ -355,7 +409,7 @@ export default function DesktopCategoryManagerView({
     showFeedback("success", "Opción actualizada.");
   };
 
-  // Opciones del atributo activo: eliminar
+  // Opciones del atributo en Columna 3: eliminar opción
   const handleDeleteOption = (option: string) => {
     if (!activeAttr) return;
     if (activeAttr.options.length <= 1) {
@@ -374,11 +428,14 @@ export default function DesktopCategoryManagerView({
       data-testid="desktop-category-manager-view"
       className="fixed inset-0 z-40 w-full h-full flex flex-col overflow-hidden bg-[var(--bg-primary)] pt-[var(--quiral-header-offset,4rem)] antialiased-hd"
     >
-      {/* Cabecera Superior de la Vista de Pantalla Completa */}
+      {/* ======================================================== */}
+      {/* CABECERA SUPERIOR: Título, Atajos y Acciones Maestras    */}
+      {/* ======================================================== */}
       <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-elevated)]/90 backdrop-blur-md px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             type="button"
+            data-testid="back-category-manager-btn"
             aria-label="Regresar al Inventario"
             onClick={handleSaveAndClose}
             className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all cursor-pointer"
@@ -392,8 +449,7 @@ export default function DesktopCategoryManagerView({
               Organizar Categorías
             </h1>
             <p className="text-xs text-[var(--text-secondary)] font-medium">
-              Banco Maestro de Categorías, jerarquía y configuración de
-              atributos
+              Banco Maestro en 3 columnas: Categorías · Atributos · Opciones
             </p>
           </div>
         </div>
@@ -440,7 +496,7 @@ export default function DesktopCategoryManagerView({
         </div>
       )}
 
-      {/* Alerta Modal de Protección contra Categorías Huérfanas */}
+      {/* Alerta de Protección contra Categorías Huérfanas */}
       {categoryPendingDelete && (
         <div
           role="alertdialog"
@@ -483,7 +539,7 @@ export default function DesktopCategoryManagerView({
               type="button"
               data-testid="confirm-orphan-category-delete"
               onClick={handleConfirmOrphanMoveAndDelete}
-              className="rounded-xl bg-[#ff3b30] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs active:scale-95 transition-transform"
+              className="rounded-xl bg-[#ff3b30] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs active:scale-95 transition-transform cursor-pointer"
             >
               Mover a General / Otros y Eliminar
             </button>
@@ -491,20 +547,22 @@ export default function DesktopCategoryManagerView({
         </div>
       )}
 
-      {/* Contenedor Principal: Panel Dual Simétrico de Escritorio */}
-      <div className="flex-1 overflow-hidden p-6 lg:p-8">
-        <div className="h-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6">
+      {/* ======================================================== */}
+      {/* CUERPO PRINCIPAL: 3 COLUMNAS LIMPIAS (CERO SCROLL HORIZONTAL) */}
+      {/* ======================================================== */}
+      <div className="flex-1 min-h-0 overflow-hidden p-5 lg:p-6">
+        <div className="h-full w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 min-h-0 overflow-hidden">
           {/* ======================================================== */}
-          {/* PANEL IZQUIERDO: Selector Maestro de Categorías (5 Cols) */}
+          {/* COLUMNA 1 (IZQUIERDA): Listado de Categorías             */}
           {/* ======================================================== */}
-          <div className="md:col-span-5 flex flex-col h-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-xs overflow-hidden">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+          <div className="flex flex-col h-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 lg:p-5 shadow-xs overflow-hidden min-h-0">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)] shrink-0">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
-                  Categorías ({draftOrder.length})
+                  1. Categorías ({draftOrder.length})
                 </h3>
                 <p className="text-[11px] text-[var(--text-secondary)]">
-                  Fija e inamovible al inicio de la barra
+                  Jerarquía en la barra de navegación
                 </p>
               </div>
               <button
@@ -521,13 +579,13 @@ export default function DesktopCategoryManagerView({
             {isCreatingCategory && (
               <form
                 onSubmit={handleCreateCategory}
-                className="mt-3 p-3 rounded-2xl border border-accent/30 bg-accent-subtle space-y-2 animate-in fade-in duration-150"
+                className="mt-3 p-3 rounded-2xl border border-accent/30 bg-accent-subtle space-y-2 animate-in fade-in duration-150 shrink-0"
               >
                 <input
                   type="text"
                   value={newCategoryName}
                   onChange={(e) => setNewCategoryName(e.target.value)}
-                  placeholder="Ej. Accesorios, Fundas, etc."
+                  placeholder="Ej. Accesorios, Fundas..."
                   autoFocus
                   className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
                 />
@@ -553,8 +611,8 @@ export default function DesktopCategoryManagerView({
               </form>
             )}
 
-            {/* Listado Scrollable de Categorías */}
-            <div className="flex-1 overflow-y-auto mt-3 space-y-1.5 pr-1 custom-scrollbar">
+            {/* Listado Vertical Scrollable de Categorías */}
+            <div className="flex-1 overflow-y-auto mt-3 space-y-1.5 pr-1 custom-scrollbar min-h-0">
               {draftOrder.map((cat, index) => {
                 const isActive = isSameCatalogText(cat, selectedCategory);
                 const count = productCountByCategory(cat);
@@ -567,7 +625,7 @@ export default function DesktopCategoryManagerView({
                         : "border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
                     }`}
                   >
-                    {/* Botón Principal para Seleccionar la Categoría */}
+                    {/* Botón de Selección de Categoría */}
                     <button
                       type="button"
                       onClick={() => setSelectedCategory(cat)}
@@ -633,13 +691,13 @@ export default function DesktopCategoryManagerView({
               })}
             </div>
 
-            {/* Categorías de Fábrica / Respaldo */}
+            {/* Categorías de Fábrica / Respaldo (Flujo Vertical Adaptativo) */}
             {backupCategories.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
+              <div className="mt-3 pt-3 border-t border-[var(--border-color)] shrink-0">
                 <h4 className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
                   Valores Predeterminados Fijos (Respaldo)
                 </h4>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto custom-scrollbar p-0.5">
                   {backupCategories.map((cat) => (
                     <button
                       key={cat}
@@ -658,240 +716,336 @@ export default function DesktopCategoryManagerView({
           </div>
 
           {/* ======================================================== */}
-          {/* PANEL DERECHO: Detalle, Atributos y Opciones (7 Cols)     */}
+          {/* COLUMNA 2 (CENTRO): Atributos de la Categoría Activa     */}
           {/* ======================================================== */}
-          <div className="md:col-span-7 flex flex-col h-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-6 shadow-xs overflow-hidden">
-            {/* Header del Panel Derecho */}
-            <div className="pb-4 border-b border-[var(--border-color)]">
+          <div className="flex flex-col h-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 lg:p-5 shadow-xs overflow-hidden min-h-0">
+            {/* Cabecera de Columna 2 */}
+            <div className="pb-3 border-b border-[var(--border-color)] shrink-0">
               <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-black text-[var(--text-primary)]">
+                <div className="min-w-0">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
+                    2. Atributos en Categoría
+                  </h3>
+                  <h2 className="text-sm lg:text-base font-black text-[var(--text-primary)] truncate mt-0.5">
                     {selectedCategory}
                   </h2>
-                  <p className="text-xs text-[var(--text-secondary)]">
-                    {productCountByCategory(selectedCategory)} productos activos
-                    · {categoryAttrKeys.length} atributos vinculados
-                  </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleRequestDeleteCategory(selectedCategory)
-                    }
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] px-3 py-1.5 text-xs font-bold text-red-500 hover:bg-red-500/10 hover:border-red-500/30 transition-all cursor-pointer"
-                  >
-                    <Trash2 size={13} />
-                    <span>Eliminar Categoría</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Selector de Pestañas de Atributos de esta Categoría */}
-              <div className="mt-3">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
-                  Atributos activos en esta categoría:
-                </p>
-                <HorizontalScrollNav
-                  testId="desktop-category-attributes-nav"
-                  className="flex items-center gap-1.5 overflow-x-auto scroll-smooth custom-scrollbar py-1"
-                  containerClassName="relative flex items-center w-full min-w-0"
-                  scrollAmount={200}
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingAttribute((prev) => !prev)}
+                  className="inline-flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1 text-[11px] font-bold text-accent hover:border-accent transition-all cursor-pointer shrink-0"
                 >
-                  {categoryAttrKeys.map((key, idx) => {
-                    const attr = catalogConfig.attributes[key];
-                    const isAttrActive = activeAttrKey === key;
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => setActiveAttrKey(key)}
-                        className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
-                          isAttrActive
-                            ? "bg-accent text-white shadow-xs"
-                            : "border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
-                        }`}
-                      >
-                        <span className="tabular-nums text-[10px] opacity-70">
-                          {idx + 1}.
-                        </span>
-                        <span>{attr?.label || key}</span>
-                        <span
-                          className={`text-[10px] px-1.5 py-0.2 rounded-full tabular-nums ${
-                            isAttrActive
-                              ? "bg-white/20"
-                              : "bg-black/5 dark:bg-white/10"
-                          }`}
-                        >
-                          {attr?.options.length ?? 0}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </HorizontalScrollNav>
+                  <Plus size={12} />
+                  <span>Crear Atributo</span>
+                </button>
               </div>
+              <p className="text-[11px] text-[var(--text-secondary)] mt-1">
+                {categoryAttrKeys.length} atributos vinculados · Define el orden
+                en filtros y Nuevo Producto
+              </p>
             </div>
 
-            {/* Configuración de Opciones del Atributo Activo */}
-            <div className="flex-1 flex flex-col min-h-0 pt-4">
-              <div className="flex items-center justify-between pb-3">
-                <div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-[var(--text-primary)]">
-                    Valores de «{activeAttr?.label || activeAttrKey}»
-                  </h4>
-                  <p className="text-[11px] text-[var(--text-secondary)]">
-                    {activeAttr?.options.length ?? 0} opciones desplegables
-                    configuradas
-                  </p>
+            {/* Formulario Inline para Crear Nuevo Atributo */}
+            {isCreatingAttribute && (
+              <form
+                onSubmit={handleCreateCustomAttr}
+                className="mt-3 p-3 rounded-2xl border border-accent/30 bg-accent-subtle space-y-2 animate-in fade-in duration-150 shrink-0"
+              >
+                <div className="text-[11px] font-bold text-accent uppercase tracking-wider">
+                  Nuevo Atributo Maestro:
                 </div>
-
-                {/* Formulario de Adición Rápida de Opción */}
-                <form
-                  onSubmit={handleAddOption}
-                  className="flex items-center gap-2"
-                >
-                  <input
-                    type="text"
-                    value={newOptionInput}
-                    onChange={(e) => setNewOptionInput(e.target.value)}
-                    placeholder="Nueva opción..."
-                    className="w-48 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
-                  />
+                <input
+                  type="text"
+                  value={newAttributeLabel}
+                  onChange={(e) => setNewAttributeLabel(e.target.value)}
+                  placeholder="Nombre (ej. Material, Conexión, Potencia...)"
+                  autoFocus
+                  className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                />
+                <input
+                  type="text"
+                  value={newAttributeFirstOption}
+                  onChange={(e) => setNewAttributeFirstOption(e.target.value)}
+                  placeholder="Primera opción / valor (opcional)"
+                  className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-primary)] outline-none focus:border-accent"
+                />
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCreatingAttribute(false);
+                      setNewAttributeLabel("");
+                      setNewAttributeFirstOption("");
+                    }}
+                    className="px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  >
+                    Cancelar
+                  </button>
                   <button
                     type="submit"
-                    disabled={!newOptionInput.trim()}
-                    className="inline-flex items-center gap-1 rounded-xl bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-accent-hover transition-all disabled:opacity-50 cursor-pointer"
+                    disabled={!newAttributeLabel.trim()}
+                    className="px-3 py-1 rounded-lg bg-accent text-[11px] font-bold text-white disabled:opacity-50 cursor-pointer"
                   >
-                    <Plus size={13} />
-                    <span>Agregar</span>
+                    Crear y Vincular
                   </button>
-                </form>
-              </div>
+                </div>
+              </form>
+            )}
 
-              {/* Lista Scrollable de Opciones del Atributo */}
-              <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                {activeAttr?.options.map((option, index) => {
-                  const isEditing = editingOption === option;
-                  return (
-                    <div
-                      key={option}
-                      className="group flex items-center justify-between p-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] transition-all hover:border-accent/40"
-                    >
-                      {isEditing ? (
-                        <div className="flex-1 flex items-center gap-2 mr-3">
-                          <input
-                            type="text"
-                            value={editingValue}
-                            onChange={(e) => setEditingValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleSaveEdit(option);
-                              if (e.key === "Escape") setEditingOption(null);
-                            }}
-                            autoFocus
-                            className="flex-1 rounded-xl border border-accent bg-[var(--bg-elevated)] px-3 py-1 text-xs font-bold text-[var(--text-primary)] outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleSaveEdit(option)}
-                            className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white cursor-pointer"
-                          >
-                            Guardar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setEditingOption(null)}
-                            className="rounded-lg border border-[var(--border-color)] px-2 py-1 text-xs text-[var(--text-secondary)] cursor-pointer"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                          <span className="tabular-nums text-[10px] text-[var(--text-secondary)] font-mono">
-                            {index + 1}.
-                          </span>
-                          <span className="text-xs font-bold text-[var(--text-primary)] truncate">
-                            {option}
-                          </span>
-                        </div>
-                      )}
-
-                      {!isEditing && (
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => moveOption(index, "up")}
-                            disabled={index === 0}
-                            title="Subir opción"
-                            className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent disabled:opacity-30 cursor-pointer"
-                          >
-                            <ArrowUp size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => moveOption(index, "down")}
-                            disabled={index === activeAttr.options.length - 1}
-                            title="Bajar opción"
-                            className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent disabled:opacity-30 cursor-pointer"
-                          >
-                            <ArrowDown size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingOption(option);
-                              setEditingValue(option);
-                            }}
-                            title="Editar opción"
-                            className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-accent hover:border-accent cursor-pointer"
-                          >
-                            <Pencil size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteOption(option)}
-                            title="Eliminar opción"
-                            className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 cursor-pointer ml-1"
-                          >
-                            <Minus size={12} />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Atributos Disponibles para Vincular a esta Categoría */}
-              {allAttributesList.some(
-                (a) => !categoryAttrKeys.includes(a.key)
-              ) && (
-                <div className="pt-3 mt-3 border-t border-[var(--border-color)]">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
-                    Vincular otro atributo a {selectedCategory}:
-                  </p>
-                  <HorizontalScrollNav
-                    testId="desktop-category-available-attr-nav"
-                    className="flex items-center gap-1.5 overflow-x-auto scroll-smooth custom-scrollbar py-1"
-                    containerClassName="relative flex items-center w-full min-w-0"
-                    scrollAmount={200}
+            {/* Sección Superior: Listado Vertical de Atributos Activos Vinculados */}
+            <div className="flex-1 overflow-y-auto mt-3 space-y-2 pr-1 custom-scrollbar min-h-0">
+              {categoryAttrKeys.map((key, idx) => {
+                const attr = catalogConfig.attributes[key];
+                const isSelected = activeAttrKey === key;
+                return (
+                  <div
+                    key={key}
+                    className={`group flex items-center justify-between p-2.5 rounded-2xl border transition-all ${
+                      isSelected
+                        ? "border-accent bg-accent/15 text-[var(--text-primary)] shadow-xs"
+                        : "border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
+                    }`}
                   >
-                    {allAttributesList
-                      .filter((a) => !categoryAttrKeys.includes(a.key))
-                      .map((a) => (
-                        <button
-                          key={a.key}
-                          type="button"
-                          onClick={() => addCategoryAttr(a.key)}
-                          className="inline-flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1 text-xs font-bold text-[var(--text-primary)] hover:border-accent hover:text-accent transition-all cursor-pointer"
+                    {/* Botón de Selección del Atributo para inspeccionar en Columna 3 */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveAttrKey(key)}
+                      className="flex-1 flex items-center justify-between min-w-0 pr-2 text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="tabular-nums flex h-5 w-5 items-center justify-center rounded-md bg-black/5 dark:bg-white/10 text-[10px] font-black text-[var(--text-secondary)] shrink-0">
+                          {idx + 1}
+                        </span>
+                        <span
+                          className={`text-xs truncate ${
+                            isSelected ? "font-black text-accent" : "font-bold"
+                          }`}
                         >
-                          <Plus size={12} />
-                          <span>{a.label}</span>
-                        </button>
-                      ))}
-                  </HorizontalScrollNav>
+                          {attr?.label || key}
+                        </span>
+                      </div>
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full tabular-nums font-bold shrink-0 ml-2 ${
+                          isSelected
+                            ? "bg-accent text-white"
+                            : "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)]"
+                        }`}
+                      >
+                        {attr?.options.length ?? 0} valores
+                      </span>
+                    </button>
+
+                    {/* Controles de Orden Vertical y Desvinculación */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        aria-label={`Subir atributo ${attr?.label || key}`}
+                        onClick={() => moveCategoryAttr(idx, idx - 1)}
+                        disabled={idx === 0}
+                        title="Subir prioridad en filtros y orden"
+                        className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent disabled:opacity-20 cursor-pointer"
+                      >
+                        <ArrowUp size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Bajar atributo ${attr?.label || key}`}
+                        onClick={() => moveCategoryAttr(idx, idx + 1)}
+                        disabled={idx === categoryAttrKeys.length - 1}
+                        title="Bajar prioridad en filtros y orden"
+                        className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent disabled:opacity-20 cursor-pointer"
+                      >
+                        <ArrowDown size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Desvincular atributo ${attr?.label || key}`}
+                        onClick={() => removeCategoryAttr(key)}
+                        disabled={categoryAttrKeys.length <= 1}
+                        title="Desvincular de esta categoría"
+                        className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 disabled:opacity-20 cursor-pointer"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Sección Inferior: Panel de Vinculación de Atributos Disponibles (CERO SCROLL HORIZONTAL) */}
+            <div className="mt-3 pt-3 border-t border-[var(--border-color)] shrink-0">
+              <h4 className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                Vincular Atributos Disponibles ({availableAttrsToLink.length})
+              </h4>
+              {availableAttrsToLink.length === 0 ? (
+                <p className="text-[11px] text-[var(--text-secondary)] italic">
+                  Todos los atributos del catálogo están vinculados a esta
+                  categoría.
+                </p>
+              ) : (
+                /* Grid Vertical / Flex Wrap sin desbordamiento */
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-36 overflow-y-auto custom-scrollbar p-0.5">
+                  {availableAttrsToLink.map((attr) => (
+                    <button
+                      key={attr.key}
+                      type="button"
+                      onClick={() => addCategoryAttr(attr.key)}
+                      className="inline-flex items-center justify-between rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent hover:text-accent transition-all cursor-pointer text-left min-w-0"
+                    >
+                      <span className="truncate">{attr.label}</span>
+                      <Plus size={12} className="shrink-0 ml-1 opacity-70" />
+                    </button>
+                  ))}
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* ======================================================== */}
+          {/* COLUMNA 3 (DERECHA): Valores del Atributo Seleccionado   */}
+          {/* ======================================================== */}
+          <div className="flex flex-col h-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 lg:p-5 shadow-xs overflow-hidden min-h-0">
+            {/* Cabecera de Columna 3 */}
+            <div className="pb-3 border-b border-[var(--border-color)] shrink-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
+                    3. Valores y Opciones
+                  </h3>
+                  <h4 className="text-sm lg:text-base font-black text-[var(--text-primary)] truncate mt-0.5">
+                    {activeAttr?.label || activeAttrKey}
+                  </h4>
+                </div>
+                <span className="text-[11px] text-[var(--text-secondary)] font-bold">
+                  {activeAttr?.options.length ?? 0} opciones
+                </span>
+              </div>
+
+              {/* Formulario de Adición Rápida de Opción */}
+              <form
+                onSubmit={handleAddOption}
+                className="mt-3 flex items-center gap-2"
+              >
+                <input
+                  type="text"
+                  value={newOptionInput}
+                  onChange={(e) => setNewOptionInput(e.target.value)}
+                  placeholder="Nueva opción..."
+                  className="flex-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                />
+                <button
+                  type="submit"
+                  disabled={!newOptionInput.trim()}
+                  className="inline-flex items-center gap-1 rounded-xl bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-accent-hover transition-all disabled:opacity-50 cursor-pointer shrink-0"
+                >
+                  <Plus size={13} />
+                  <span>Agregar</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Listado Vertical Scrollable de Opciones */}
+            <div className="flex-1 overflow-y-auto mt-3 space-y-2 pr-1 custom-scrollbar min-h-0">
+              {activeAttr?.options.map((option, index) => {
+                const isEditing = editingOption === option;
+                return (
+                  <div
+                    key={option}
+                    className="group flex items-center justify-between p-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] transition-all hover:border-accent/40"
+                  >
+                    {isEditing ? (
+                      <div className="flex-1 flex items-center gap-2 mr-2">
+                        <input
+                          type="text"
+                          value={editingValue}
+                          onChange={(e) => setEditingValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveEdit(option);
+                            if (e.key === "Escape") setEditingOption(null);
+                          }}
+                          autoFocus
+                          className="flex-1 rounded-xl border border-accent bg-[var(--bg-elevated)] px-3 py-1 text-xs font-bold text-[var(--text-primary)] outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleSaveEdit(option)}
+                          className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white cursor-pointer shrink-0"
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingOption(null)}
+                          className="rounded-lg border border-[var(--border-color)] px-2 py-1 text-xs text-[var(--text-secondary)] cursor-pointer shrink-0"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                        <span className="tabular-nums text-[10px] text-[var(--text-secondary)] font-mono shrink-0">
+                          {index + 1}.
+                        </span>
+                        <span className="text-xs font-bold text-[var(--text-primary)] truncate">
+                          {option}
+                        </span>
+                      </div>
+                    )}
+
+                    {!isEditing && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => moveOption(index, "up")}
+                          disabled={index === 0}
+                          title="Subir opción"
+                          className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent disabled:opacity-20 cursor-pointer"
+                        >
+                          <ArrowUp size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveOption(index, "down")}
+                          disabled={index === activeAttr.options.length - 1}
+                          title="Bajar opción"
+                          className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent disabled:opacity-20 cursor-pointer"
+                        >
+                          <ArrowDown size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingOption(option);
+                            setEditingValue(option);
+                          }}
+                          title="Editar opción"
+                          className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-accent hover:border-accent cursor-pointer"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteOption(option)}
+                          title="Eliminar opción"
+                          className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 cursor-pointer"
+                        >
+                          <Minus size={12} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Nota de Integridad de Datos en la Base de la Columna 3 */}
+            <div className="mt-3 pt-3 border-t border-[var(--border-color)] text-[10px] text-[var(--text-secondary)] leading-tight shrink-0">
+              <p>
+                💡 Los cambios se sincronizan automáticamente para nuevos
+                productos en esta categoría. Los productos históricos preservan
+                su nomenclatura original.
+              </p>
             </div>
           </div>
         </div>
