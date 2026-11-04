@@ -11,7 +11,7 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     });
   });
 
-  test("1. Renderizado de Tabla Excel de alta densidad, edición inline con Enter (avance vertical) y Creación Rápida en Línea", async ({
+  test("1. Renderizado de Tabla Excel de alta densidad, edición inline con Enter (avance vertical) y Creación Rápida con Permiso y Censura de Costo", async ({
     page,
   }) => {
     await page.goto("/");
@@ -112,6 +112,29 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(
       page.getByText("Silicona Case iPhone 16 Pro Max")
     ).toBeVisible();
+
+    // Validar censura post-creación: la nueva fila debe mostrar '••••••' en costo mientras Modo Admin esté inactivo
+    const newProductRow = gridTable
+      .locator("tbody tr")
+      .filter({ hasText: "Silicona Case iPhone 16 Pro Max" });
+    await expect(newProductRow).toBeVisible();
+
+    const newProductCostCell = newProductRow.locator(
+      '[data-testid^="grid-cell-cost-"]'
+    );
+    await expect(newProductCostCell).toContainText("••••••");
+
+    // Revelar costo activando Modo Administrador en la barra lateral
+    const adminModeBtn = desktopSidebar.getByRole("button", {
+      name: /Modo Administrador/i,
+    });
+    await adminModeBtn.click();
+    await expect(newProductCostCell).not.toContainText("••••••");
+    await expect(newProductCostCell).toContainText("28.000");
+
+    // Desactivar Modo Administrador y comprobar que se censura de nuevo
+    await adminModeBtn.click();
+    await expect(newProductCostCell).toContainText("••••••");
   });
 
   test("2. Modo Conteo Rápido, Inspector Lateral (Side Drawer) y herencia del Sistema Global de Temas", async ({
@@ -162,7 +185,7 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     );
   });
 
-  test("3. Modal de Creación Avanzada de Productos Split-Layout y Navegación Horizontal con Chevrons", async ({
+  test("3. Modal de Creación Avanzada de Productos Split-Layout y Navegación Horizontal por Arrastre (Drag-to-Scroll sin flechas)", async ({
     page,
   }) => {
     await page.goto("/");
@@ -173,9 +196,23 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(desktopSidebar).toBeVisible({ timeout: 10000 });
     await desktopSidebar.getByRole("button", { name: "Inventario" }).click();
 
-    // 1. Validar barra de desplazamiento horizontal de categorías
+    // 1. Validar barra de desplazamiento horizontal de categorías por arrastre (Grab & Drag)
     const categoryNav = page.getByTestId("desktop-category-chips-nav");
     await expect(categoryNav).toBeVisible();
+
+    // Comprobar que NO existen botones de flechas/chevrons desplazadores
+    await expect(
+      categoryNav.locator("button[aria-label*='Desplazar']")
+    ).toHaveCount(0);
+
+    // Probar interacción por arrastre con el cursor del mouse
+    const box = await categoryNav.boundingBox();
+    if (box) {
+      await page.mouse.move(box.x + box.width - 30, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(box.x + 30, box.y + box.height / 2, { steps: 5 });
+      await page.mouse.up();
+    }
 
     // 2. Abrir Modal de Creación Avanzada de Productos desde la barra de herramientas de escritorio
     const newProductBtn = page.getByTestId("desktop-toolbar-new-product-btn");
@@ -210,7 +247,7 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(modal).not.toBeVisible();
   });
 
-  test("4. Selección múltiple y Adición Masiva al Carrito de POS (+ Añadir al carrito)", async ({
+  test("4. Barra Flotante Glassmórfica de Acciones Masivas: Fila Única, Ajuste de Stock (+1/-1), Migración de Categoría y Adición a POS", async ({
     page,
   }) => {
     await page.goto("/");
@@ -227,13 +264,31 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await rowCheckbox0.click();
     await rowCheckbox1.click();
 
-    // Validar que la barra flotante de acciones masivas aparece en estricta fila única (flex-nowrap)
+    // Validar que la barra flotante de acciones masivas aparece en estricta fila única (flex-nowrap) y con glassmorfismo
     const bulkBar = page.getByTestId("desktop-bulk-actions-bar");
     await expect(bulkBar).toBeVisible();
     await expect(bulkBar.getByText(/2 seleccionados/i)).toBeVisible();
     await expect(bulkBar).toHaveClass(/flex-nowrap/);
+    await expect(bulkBar).toHaveClass(/backdrop-blur-md/);
 
-    // Enviar masivamente los productos al carrito de POS
+    // 1. Probar incremento masivo de stock (+1 Stock)
+    const stockCell0 = page.getByTestId("grid-cell-stock-0");
+    const stockSpan0 = stockCell0.locator("span.tabular-nums");
+    const initialStockText = await stockSpan0.innerText();
+    const initialStockVal = parseInt(initialStockText, 10);
+
+    const incStockBtn = bulkBar.getByRole("button", { name: "+1 Stock" });
+    await expect(incStockBtn).toBeVisible();
+    await incStockBtn.click();
+    await expect(stockSpan0).toHaveText(String(initialStockVal + 1));
+
+    // 2. Probar decremento masivo de stock (-1 Stock)
+    const decStockBtn = bulkBar.getByRole("button", { name: "-1 Stock" });
+    await expect(decStockBtn).toBeVisible();
+    await decStockBtn.click();
+    await expect(stockSpan0).toHaveText(String(initialStockVal));
+
+    // 3. Enviar masivamente los productos al carrito de POS
     const bulkAddToCartBtn = page.getByTestId("desktop-bulk-add-to-cart-btn");
     await expect(bulkAddToCartBtn).toBeVisible();
     await bulkAddToCartBtn.click();
@@ -241,6 +296,14 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     // Verificar que el badge del carrito en la barra lateral aumenta
     const sellBtn = desktopSidebar.getByRole("button", { name: /Vender/i });
     await expect(sellBtn).toContainText("2");
+
+    // 4. Probar botón de limpiar selección
+    const clearSelectionBtn = bulkBar.getByRole("button", {
+      name: "Limpiar selección",
+    });
+    await expect(clearSelectionBtn).toBeVisible();
+    await clearSelectionBtn.click();
+    await expect(bulkBar).not.toBeVisible();
   });
 
   test("5. Edición Numérica Fluida de Celdas (escritura de múltiples dígitos sin sobreescritura accidental)", async ({
@@ -269,7 +332,7 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(stockCell0).toContainText("70");
   });
 
-  test("6. Vista Unificada en 3 Columnas: Configuración y Ajustes de Catálogo", async ({
+  test("6. Vista Unificada en 3 Columnas: Configuración y Ajustes de Catálogo (Sin scroll horizontal y acceso universal)", async ({
     page,
   }) => {
     await page.goto("/");
@@ -293,6 +356,12 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
         name: "Configuración y Ajustes de Catálogo",
       })
     ).toBeVisible();
+
+    // Validar CERO scroll horizontal en el contenedor principal
+    const hasHorizontalOverflow = await managerView.evaluate(
+      (el) => el.scrollWidth > el.clientWidth + 2
+    );
+    expect(hasHorizontalOverflow).toBe(false);
 
     // 3. Columna 1 (Izquierda): Crear nueva categoría
     const newCatBtn = managerView.getByRole("button", {
@@ -327,11 +396,20 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       .first();
     await materialAttrCard.click();
 
-    // Columna 3 (Derecha): Verificar carga instantánea y agregar nueva opción al atributo activo
+    // Columna 3 (Derecha): Verificar carga instantánea y vincular a la categoría activa
     await expect(
       managerView.getByRole("heading", { name: "Material" })
     ).toBeVisible();
 
+    // Si tiene el botón de vincular a «Prueba Desktop», vincularlo
+    const linkBtn = managerView.getByRole("button", {
+      name: /Vincular a «Prueba Desktop»/i,
+    });
+    if (await linkBtn.isVisible()) {
+      await linkBtn.click();
+    }
+
+    // Agregar nueva opción al atributo activo
     const newOptionInput = managerView.getByPlaceholder("Nueva opción...");
     await expect(newOptionInput).toBeVisible();
     await newOptionInput.fill("Opción Alfa");

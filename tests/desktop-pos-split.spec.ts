@@ -179,4 +179,50 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
     await expect(tableView).toBeVisible();
     await expect(cardsGrid).not.toBeVisible();
   });
+
+  test("4. Ergonomía de Teclado, Ajuste de Total y Atajo Ctrl+Enter para Cobro Directo en Estación Desktop", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const desktopSidebar = page.getByRole("complementary", {
+      name: /Navegación principal de escritorio/i,
+    });
+    await expect(desktopSidebar).toBeVisible({ timeout: 10000 });
+    await desktopSidebar.getByRole("button", { name: "Vender" }).click();
+
+    // 1. Agregar un producto al ticket
+    const tableView = page.getByTestId("pos-products-table-view");
+    await expect(tableView).toBeVisible();
+
+    const tableRow = tableView.getByRole("button", {
+      name: /Agregar Cubo iPhone 20W al carrito/i,
+    });
+    await expect(tableRow).toBeVisible();
+    await tableRow.click();
+
+    const ticket = page.getByTestId("desktop-pos-ticket");
+    await expect(ticket.getByText(/1 artículo/i)).toBeVisible();
+
+    // 2. Asignar cliente institucional
+    const customerInput = page.getByTestId("pos-customer-input");
+    await customerInput.fill("Cliente Corporativo Express");
+
+    // 3. Ajustar monto total a cobrar con descuento en pos-custom-total-input
+    const customTotalInput = page.getByTestId("pos-custom-total-input");
+    await expect(customTotalInput).toBeVisible();
+    await customTotalInput.fill("60000");
+
+    // Verificar que el botón de completar venta refleja el nuevo monto con clase tabular-nums
+    const completeBtn = page.getByTestId("complete-sale-desktop-btn");
+    await expect(completeBtn).toContainText("60.000");
+
+    // 4. Completar venta usando el atajo de teclado Ctrl+Enter
+    await page.keyboard.press("Control+Enter");
+
+    // 5. Verificar flash de éxito instantáneo y reseteo del ticket a vacío
+    await expect(page.getByText(/¡Venta registrada con éxito!/i)).toBeVisible();
+    await expect(ticket.getByText("Ticket Vacío")).toBeVisible();
+    await expect(completeBtn).toBeDisabled();
+  });
 });
