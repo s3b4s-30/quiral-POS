@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import React, { useRef, useState } from "react";
 import ModalSheet from "../../../components/ModalSheet";
+import HorizontalScrollNav from "../../../components/HorizontalScrollNav";
 import { useInventory } from "../../../context/InventoryContext";
 import { ProductCategory } from "../../../types/domain";
 import {
@@ -69,13 +70,15 @@ export default function AttributeConfigModal({
   const [newBlockFirstOption, setNewBlockFirstOption] = useState("");
 
   // Estado de Drag & Drop / Deslizamiento Táctil para la lista de atributos de la categoría
-  const [catAttrTouchIndex, setCatAttrTouchIndex] = useState<number | null>(null);
+  const [catAttrTouchIndex, setCatAttrTouchIndex] = useState<number | null>(
+    null
+  );
   const catAttrTouchIndexRef = useRef<number | null>(null);
   const catAttrListRef = useRef<HTMLDivElement | null>(null);
   const [catAttrDragIndex, setCatAttrDragIndex] = useState<number | null>(null);
-  const [catAttrDragOverIndex, setCatAttrDragOverIndex] = useState<number | null>(
-    null
-  );
+  const [catAttrDragOverIndex, setCatAttrDragOverIndex] = useState<
+    number | null
+  >(null);
 
   // Estado de Drag & Drop / Deslizamiento Táctil para la lista de opciones de un atributo
   const [optTouchIndex, setOptTouchIndex] = useState<number | null>(null);
@@ -84,8 +87,7 @@ export default function AttributeConfigModal({
   const [optDragIndex, setOptDragIndex] = useState<number | null>(null);
   const [optDragOverIndex, setOptDragOverIndex] = useState<number | null>(null);
 
-  const activeAttr =
-    catalogConfig.attributes[selectedKey] || attributeList[0];
+  const activeAttr = catalogConfig.attributes[selectedKey] || attributeList[0];
 
   const currentCategoryConfig = catalogConfig.categories.find((c) =>
     isSameCatalogText(c.name, selectedCategory)
@@ -349,7 +351,12 @@ export default function AttributeConfigModal({
               <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
                 Categoría seleccionada
               </label>
-              <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              <HorizontalScrollNav
+                testId="attribute-config-category-nav"
+                className="flex items-center gap-1.5 overflow-x-auto scroll-smooth custom-scrollbar pb-1 flex-1"
+                containerClassName="relative flex items-center w-full min-w-0"
+                scrollAmount={220}
+              >
                 {catalogConfig.categoryOrder.map((cat) => {
                   const isSel = isSameCatalogText(selectedCategory, cat);
                   return (
@@ -367,7 +374,7 @@ export default function AttributeConfigModal({
                     </button>
                   );
                 })}
-              </div>
+              </HorizontalScrollNav>
             </div>
 
             {/* Lista Reordenable de Atributos de la Categoría (Mismo estilo que Categorías) */}
@@ -496,7 +503,12 @@ export default function AttributeConfigModal({
               <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
                 Otros atributos disponibles (Toca para agregar)
               </p>
-              <div className="flex flex-wrap gap-1.5">
+              <HorizontalScrollNav
+                testId="attribute-config-available-attrs-nav"
+                className="flex items-center gap-1.5 overflow-x-auto scroll-smooth custom-scrollbar py-1"
+                containerClassName="relative flex items-center w-full min-w-0"
+                scrollAmount={200}
+              >
                 {attributeList
                   .filter((a) => !categoryAttrKeys.includes(a.key))
                   .map((attr) => (
@@ -510,7 +522,7 @@ export default function AttributeConfigModal({
                       <span>{attr.label}</span>
                     </button>
                   ))}
-              </div>
+              </HorizontalScrollNav>
             </div>
           </div>
         ) : (
@@ -518,7 +530,8 @@ export default function AttributeConfigModal({
             {/* Cabecera para crear un nuevo atributo */}
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs font-medium text-[var(--text-secondary)] dark:text-zinc-400">
-                Desliza las opciones para cambiar su orden o elimina las que no uses.
+                Desliza las opciones para cambiar su orden o elimina las que no
+                uses.
               </p>
               <button
                 type="button"
@@ -579,7 +592,12 @@ export default function AttributeConfigModal({
               <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
                 Atributo seleccionado
               </label>
-              <div className="flex gap-1.5 overflow-x-auto pb-1.5 no-scrollbar">
+              <HorizontalScrollNav
+                testId="attribute-config-attr-list-nav"
+                className="flex items-center gap-1.5 overflow-x-auto scroll-smooth custom-scrollbar pb-1.5 flex-1"
+                containerClassName="relative flex items-center w-full min-w-0"
+                scrollAmount={220}
+              >
                 {attributeList.map((attr) => {
                   const isSelected = activeAttr?.key === attr.key;
                   return (
@@ -600,7 +618,7 @@ export default function AttributeConfigModal({
                     </button>
                   );
                 })}
-              </div>
+              </HorizontalScrollNav>
             </div>
 
             {feedbackMsg && (
@@ -618,7 +636,10 @@ export default function AttributeConfigModal({
             {/* Lista Reordenable de Opciones del Atributo Activo */}
             {activeAttr && (
               <div className="rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900/60 p-3.5 space-y-3">
-                <form onSubmit={handleAddOption} className="flex items-center gap-2">
+                <form
+                  onSubmit={handleAddOption}
+                  className="flex items-center gap-2"
+                >
                   <input
                     type="text"
                     value={newOptionInput}

@@ -1,4 +1,12 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, Trash2, X, Zap } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Plus,
+  Trash2,
+  X,
+  Zap,
+} from "lucide-react";
 import React, {
   useCallback,
   useEffect,
@@ -20,6 +28,7 @@ import {
 } from "./DesktopInventoryGridParts";
 
 export type { EditableColKey } from "./DesktopInventoryGridParts";
+import DesktopNewProductModal from "./DesktopNewProductModal";
 
 type SortColumn =
   "index" | "name" | "category" | "stock" | "cost" | "price" | "profit";
@@ -35,6 +44,7 @@ interface DesktopInventoryGridProps {
   onInspectProduct: (product: Product) => void;
   quickCountMode: boolean;
   focusQuickAddRef?: React.MutableRefObject<(() => void) | null>;
+  onOpenNewProduct?: () => void;
 }
 
 /** Altura estimada (px) de una fila antes de su medición real en el DOM. */
@@ -45,6 +55,7 @@ export default function DesktopInventoryGrid({
   onInspectProduct,
   quickCountMode,
   focusQuickAddRef,
+  onOpenNewProduct,
 }: DesktopInventoryGridProps) {
   const {
     suppliers,
@@ -76,6 +87,7 @@ export default function DesktopInventoryGrid({
 
   // Feedback visual al agregar al carrito desde la fila
   const [addedCartId, setAddedCartId] = useState<string | null>(null);
+  const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
 
   const quickNameInputRef = useRef<HTMLInputElement | null>(null);
   const rowsBodyRef = useRef<HTMLTableSectionElement>(null);
@@ -707,6 +719,58 @@ export default function DesktopInventoryGrid({
       data-virtualized={virtual.enabled ? "true" : "false"}
       className="relative rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] shadow-sm overflow-hidden antialiased-hd"
     >
+      {/* Barra de Acciones y Creación de la Estación de Trabajo Desktop */}
+      <div
+        data-testid="desktop-grid-action-bar"
+        className="flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-elevated)] px-4 py-3 select-none"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs sm:text-sm font-extrabold text-[var(--text-primary)]">
+              Catálogo de Inventario
+            </span>
+            <span className="tabular-nums rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-2 py-0.5 text-[11px] font-bold text-[var(--text-secondary)]">
+              {enrichedRows.length} referencias
+            </span>
+          </div>
+
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2 animate-in fade-in duration-100">
+              <span className="tabular-nums rounded-md bg-accent-subtle px-2 py-0.5 text-[11px] font-extrabold text-accent">
+                {selectedIds.size} seleccionados
+              </span>
+              <button
+                type="button"
+                onClick={handleBulkDelete}
+                className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1 text-[11px] font-bold text-red-500 hover:bg-red-500/20 active:scale-95 transition-all"
+              >
+                <Trash2 size={12} />
+                <span>Eliminar en lote</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Botón Destacado de Acción Principal: + Nuevo Producto */}
+          <button
+            type="button"
+            data-testid="desktop-new-product-btn"
+            onClick={() => {
+              if (onOpenNewProduct) {
+                onOpenNewProduct();
+              } else {
+                setIsNewProductModalOpen(true);
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-accent-glow hover:bg-accent-hover active:scale-95 transition-all duration-150"
+          >
+            <Plus size={15} strokeWidth={2.5} />
+            <span>+ Nuevo Producto</span>
+          </button>
+        </div>
+      </div>
+
       {/* Banner informativo sutil cuando Modo Conteo Rápido está activo */}
       {quickCountMode && (
         <div
@@ -966,6 +1030,13 @@ export default function DesktopInventoryGrid({
             </button>
           </div>
         </div>
+      )}
+
+      {/* Modal Centrado de Creación Avanzada de Productos para Escritorio */}
+      {isNewProductModalOpen && (
+        <DesktopNewProductModal
+          onClose={() => setIsNewProductModalOpen(false)}
+        />
       )}
     </div>
   );

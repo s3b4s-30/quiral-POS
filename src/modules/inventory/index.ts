@@ -12,6 +12,8 @@ export * from "./components/ProductCard";
 
 export { default as ProductDetailModal } from "./components/ProductDetailModal";
 export { default as NewProductModal } from "./components/NewProductModal";
+export { default as DesktopNewProductModal } from "./components/DesktopNewProductModal";
+export * from "./components/DesktopNewProductModal";
 export { default as AttributeConfigModal } from "./components/AttributeConfigModal";
 export { default as CategoryManagerModal } from "./components/CategoryManagerModal";
 export { default as SuppliersModal } from "./components/SuppliersModal";

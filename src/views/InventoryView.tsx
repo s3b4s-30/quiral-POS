@@ -7,6 +7,7 @@ import {
   Search,
   Sliders,
   SlidersHorizontal,
+  Plus,
   Table2,
   X,
   Zap,
@@ -27,9 +28,11 @@ import {
   CategoryManagerModal,
   DesktopAttributeConfigView,
   DesktopInventoryGrid,
+  DesktopNewProductModal,
   DesktopProductDrawer,
   ProductCard,
 } from "../modules/inventory";
+import HorizontalScrollNav from "../components/HorizontalScrollNav";
 import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
 import { useInventory } from "../context/InventoryContext";
 import { Product, ProductCategory } from "../types/domain";
@@ -77,6 +80,8 @@ export default function InventoryView({
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isAttributeModalOpen, setIsAttributeModalOpen] = useState(false);
+  const [isDesktopNewProductModalOpen, setIsDesktopNewProductModalOpen] =
+    useState(false);
 
   // Estados exclusivos de la Estación de Trabajo de Escritorio (Data Grid / Excel)
   const isDesktopViewport = useIsDesktop();
@@ -628,6 +633,17 @@ export default function InventoryView({
                 <Sliders size={13} className="text-accent" />
                 <span>Atributos</span>
               </button>
+
+              {/* Boton "+ Nuevo Producto" Destacado en Escritorio */}
+              <button
+                type="button"
+                data-testid="desktop-toolbar-new-product-btn"
+                onClick={() => setIsDesktopNewProductModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-accent-glow hover:bg-accent-hover active:scale-95 transition-all duration-150"
+              >
+                <Plus size={13} strokeWidth={2.5} />
+                <span>+ Nuevo Producto</span>
+              </button>
             </div>
 
             {/* Derecha: Paginación Densa en Escritorio + Selector de Vista (Tabla Excel / Tarjetas) */}
@@ -689,7 +705,12 @@ export default function InventoryView({
           </div>
 
           {/* 2. Chips Horizontales de Selección de Categoría (Soporte Long-Press para Organizar Categorías) */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          <HorizontalScrollNav
+            testId="desktop-category-chips-nav"
+            className="flex items-center gap-2 overflow-x-auto scroll-smooth custom-scrollbar pb-1 flex-1"
+            containerClassName="relative flex items-center w-full min-w-0"
+            scrollAmount={240}
+          >
             {sortedCategories.map((cat) => {
               const isActive = selectedCategory === cat;
               const isZeroStock =
@@ -738,14 +759,16 @@ export default function InventoryView({
             >
               <SlidersHorizontal size={14} />
             </button>
-          </div>
+          </HorizontalScrollNav>
 
           {/* Subfiltros rápidos de atributos/subtipos cuando hay una categoría activa */}
           {selectedCategory !== "Todos" &&
             availableAttributeTags.length > 0 && (
-              <div
-                data-testid="category-attribute-subfilters"
-                className="mt-2 flex items-center gap-1.5 overflow-x-auto pt-1.5 border-t border-[var(--border-color)]/60 no-scrollbar"
+              <HorizontalScrollNav
+                testId="category-attribute-subfilters"
+                className="flex items-center gap-1.5 overflow-x-auto scroll-smooth custom-scrollbar py-1"
+                containerClassName="relative flex items-center w-full min-w-0 mt-2 border-t border-[var(--border-color)]/60 pt-1.5"
+                scrollAmount={200}
               >
                 <button
                   type="button"
@@ -780,7 +803,7 @@ export default function InventoryView({
                     </button>
                   );
                 })}
-              </div>
+              </HorizontalScrollNav>
             )}
         </div>
 
@@ -845,6 +868,7 @@ export default function InventoryView({
               onInspectProduct={(prod) => setInspectedProduct(prod)}
               quickCountMode={quickCountMode}
               focusQuickAddRef={focusQuickAddRef}
+              onOpenNewProduct={() => setIsDesktopNewProductModalOpen(true)}
             />
           ) : (
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1002,6 +1026,14 @@ export default function InventoryView({
             selectedCategory !== "Todos" ? selectedCategory : undefined
           }
           onClose={() => handleOpenAttributeModal(false)}
+        />
+      )}
+
+      {/* Modal Centrado de Creación Avanzada para Escritorio */}
+      {isDesktopViewport && isDesktopNewProductModalOpen && (
+        <DesktopNewProductModal
+          onClose={() => setIsDesktopNewProductModalOpen(false)}
+          onOpenSuppliers={_onOpenSuppliers}
         />
       )}
     </div>
