@@ -88,13 +88,16 @@ export const ProductCard = React.memo(function ProductCard({
             <button
               type="button"
               onClick={handleOpenDetail}
-              className="text-left line-clamp-2 text-sm sm:text-base font-bold leading-snug text-[var(--text-primary)] hover:text-accent hover:underline transition-colors block cursor-pointer"
+              className="text-left line-clamp-2 sm:line-clamp-3 text-sm sm:text-base font-bold leading-snug text-[var(--text-primary)] hover:text-accent hover:underline transition-colors block cursor-pointer"
               title="Clic para ver detalle y editar producto"
             >
               {product.name}
             </button>
           ) : (
-            <h3 className="line-clamp-2 text-sm sm:text-base font-bold leading-snug text-[var(--text-primary)]">
+            <h3
+              title={product.name}
+              className="line-clamp-2 sm:line-clamp-3 text-sm sm:text-base font-bold leading-snug text-[var(--text-primary)]"
+            >
               {product.name}
             </h3>
           )}
@@ -127,7 +130,8 @@ export const ProductCard = React.memo(function ProductCard({
             {product.batches
               .filter((batch) => batch.stock > 0)
               .map((batch) => {
-                const color = supplierColors?.get(batch.supplierId) ?? "#007aff";
+                const color =
+                  supplierColors?.get(batch.supplierId) ?? "#007aff";
                 return (
                   <span
                     key={batch.id}

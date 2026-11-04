@@ -29,7 +29,9 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
 
     const ticket = page.getByTestId("desktop-pos-ticket");
     await expect(ticket).toBeVisible();
-    await expect(ticket.getByRole("heading", { name: "Ticket de Venta" })).toBeVisible();
+    await expect(
+      ticket.getByRole("heading", { name: "Ticket de Venta" })
+    ).toBeVisible();
     await expect(ticket.getByText("Ticket Vacío")).toBeVisible();
 
     // El botón Completar Venta debe estar deshabilitado cuando el carrito está vacío
@@ -37,7 +39,9 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
     await expect(completeBtn).toBeDisabled();
 
     // Agregar un producto desde el catálogo haciendo clic en su botón/tarjeta
-    const productCard = page.getByRole("button", { name: /Agregar Cubo iPhone 20W al carrito/i });
+    const productCard = page.getByRole("button", {
+      name: /Agregar Cubo iPhone 20W al carrito/i,
+    });
     await expect(productCard).toBeVisible();
     await productCard.click();
 
@@ -77,7 +81,9 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
 
     // Probar atajo de teclado '/' para enfocar el buscador
     await page.keyboard.press("/");
-    const searchInput = page.getByPlaceholder(/Buscar referencia, cargador, funda/i);
+    const searchInput = page.getByPlaceholder(
+      /Buscar referencia, cargador, funda/i
+    );
     await expect(searchInput).toBeFocused();
 
     // Escribir un filtro
@@ -85,7 +91,9 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
     await expect(page.getByText("Cubo Anker 30W")).toBeVisible();
 
     // Agregar producto al ticket
-    const ankerCard = page.getByRole("button", { name: /Agregar Cubo Anker 30W al carrito/i });
+    const ankerCard = page.getByRole("button", {
+      name: /Agregar Cubo Anker 30W al carrito/i,
+    });
     await expect(ankerCard).toBeVisible();
     await ankerCard.click();
 
@@ -102,5 +110,48 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
 
     // El ticket vuelve a estar vacío
     await expect(ticket.getByText("Ticket Vacío")).toBeVisible();
+  });
+
+  test("3. Alternancia de Vistas en POS (Tarjetas 3 Columnas y Tabla de Ventas)", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const desktopSidebar = page.getByRole("complementary", {
+      name: /Navegación principal de escritorio/i,
+    });
+    await expect(desktopSidebar).toBeVisible({ timeout: 10000 });
+    await desktopSidebar.getByRole("button", { name: "Vender" }).click();
+
+    // 1. Validar que la vista de tarjetas en 3 columnas está activa por defecto
+    const cardsGrid = page.getByTestId("pos-products-cards-grid");
+    await expect(cardsGrid).toBeVisible();
+
+    // 2. Alternar a Vista de Tabla de Ventas
+    const tableBtn = page.getByTestId("pos-view-table-btn");
+    await expect(tableBtn).toBeVisible();
+    await tableBtn.click();
+
+    // 3. Validar renderizado de la tabla de ventas
+    const tableView = page.getByTestId("pos-products-table-view");
+    await expect(tableView).toBeVisible();
+    await expect(cardsGrid).not.toBeVisible();
+
+    // 4. Agregar producto haciendo clic en la fila de la tabla
+    const tableRow = tableView.getByRole("button", {
+      name: /Agregar Cubo iPhone 20W al carrito/i,
+    });
+    await expect(tableRow).toBeVisible();
+    await tableRow.click();
+
+    // Verificar que el ticket se actualiza con el producto
+    const ticket = page.getByTestId("desktop-pos-ticket");
+    await expect(ticket.getByText(/1 artículo/i)).toBeVisible();
+
+    // 5. Alternar de vuelta a Vista de Tarjetas
+    const cardsBtn = page.getByTestId("pos-view-cards-btn");
+    await cardsBtn.click();
+    await expect(cardsGrid).toBeVisible();
+    await expect(tableView).not.toBeVisible();
   });
 });
