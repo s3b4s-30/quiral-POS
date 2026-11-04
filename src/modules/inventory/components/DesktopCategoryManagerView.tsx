@@ -431,7 +431,7 @@ export default function DesktopCategoryManagerView({
       {/* ======================================================== */}
       {/* CABECERA SUPERIOR: Título, Atajos y Acciones Maestras    */}
       {/* ======================================================== */}
-      <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-elevated)]/90 backdrop-blur-md px-6 py-4 flex items-center justify-between">
+      <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-elevated)]/90 backdrop-blur-md px-6 lg:px-8 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -446,10 +446,11 @@ export default function DesktopCategoryManagerView({
           <div className="h-5 w-px bg-[var(--border-color)]" />
           <div>
             <h1 className="text-lg font-black text-[var(--text-primary)] tracking-tight">
-              Organizar Categorías
+              Configuración y Ajustes de Catálogo
             </h1>
             <p className="text-xs text-[var(--text-secondary)] font-medium">
-              Banco Maestro en 3 columnas: Categorías · Atributos · Opciones
+              Gestión jerárquica integral: Categorías ➔ Atributos de Categoría ➔
+              Valores y Opciones
             </p>
           </div>
         </div>
@@ -550,8 +551,8 @@ export default function DesktopCategoryManagerView({
       {/* ======================================================== */}
       {/* CUERPO PRINCIPAL: 3 COLUMNAS LIMPIAS (CERO SCROLL HORIZONTAL) */}
       {/* ======================================================== */}
-      <div className="flex-1 min-h-0 overflow-hidden p-5 lg:p-6">
-        <div className="h-full w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0 w-full overflow-hidden px-6 lg:px-8 py-4">
+        <div className="h-full w-full grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6 min-h-0 overflow-hidden">
           {/* ======================================================== */}
           {/* COLUMNA 1 (IZQUIERDA): Listado de Categorías             */}
           {/* ======================================================== */}
@@ -681,9 +682,9 @@ export default function DesktopCategoryManagerView({
                         aria-label={`Eliminar categoría ${cat}`}
                         onClick={() => handleRequestDeleteCategory(cat)}
                         title="Eliminar categoría"
-                        className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 cursor-pointer"
+                        className="p-1.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
                       >
-                        <Trash2 size={12} />
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   </div>
@@ -862,10 +863,10 @@ export default function DesktopCategoryManagerView({
                         aria-label={`Desvincular atributo ${attr?.label || key}`}
                         onClick={() => removeCategoryAttr(key)}
                         disabled={categoryAttrKeys.length <= 1}
-                        title="Desvincular de esta categoría"
-                        className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 disabled:opacity-20 cursor-pointer"
+                        title="Desvincular atributo de esta categoría"
+                        className="p-1.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 hover:bg-red-500/10 disabled:opacity-20 active:scale-95 transition-all cursor-pointer"
                       >
-                        <X size={12} />
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   </div>
@@ -1026,11 +1027,12 @@ export default function DesktopCategoryManagerView({
                         </button>
                         <button
                           type="button"
+                          aria-label={`Eliminar opción ${option}`}
                           onClick={() => handleDeleteOption(option)}
-                          title="Eliminar opción"
-                          className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 cursor-pointer"
+                          title="Eliminar opción del catálogo"
+                          className="p-1.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
                         >
-                          <Minus size={12} />
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     )}

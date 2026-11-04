@@ -264,7 +264,7 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(stockCell0).toContainText("70");
   });
 
-  test("6. Banco Maestro de Categorías en Panel Dual de Escritorio (Organizar Categorías)", async ({
+  test("6. Vista Unificada en 3 Columnas: Configuración y Ajustes de Catálogo", async ({
     page,
   }) => {
     await page.goto("/");
@@ -275,22 +275,21 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(desktopSidebar).toBeVisible({ timeout: 10000 });
     await desktopSidebar.getByRole("button", { name: "Inventario" }).click();
 
-    // 1. Abrir Organizar Categorías desde el botón de la barra superior de inventario
-    const categoriasBtn = page.getByRole("button", {
-      name: "Categorías",
-      exact: true,
-    });
-    await expect(categoriasBtn).toBeVisible();
-    await categoriasBtn.click();
+    // 1. Abrir Configuración y Ajustes de Catálogo desde el botón unificado en la barra de escritorio
+    const catalogSettingsBtn = page.getByTestId("desktop-catalog-settings-btn");
+    await expect(catalogSettingsBtn).toBeVisible();
+    await catalogSettingsBtn.click();
 
-    // 2. Verificar que se renderiza la vista de escritorio en Panel Dual
+    // 2. Verificar que se renderiza la vista unificada en 3 Columnas con el título oficial
     const managerView = page.getByTestId("desktop-category-manager-view");
     await expect(managerView).toBeVisible();
     await expect(
-      managerView.getByRole("heading", { name: "Organizar Categorías" })
+      managerView.getByRole("heading", {
+        name: "Configuración y Ajustes de Catálogo",
+      })
     ).toBeVisible();
 
-    // 3. Panel Izquierdo: Crear nueva categoría
+    // 3. Columna 1 (Izquierda): Crear nueva categoría
     const newCatBtn = managerView.getByRole("button", {
       name: /Nueva Categoría/i,
     });
@@ -306,12 +305,12 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     });
     await submitCatBtn.click();
 
-    // La nueva categoría debe aparecer en la lista y estar seleccionada en la cabecera derecha
+    // La nueva categoría debe aparecer en la lista y estar seleccionada en la cabecera de la Columna 2
     await expect(
       managerView.getByRole("heading", { name: "Prueba Desktop" })
     ).toBeVisible();
 
-    // 4. Panel Derecho: Agregar nueva opción al atributo
+    // 4. Columna 3 (Derecha): Agregar nueva opción al atributo activo
     const newOptionInput = managerView.getByPlaceholder("Nueva opción...");
     await expect(newOptionInput).toBeVisible();
     await newOptionInput.fill("Opción Alfa");

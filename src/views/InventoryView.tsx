@@ -27,6 +27,7 @@ import {
   AttributeConfigModal,
   CategoryManagerModal,
   DesktopAttributeConfigView,
+  DesktopCategoryManagerView,
   DesktopInventoryGrid,
   DesktopNewProductModal,
   DesktopProductDrawer,
@@ -464,8 +465,8 @@ export default function InventoryView({
 
   if (isDesktopViewport && isDesktopAttributeView) {
     return (
-      <DesktopAttributeConfigView
-        activeCategory={
+      <DesktopCategoryManagerView
+        initialCategory={
           selectedCategory !== "Todos" ? selectedCategory : undefined
         }
         onBack={() => setIsDesktopAttributeView(false)}
@@ -591,23 +592,16 @@ export default function InventoryView({
                 </kbd>
               </button>
 
-              {/* Gestión de Categorías y Atributos */}
+              {/* Gestión Unificada de Catálogo en 3 Columnas */}
               <button
                 type="button"
+                data-testid="desktop-catalog-settings-btn"
                 onClick={() => handleOpenCategoryModal(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 transition-colors duration-150"
+                title="Configuración y Ajustes de Catálogo (Categorías, Atributos y Opciones)"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all duration-150 shadow-xs cursor-pointer"
               >
                 <SlidersHorizontal size={13} className="text-accent" />
-                <span>Categorías</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleOpenAttributeModal(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 transition-colors duration-150"
-              >
-                <Sliders size={13} className="text-accent" />
-                <span>Atributos</span>
+                <span>Ajustes de Catálogo</span>
               </button>
 
               {/* Botón Destacado de Acción Principal: Nuevo Producto */}
