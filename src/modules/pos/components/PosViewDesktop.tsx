@@ -263,7 +263,9 @@ export default function PosViewDesktop({
           {/* 1. Píldoras de Categoría Horizontales con Chevrons Laterales */}
           <HorizontalScrollNav
             testId="pos-desktop-category-chips-nav"
-            className="flex items-center gap-2 overflow-x-auto scroll-smooth custom-scrollbar pb-1 flex-1"
+            variant="none"
+            enableDrag={true}
+            className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth pb-1 flex-1"
             containerClassName="relative flex items-center w-full min-w-0"
             scrollAmount={240}
           >
@@ -290,7 +292,9 @@ export default function PosViewDesktop({
           {category !== "Todos" && availableAttributeTags.length > 0 && (
             <HorizontalScrollNav
               testId="pos-category-attribute-subfilters"
-              className="flex items-center gap-1.5 overflow-x-auto scroll-smooth custom-scrollbar py-1"
+              variant="none"
+              enableDrag={true}
+              className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1"
               containerClassName="relative flex items-center w-full min-w-0 pt-1.5 border-t border-[var(--border-color)]/60"
               scrollAmount={200}
             >

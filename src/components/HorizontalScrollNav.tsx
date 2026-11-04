@@ -13,28 +13,36 @@ export interface HorizontalScrollNavProps {
   testId?: string;
   /** Referencia externa al contenedor desplazable si se desea controlar desde fuera */
   scrollRef?: React.RefObject<HTMLDivElement>;
-  /** Si se deben mostrar los chevrons fijos en los laterales o flotantes */
-  variant?: "inline" | "floating";
+  /** Si se deben mostrar los chevrons fijos en los laterales, flotantes o ninguno */
+  variant?: "inline" | "floating" | "none";
+  /** Si se debe habilitar el scroll por arrastre (Grab & Drag) con el cursor */
+  enableDrag?: boolean;
 }
 
 /**
- * HorizontalScrollNav — Navegador Horizontal Fluido con Chevrons Laterales
+ * HorizontalScrollNav — Navegador Horizontal Fluido con Chevrons Laterales o Grab & Drag
  * Cumple con los estándares de ergonomía Desktop y Apple HIG de Quiral POS.
  */
 export default function HorizontalScrollNav({
   children,
-  className = "flex items-center gap-2 overflow-x-auto scroll-smooth custom-scrollbar pb-1",
-  containerClassName = "relative flex items-center w-full min-w-0 group select-none",
+  className = "flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth pb-1",
+  containerClassName = "relative flex items-center w-full min-w-0 select-none",
   scrollAmount = 240,
   testId,
   scrollRef: externalRef,
-  variant = "inline",
+  variant = "none",
+  enableDrag = true,
 }: HorizontalScrollNavProps) {
   const localRef = useRef<HTMLDivElement>(null);
   const targetRef = externalRef || localRef;
 
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragScrollLeftRef = useRef(0);
+  const dragDistanceRef = useRef(0);
 
   const checkScrollability = useCallback(() => {
     const el = targetRef.current;
@@ -72,6 +80,69 @@ export default function HorizontalScrollNav({
     el.scrollBy({ left: direction * scrollAmount, behavior: "smooth" });
   };
 
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!enableDrag || e.button !== 0) return;
+    const el = targetRef.current;
+    if (!el) return;
+    isDraggingRef.current = true;
+    dragStartXRef.current = e.pageX - el.offsetLeft;
+    dragScrollLeftRef.current = el.scrollLeft;
+    dragDistanceRef.current = 0;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!enableDrag || !isDraggingRef.current) return;
+    const el = targetRef.current;
+    if (!el) return;
+    const x = e.pageX - el.offsetLeft;
+    const walk = (x - dragStartXRef.current) * 1.5;
+    dragDistanceRef.current = Math.abs(x - dragStartXRef.current);
+    el.scrollLeft = dragScrollLeftRef.current - walk;
+  };
+
+  const handleMouseUp = () => {
+    isDraggingRef.current = false;
+  };
+
+  const handleClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (enableDrag && dragDistanceRef.current > 5) {
+      e.stopPropagation();
+      e.preventDefault();
+      dragDistanceRef.current = 0;
+    }
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!enableDrag) return;
+    const el = targetRef.current;
+    if (!el) return;
+    if (e.deltaY !== 0) {
+      el.scrollLeft += e.deltaY;
+    }
+  };
+
+  if (variant === "none") {
+    return (
+      <div className={containerClassName} data-testid={testId}>
+        <div
+          ref={targetRef}
+          onScroll={checkScrollability}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onClickCapture={handleClickCapture}
+          onWheel={handleWheel}
+          className={`${className} ${
+            enableDrag ? "cursor-grab active:cursor-grabbing select-none" : ""
+          }`}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  }
+
   if (variant === "floating") {
     return (
       <div className={containerClassName} data-testid={testId}>
@@ -82,7 +153,7 @@ export default function HorizontalScrollNav({
               type="button"
               onClick={() => handleScroll(-1)}
               aria-label="Desplazar opciones hacia la izquierda"
-              className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] shadow-sm hover:text-accent hover:border-accent active:scale-95 transition-all duration-150"
+              className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] shadow-sm hover:text-accent hover:border-accent active:scale-95 transition-all duration-150 cursor-pointer"
             >
               <ChevronLeft size={16} />
             </button>
@@ -93,7 +164,15 @@ export default function HorizontalScrollNav({
         <div
           ref={targetRef}
           onScroll={checkScrollability}
-          className={className}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onClickCapture={handleClickCapture}
+          onWheel={handleWheel}
+          className={`${className} ${
+            enableDrag ? "cursor-grab active:cursor-grabbing select-none" : ""
+          }`}
         >
           {children}
         </div>
@@ -105,7 +184,7 @@ export default function HorizontalScrollNav({
               type="button"
               onClick={() => handleScroll(1)}
               aria-label="Desplazar opciones hacia la derecha"
-              className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] shadow-sm hover:text-accent hover:border-accent active:scale-95 transition-all duration-150"
+              className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] shadow-sm hover:text-accent hover:border-accent active:scale-95 transition-all duration-150 cursor-pointer"
             >
               <ChevronRight size={16} />
             </button>
@@ -123,14 +202,26 @@ export default function HorizontalScrollNav({
           type="button"
           onClick={() => handleScroll(-1)}
           aria-label="Desplazar opciones hacia la izquierda"
-          className="mr-1.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] shadow-sm hover:text-accent hover:border-accent active:scale-95 transition-all duration-150 z-10"
+          className="mr-1.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] shadow-sm hover:text-accent hover:border-accent active:scale-95 transition-all duration-150 z-10 cursor-pointer"
         >
           <ChevronLeft size={15} />
         </button>
       )}
 
       {/* Contenedor Desplazable */}
-      <div ref={targetRef} onScroll={checkScrollability} className={className}>
+      <div
+        ref={targetRef}
+        onScroll={checkScrollability}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onClickCapture={handleClickCapture}
+        onWheel={handleWheel}
+        className={`${className} ${
+          enableDrag ? "cursor-grab active:cursor-grabbing select-none" : ""
+        }`}
+      >
         {children}
       </div>
 
@@ -140,7 +231,7 @@ export default function HorizontalScrollNav({
           type="button"
           onClick={() => handleScroll(1)}
           aria-label="Desplazar opciones hacia la derecha"
-          className="ml-1.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] shadow-sm hover:text-accent hover:border-accent active:scale-95 transition-all duration-150 z-10"
+          className="ml-1.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] shadow-sm hover:text-accent hover:border-accent active:scale-95 transition-all duration-150 z-10 cursor-pointer"
         >
           <ChevronRight size={15} />
         </button>

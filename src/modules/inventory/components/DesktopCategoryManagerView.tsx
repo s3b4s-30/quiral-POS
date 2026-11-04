@@ -426,12 +426,12 @@ export default function DesktopCategoryManagerView({
   return (
     <div
       data-testid="desktop-category-manager-view"
-      className="fixed inset-0 z-40 w-full h-full flex flex-col overflow-hidden bg-[var(--bg-primary)] pt-[var(--quiral-header-offset,4rem)] antialiased-hd"
+      className="fixed inset-0 z-40 w-full h-full flex flex-col overflow-hidden bg-[var(--bg-primary)] pt-0 antialiased-hd"
     >
       {/* ======================================================== */}
       {/* CABECERA SUPERIOR: Título, Atajos y Acciones Maestras    */}
       {/* ======================================================== */}
-      <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-elevated)]/90 backdrop-blur-md px-6 lg:px-8 py-3.5 flex items-center justify-between">
+      <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-elevated)]/90 backdrop-blur-md px-5 lg:px-6 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -503,7 +503,7 @@ export default function DesktopCategoryManagerView({
           role="alertdialog"
           aria-label="Alerta de categoría con productos activos"
           data-testid="orphan-category-alert"
-          className="shrink-0 m-6 mb-0 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 space-y-3 animate-in fade-in duration-150"
+          className="shrink-0 mx-5 my-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 space-y-3 animate-in fade-in duration-150"
         >
           <div className="flex items-start gap-2.5 text-amber-500">
             <AlertTriangle size={20} className="shrink-0 mt-0.5" />
@@ -551,12 +551,12 @@ export default function DesktopCategoryManagerView({
       {/* ======================================================== */}
       {/* CUERPO PRINCIPAL: 3 COLUMNAS LIMPIAS (CERO SCROLL HORIZONTAL) */}
       {/* ======================================================== */}
-      <div className="flex-1 min-h-0 w-full overflow-hidden px-6 lg:px-8 py-4">
-        <div className="h-full w-full grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0 w-full overflow-hidden px-5 lg:px-6 py-3">
+        <div className="h-full w-full grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 min-h-0 overflow-hidden">
           {/* ======================================================== */}
           {/* COLUMNA 1 (IZQUIERDA): Listado de Categorías             */}
           {/* ======================================================== */}
-          <div className="flex flex-col h-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 lg:p-5 shadow-xs overflow-hidden min-h-0">
+          <div className="flex flex-col h-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-xs overflow-hidden min-h-0">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)] shrink-0">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
@@ -719,7 +719,7 @@ export default function DesktopCategoryManagerView({
           {/* ======================================================== */}
           {/* COLUMNA 2 (CENTRO): Atributos de la Categoría Activa     */}
           {/* ======================================================== */}
-          <div className="flex flex-col h-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 lg:p-5 shadow-xs overflow-hidden min-h-0">
+          <div className="flex flex-col h-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-xs overflow-hidden min-h-0">
             {/* Cabecera de Columna 2 */}
             <div className="pb-3 border-b border-[var(--border-color)] shrink-0">
               <div className="flex items-center justify-between">
@@ -906,7 +906,7 @@ export default function DesktopCategoryManagerView({
           {/* ======================================================== */}
           {/* COLUMNA 3 (DERECHA): Valores del Atributo Seleccionado   */}
           {/* ======================================================== */}
-          <div className="flex flex-col h-full rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 lg:p-5 shadow-xs overflow-hidden min-h-0">
+          <div className="flex flex-col h-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-xs overflow-hidden min-h-0">
             {/* Cabecera de Columna 3 */}
             <div className="pb-3 border-b border-[var(--border-color)] shrink-0">
               <div className="flex items-center justify-between">
