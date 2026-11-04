@@ -35,7 +35,7 @@ export interface DesktopCategoryManagerViewProps {
  */
 // Estándar de diseño para botones de acción principal, creación y guardado (Design System UI)
 const PRIMARY_ACTION_BTN_CLASS =
-  "inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-accent-glow active:scale-95 transition-all duration-150 cursor-pointer select-none disabled:opacity-50 disabled:pointer-events-none shrink-0";
+  "inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-accent-glow active:scale-95 transition-all duration-150 cursor-pointer select-none disabled:opacity-50 disabled:pointer-events-none shrink-0 tabular-nums";
 
 export default function DesktopCategoryManagerView({
   onBack,
@@ -436,7 +436,7 @@ export default function DesktopCategoryManagerView({
       {/* ======================================================== */}
       {/* CABECERA SUPERIOR: Título, Atajos y Acciones Maestras    */}
       {/* ======================================================== */}
-      <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-elevated)]/90 backdrop-blur-md px-5 lg:px-6 py-2.5 flex items-center justify-between">
+      <div className="shrink-0 border-b border-white/10 bg-black/60 backdrop-blur-md px-5 lg:px-6 py-2.5 flex items-center justify-between shadow-2xl">
         <div className="flex items-center gap-3">
           <button
             type="button"

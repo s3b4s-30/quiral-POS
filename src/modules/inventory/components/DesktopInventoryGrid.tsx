@@ -748,7 +748,7 @@ export default function DesktopInventoryGrid({
       {/* Barra de Acciones y Creación de la Estación de Trabajo Desktop */}
       <div
         data-testid="desktop-grid-action-bar"
-        className="flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-elevated)] px-4 py-3 select-none"
+        className="flex items-center justify-between border-b border-white/10 bg-black/40 backdrop-blur-md px-4 py-3 select-none"
       >
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
@@ -810,7 +810,7 @@ export default function DesktopInventoryGrid({
           className="w-full border-collapse text-left"
         >
           {/* Cabecera con Desenfoque Translúcido y Bordes Milimétricos */}
-          <thead className="sticky top-0 z-10 backdrop-blur-md bg-[var(--bg-elevated)]/95 border-b border-[var(--border-color)] select-none">
+          <thead className="sticky top-0 z-10 backdrop-blur-md bg-black/60 border-b border-white/10 select-none">
             <tr className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
               {/* 1. [✓] / Nº (48px) */}
               <th className="w-12 border-r border-[var(--border-color)] px-2.5 py-2.5 text-center">
@@ -963,25 +963,25 @@ export default function DesktopInventoryGrid({
         </div>
       </footer>
 
-      {/* Barra Flotante de Acciones en Lote (Estricta Fila Única Horizontal - Sin Amontonamiento) */}
+      {/* Barra Flotante de Acciones en Lote (Glassmorfismo Puro & Layout Inflexible en 1 Fila) */}
       {selectedIds.size > 0 && (
         <div
           data-testid="desktop-bulk-actions-bar"
-          className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 flex flex-row items-center gap-3 flex-nowrap rounded-2xl border border-[var(--border-color)] dark:border-white/10 bg-[var(--bg-elevated)]/95 backdrop-blur-md px-4 py-2.5 shadow-accent-glow max-w-[calc(100vw-2rem)] select-none animate-in fade-in slide-in-from-bottom-2 duration-150"
+          className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 flex flex-row items-center justify-between gap-3 flex-nowrap w-max max-w-[95vw] mx-auto rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md px-4 py-2.5 shadow-2xl select-none animate-in fade-in slide-in-from-bottom-2 duration-150"
         >
           {/* Badge contador */}
           <span className="shrink-0 whitespace-nowrap rounded-xl bg-accent px-3 py-1.5 text-xs font-extrabold text-white tabular-nums shadow-xs">
             {selectedIds.size} seleccionados
           </span>
 
-          <div className="h-4 w-px bg-[var(--border-color)] shrink-0" />
+          <div className="h-4 w-px bg-white/10 shrink-0" />
 
           {/* Adición Masiva al Carrito de POS */}
           <button
             type="button"
             data-testid="desktop-bulk-add-to-cart-btn"
             onClick={handleBulkAddToCart}
-            className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-xl bg-accent px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-accent-hover hover:shadow-accent-glow active:scale-95 transition-all duration-150 cursor-pointer"
+            className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-accent-glow active:scale-95 transition-all duration-150 cursor-pointer tabular-nums"
           >
             <ShoppingCart size={13} strokeWidth={2.5} />
             <span>
@@ -989,9 +989,9 @@ export default function DesktopInventoryGrid({
             </span>
           </button>
 
-          <div className="h-4 w-px bg-[var(--border-color)] shrink-0" />
+          <div className="h-4 w-px bg-white/10 shrink-0" />
 
-          {/* Cambiar categoría en lote */}
+          {/* Cambiar categoría en lote con Menú Desplegable Glassmorphic */}
           <div className="shrink-0 flex items-center gap-2 whitespace-nowrap">
             <select
               value={bulkCategory}
@@ -999,10 +999,14 @@ export default function DesktopInventoryGrid({
                 setBulkCategory(e.target.value as ProductCategory)
               }
               aria-label="Seleccionar nueva categoría en lote"
-              className="shrink-0 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent max-w-[145px] truncate cursor-pointer"
+              className="shrink-0 rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm px-2.5 py-1.5 text-xs font-bold text-white outline-none focus:border-accent max-w-[145px] truncate cursor-pointer"
             >
               {catalogConfig.categoryOrder.map((cat) => (
-                <option key={cat} value={cat}>
+                <option
+                  key={cat}
+                  value={cat}
+                  className="bg-zinc-900 text-white"
+                >
                   {cat}
                 </option>
               ))}
@@ -1010,40 +1014,40 @@ export default function DesktopInventoryGrid({
             <button
               type="button"
               onClick={handleBulkCategoryChange}
-              className="shrink-0 whitespace-nowrap rounded-xl border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-bold text-accent hover:bg-accent hover:text-white transition-all duration-150 cursor-pointer active:scale-95"
+              className="shrink-0 whitespace-nowrap rounded-xl border border-accent/40 bg-accent/15 px-3 py-1.5 text-xs font-bold text-accent hover:bg-accent hover:text-white transition-all duration-150 cursor-pointer active:scale-95"
             >
               Mover categoría
             </button>
           </div>
 
-          <div className="h-4 w-px bg-[var(--border-color)] shrink-0" />
+          <div className="h-4 w-px bg-white/10 shrink-0" />
 
           {/* Ajustar stock en lote */}
           <div className="shrink-0 flex items-center gap-1.5 whitespace-nowrap">
             <button
               type="button"
               onClick={() => handleBulkStockDelta(-1)}
-              className="shrink-0 whitespace-nowrap rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95"
+              className="shrink-0 whitespace-nowrap rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
             >
               -1 Stock
             </button>
             <button
               type="button"
               onClick={() => handleBulkStockDelta(1)}
-              className="shrink-0 whitespace-nowrap rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95"
+              className="shrink-0 whitespace-nowrap rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
             >
               +1 Stock
             </button>
           </div>
 
-          <div className="h-4 w-px bg-[var(--border-color)] shrink-0" />
+          <div className="h-4 w-px bg-white/10 shrink-0" />
 
           {/* Eliminar seleccionados y limpiar */}
           <div className="shrink-0 flex items-center gap-2 whitespace-nowrap">
             <button
               type="button"
               onClick={handleBulkDelete}
-              className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-500 hover:bg-red-500 hover:text-white transition-all duration-150 cursor-pointer active:scale-95"
+              className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded-xl border border-red-500/30 bg-red-500/15 px-3 py-1.5 text-xs font-bold text-red-400 hover:bg-red-500 hover:text-white transition-all duration-150 cursor-pointer active:scale-95"
             >
               <Trash2 size={13} />
               <span>Eliminar</span>
@@ -1054,7 +1058,7 @@ export default function DesktopInventoryGrid({
               onClick={() => setSelectedIds(new Set())}
               title="Limpiar selección"
               aria-label="Limpiar selección"
-              className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent active:scale-95 transition-all cursor-pointer"
+              className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-zinc-400 hover:text-white hover:border-accent active:scale-95 transition-all cursor-pointer"
             >
               <X size={15} />
             </button>
