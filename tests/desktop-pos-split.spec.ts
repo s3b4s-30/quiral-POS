@@ -112,7 +112,7 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
     await expect(ticket.getByText("Ticket Vacío")).toBeVisible();
   });
 
-  test("3. Alternancia de Vistas en POS (Tarjetas 3 Columnas y Tabla de Ventas)", async ({
+  test("3. Vista Tabla por Defecto en POS, Subfiltros de Atributos por Categoría y Alternancia a Tarjetas", async ({
     page,
   }) => {
     await page.goto("/");
@@ -123,21 +123,38 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
     await expect(desktopSidebar).toBeVisible({ timeout: 10000 });
     await desktopSidebar.getByRole("button", { name: "Vender" }).click();
 
-    // 1. Validar que la vista de tarjetas en 3 columnas está activa por defecto
-    const cardsGrid = page.getByTestId("pos-products-cards-grid");
-    await expect(cardsGrid).toBeVisible();
-
-    // 2. Alternar a Vista de Tabla de Ventas
-    const tableBtn = page.getByTestId("pos-view-table-btn");
-    await expect(tableBtn).toBeVisible();
-    await tableBtn.click();
-
-    // 3. Validar renderizado de la tabla de ventas
+    // 1. Validar que la Vista de Tabla de Ventas está activa por defecto a la izquierda
     const tableView = page.getByTestId("pos-products-table-view");
     await expect(tableView).toBeVisible();
+    const cardsGrid = page.getByTestId("pos-products-cards-grid");
     await expect(cardsGrid).not.toBeVisible();
 
-    // 4. Agregar producto haciendo clic en la fila de la tabla
+    // 2. Probar subfiltros de atributos cuando se selecciona una categoría específica
+    const cargadoresChip = page.getByRole("button", {
+      name: "Cargadores y Cables",
+    });
+    await expect(cargadoresChip).toBeVisible();
+    await cargadoresChip.click();
+
+    // Aparece la segunda barra de subfiltros de atributos/subtipos de la categoría
+    const subfiltersNav = page.getByTestId("pos-category-attribute-subfilters");
+    await expect(subfiltersNav).toBeVisible();
+
+    // Filtrar por subtipo (ejemplo: Anker)
+    const ankerSubfilter = subfiltersNav.getByRole("button", { name: "Anker" });
+    if (await ankerSubfilter.isVisible()) {
+      await ankerSubfilter.click();
+      await expect(tableView.getByText("Cubo Anker 30W")).toBeVisible();
+    }
+
+    // Restablecer subfiltro con "Todos en Cargadores y Cables"
+    const resetSubfilterBtn = subfiltersNav.getByRole("button", {
+      name: /Todos en Cargadores y Cables/i,
+    });
+    await expect(resetSubfilterBtn).toBeVisible();
+    await resetSubfilterBtn.click();
+
+    // 3. Agregar producto haciendo clic en la fila de la tabla
     const tableRow = tableView.getByRole("button", {
       name: /Agregar Cubo iPhone 20W al carrito/i,
     });
@@ -148,10 +165,18 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
     const ticket = page.getByTestId("desktop-pos-ticket");
     await expect(ticket.getByText(/1 artículo/i)).toBeVisible();
 
-    // 5. Alternar de vuelta a Vista de Tarjetas
+    // 4. Alternar a Vista de Tarjetas (3 Columnas)
     const cardsBtn = page.getByTestId("pos-view-cards-btn");
+    await expect(cardsBtn).toBeVisible();
     await cardsBtn.click();
     await expect(cardsGrid).toBeVisible();
     await expect(tableView).not.toBeVisible();
+
+    // 5. Alternar de vuelta a Vista de Tabla
+    const tableBtn = page.getByTestId("pos-view-table-btn");
+    await expect(tableBtn).toBeVisible();
+    await tableBtn.click();
+    await expect(tableView).toBeVisible();
+    await expect(cardsGrid).not.toBeVisible();
   });
 });

@@ -15,6 +15,7 @@ import React, {
 } from "react";
 import CategoryManagerModal from "../../../components/CategoryManagerModal";
 import DesktopPosTicket from "../../../components/DesktopPosTicket";
+import HorizontalScrollNav from "../../../components/HorizontalScrollNav";
 import LottiePlayer, {
   EMPTY_BOX_ANIMATION,
 } from "../../../components/LottiePlayer";
@@ -36,8 +37,9 @@ export default function PosViewDesktop({
 
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<"Todos" | ProductCategory>("Todos");
+  const [selectedAttributeTag, setSelectedAttributeTag] = useState("");
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [posViewMode, setPosViewMode] = useState<"cards" | "table">("cards");
+  const [posViewMode, setPosViewMode] = useState<"table" | "cards">("table");
 
   // Referencia al input de búsqueda para atajo '/' o Ctrl+F en Desktop
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -75,6 +77,11 @@ export default function PosViewDesktop({
     onCheckoutStateChange?.(open);
   };
 
+  const handleSelectCategory = (newCategory: "Todos" | ProductCategory) => {
+    setCategory(newCategory);
+    setSelectedAttributeTag("");
+  };
+
   // Categorías ordenadas según catalogConfig.categoryOrder, con "Todos" fijo al inicio
   const categories = useMemo(() => {
     const ordered: ProductCategory[] = [...catalogConfig.categoryOrder];
@@ -97,8 +104,27 @@ export default function PosViewDesktop({
       !categories.some((c) => isSameCatalogText(c, category))
     ) {
       setCategory("Todos");
+      setSelectedAttributeTag("");
     }
   }, [categories, category]);
+
+  // Etiquetas dinámicas de atributos/subtipos disponibles cuando se filtra una categoría específica
+  const availableAttributeTags = useMemo(() => {
+    if (category === "Todos") return [];
+    const tagSet = new Set<string>();
+    for (const p of products) {
+      if (!isSameCatalogText(p.category, category)) continue;
+      if (!p.subtitle) continue;
+      const parts = p.subtitle
+        .split("·")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0 && !isSameCatalogText(s, category));
+      for (const part of parts) {
+        tagSet.add(part);
+      }
+    }
+    return Array.from(tagSet).slice(0, 15);
+  }, [products, category]);
 
   const supplierColors = useMemo(
     () => new Map(suppliers.map((supplier) => [supplier.id, supplier.color])),
@@ -112,15 +138,37 @@ export default function PosViewDesktop({
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return products.filter(
-      (product) =>
-        (category === "Todos" ||
-          isSameCatalogText(product.category, category)) &&
-        (!normalizedQuery ||
-          product.name.toLowerCase().includes(normalizedQuery) ||
-          product.subtitle?.toLowerCase().includes(normalizedQuery))
-    );
-  }, [products, query, category]);
+    const attrTagLower = selectedAttributeTag.trim().toLowerCase();
+    return products.filter((product) => {
+      // 1. Categoría principal
+      if (
+        category !== "Todos" &&
+        !isSameCatalogText(product.category, category)
+      ) {
+        return false;
+      }
+
+      // 2. Subfiltro dinámico de atributos/subtipos
+      if (selectedAttributeTag) {
+        const sub = (product.subtitle || "").toLowerCase();
+        const nm = product.name.toLowerCase();
+        if (!sub.includes(attrTagLower) && !nm.includes(attrTagLower)) {
+          return false;
+        }
+      }
+
+      // 3. Búsqueda de texto
+      if (
+        normalizedQuery &&
+        !product.name.toLowerCase().includes(normalizedQuery) &&
+        !product.subtitle?.toLowerCase().includes(normalizedQuery)
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [products, query, category, selectedAttributeTag]);
 
   const handleAddToCart = useCallback(
     (productId: string) => {
@@ -179,28 +227,14 @@ export default function PosViewDesktop({
               <SlidersHorizontal size={16} />
             </button>
 
-            {/* Selector de Vista en POS: Tarjetas (3 cols) o Tabla de Ventas */}
+            {/* Selector de Vista en POS: Tabla de Ventas (Predeterminada) o Tarjetas (3 cols) */}
             <div className="flex items-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1 shrink-0 select-none">
-              <button
-                type="button"
-                data-testid="pos-view-cards-btn"
-                onClick={() => setPosViewMode("cards")}
-                title="Vista Cuadrícula de Tarjetas (3 Columnas)"
-                className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all duration-150 ${
-                  posViewMode === "cards"
-                    ? "bg-accent text-white shadow-xs"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                }`}
-              >
-                <LayoutGrid size={14} />
-                <span>Tarjetas</span>
-              </button>
               <button
                 type="button"
                 data-testid="pos-view-table-btn"
                 onClick={() => setPosViewMode("table")}
-                title="Vista Tabla de Ventas"
-                className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all duration-150 ${
+                title="Vista Tabla de Ventas (Predeterminada)"
+                className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all duration-150 cursor-pointer ${
                   posViewMode === "table"
                     ? "bg-accent text-white shadow-xs"
                     : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -209,18 +243,37 @@ export default function PosViewDesktop({
                 <Table2 size={14} />
                 <span>Tabla</span>
               </button>
+              <button
+                type="button"
+                data-testid="pos-view-cards-btn"
+                onClick={() => setPosViewMode("cards")}
+                title="Vista Cuadrícula de Tarjetas (3 Columnas)"
+                className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all duration-150 cursor-pointer ${
+                  posViewMode === "cards"
+                    ? "bg-accent text-white shadow-xs"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                <LayoutGrid size={14} />
+                <span>Tarjetas</span>
+              </button>
             </div>
           </div>
 
-          {/* Píldoras de Categoría Horizontales para Mouse */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {/* 1. Píldoras de Categoría Horizontales con Chevrons Laterales */}
+          <HorizontalScrollNav
+            testId="pos-desktop-category-chips-nav"
+            className="flex items-center gap-2 overflow-x-auto scroll-smooth custom-scrollbar pb-1 flex-1"
+            containerClassName="relative flex items-center w-full min-w-0"
+            scrollAmount={240}
+          >
             {categories.map((item) => {
               const isActive = category === item;
               return (
                 <button
                   key={item}
                   type="button"
-                  onClick={() => setCategory(item)}
+                  onClick={() => handleSelectCategory(item)}
                   className={`whitespace-nowrap rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-150 select-none cursor-pointer ${
                     isActive
                       ? "bg-accent text-white shadow-xs"
@@ -231,7 +284,51 @@ export default function PosViewDesktop({
                 </button>
               );
             })}
-          </div>
+          </HorizontalScrollNav>
+
+          {/* 2. Subfiltros dinámicos de atributos/subtipos cuando hay una categoría activa */}
+          {category !== "Todos" && availableAttributeTags.length > 0 && (
+            <HorizontalScrollNav
+              testId="pos-category-attribute-subfilters"
+              className="flex items-center gap-1.5 overflow-x-auto scroll-smooth custom-scrollbar py-1"
+              containerClassName="relative flex items-center w-full min-w-0 pt-1.5 border-t border-[var(--border-color)]/60"
+              scrollAmount={200}
+            >
+              <button
+                type="button"
+                onClick={() => setSelectedAttributeTag("")}
+                className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 cursor-pointer ${
+                  selectedAttributeTag === ""
+                    ? "bg-accent-subtle text-accent border border-accent/30"
+                    : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                Todos en {category}
+              </button>
+              {availableAttributeTags.map((tag) => {
+                const isTagActive = isSameCatalogText(
+                  selectedAttributeTag,
+                  tag
+                );
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() =>
+                      setSelectedAttributeTag(isTagActive ? "" : tag)
+                    }
+                    className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 cursor-pointer ${
+                      isTagActive
+                        ? "bg-accent text-white shadow-xs"
+                        : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </HorizontalScrollNav>
+          )}
         </div>
 
         {/* Catálogo con Scroll Vertical Independiente: Tarjetas 3 Columnas o Tabla de Ventas */}
@@ -277,6 +374,7 @@ export default function PosViewDesktop({
                 onClick={() => {
                   setQuery("");
                   setCategory("Todos");
+                  setSelectedAttributeTag("");
                 }}
                 className="mt-4 inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-xs active:scale-95 transition-all duration-150"
               >
