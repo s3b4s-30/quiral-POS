@@ -11,8 +11,10 @@ import {
 } from "lucide-react";
 import React, { useRef, useState } from "react";
 import AttributeConfigModal from "./AttributeConfigModal";
+import DesktopCategoryManagerView from "./DesktopCategoryManagerView";
 import HorizontalScrollNav from "../../../components/HorizontalScrollNav";
 import ModalSheet from "../../../components/ModalSheet";
+import useIsDesktop from "../../../hooks/useIsDesktop";
 import { useInventory } from "../../../context/InventoryContext";
 import { ProductCategory } from "../../../types/domain";
 import {
@@ -23,15 +25,19 @@ import {
   normalizeCatalogText,
 } from "../../../utils/catalogConfig";
 
-interface CategoryManagerModalProps {
+export interface CategoryManagerModalProps {
   onClose: () => void;
   onStartClose?: () => void;
+  initialCategory?: ProductCategory;
 }
 
 export default function CategoryManagerModal({
   onClose,
   onStartClose,
+  initialCategory,
 }: CategoryManagerModalProps) {
+  const isDesktop = useIsDesktop();
+
   const {
     products,
     catalogConfig,
@@ -41,6 +47,18 @@ export default function CategoryManagerModal({
     updateCategoryAttributes,
     resetCatalogConfigToDefault,
   } = useInventory();
+
+  if (isDesktop) {
+    return (
+      <DesktopCategoryManagerView
+        initialCategory={initialCategory}
+        onBack={() => {
+          onStartClose?.();
+          onClose();
+        }}
+      />
+    );
+  }
 
   const [draftOrder, setDraftOrder] = useState<ProductCategory[]>(() => [
     ...catalogConfig.categoryOrder,

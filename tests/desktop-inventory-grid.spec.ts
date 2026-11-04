@@ -263,4 +263,71 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     // Verificar que el stock resultante contiene 70
     await expect(stockCell0).toContainText("70");
   });
+
+  test("6. Banco Maestro de Categorías en Panel Dual de Escritorio (Organizar Categorías)", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const desktopSidebar = page.getByRole("complementary", {
+      name: /Navegación principal de escritorio/i,
+    });
+    await expect(desktopSidebar).toBeVisible({ timeout: 10000 });
+    await desktopSidebar.getByRole("button", { name: "Inventario" }).click();
+
+    // 1. Abrir Organizar Categorías desde el botón de la barra superior de inventario
+    const categoriasBtn = page.getByRole("button", {
+      name: "Categorías",
+      exact: true,
+    });
+    await expect(categoriasBtn).toBeVisible();
+    await categoriasBtn.click();
+
+    // 2. Verificar que se renderiza la vista de escritorio en Panel Dual
+    const managerView = page.getByTestId("desktop-category-manager-view");
+    await expect(managerView).toBeVisible();
+    await expect(
+      managerView.getByRole("heading", { name: "Organizar Categorías" })
+    ).toBeVisible();
+
+    // 3. Panel Izquierdo: Crear nueva categoría
+    const newCatBtn = managerView.getByRole("button", {
+      name: /Nueva Categoría/i,
+    });
+    await expect(newCatBtn).toBeVisible();
+    await newCatBtn.click();
+
+    const catInput = managerView.getByPlaceholder(/Ej\. Accesorios, Fundas/i);
+    await expect(catInput).toBeVisible();
+    await catInput.fill("Prueba Desktop");
+
+    const submitCatBtn = managerView.getByRole("button", {
+      name: "Crear Categoría",
+    });
+    await submitCatBtn.click();
+
+    // La nueva categoría debe aparecer en la lista y estar seleccionada en la cabecera derecha
+    await expect(
+      managerView.getByRole("heading", { name: "Prueba Desktop" })
+    ).toBeVisible();
+
+    // 4. Panel Derecho: Agregar nueva opción al atributo
+    const newOptionInput = managerView.getByPlaceholder("Nueva opción...");
+    await expect(newOptionInput).toBeVisible();
+    await newOptionInput.fill("Opción Alfa");
+
+    const addOptionBtn = managerView.getByRole("button", { name: "Agregar" });
+    await addOptionBtn.click();
+    await expect(
+      managerView.getByText("Opción Alfa", { exact: true })
+    ).toBeVisible();
+
+    // 5. Guardar y regresar al inventario
+    const saveBtn = managerView.getByTestId("save-category-order-btn");
+    await expect(saveBtn).toBeVisible();
+    await saveBtn.click();
+
+    await expect(managerView).not.toBeVisible();
+    await expect(page.locator("#inventory-scroll")).toBeVisible();
+  });
 });

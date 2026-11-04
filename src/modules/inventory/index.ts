@@ -5,6 +5,9 @@ export { default as DesktopProductDrawer } from "./components/DesktopProductDraw
 
 export { default as DesktopAttributeConfigView } from "./components/DesktopAttributeConfigView";
 
+export { default as DesktopCategoryManagerView } from "./components/DesktopCategoryManagerView";
+export * from "./components/DesktopCategoryManagerView";
+
 export { default as DesktopSuppliersView } from "./components/DesktopSuppliersView";
 
 export { default as ProductCard } from "./components/ProductCard";

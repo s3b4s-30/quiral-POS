@@ -988,9 +988,12 @@ export default function InventoryView({
         />
       )}
 
-      {/* Hoja Modal de Gestión y Reordenamiento de Categorías (Long-Press) */}
+      {/* Hoja Modal / Banco Maestro de Gestión y Reordenamiento de Categorías */}
       {isCategoryModalOpen && (
         <CategoryManagerModal
+          initialCategory={
+            selectedCategory !== "Todos" ? selectedCategory : undefined
+          }
           onStartClose={() => onFilterModalStateChange?.(false)}
           onClose={() => handleOpenCategoryModal(false)}
         />

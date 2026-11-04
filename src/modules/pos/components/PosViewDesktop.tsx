@@ -539,9 +539,10 @@ export default function PosViewDesktop({
       {/* Columna Derecha: Panel de Ticket de Venta y Cobro Directo (~30% - 35%) */}
       <DesktopPosTicket />
 
-      {/* Modal de Gestión y Reordenamiento de Categorías */}
+      {/* Banco Maestro de Gestión y Reordenamiento de Categorías */}
       {isCategoryModalOpen && (
         <CategoryManagerModal
+          initialCategory={category !== "Todos" ? category : undefined}
           onStartClose={() => handleOpenCategoryModal(false)}
           onClose={() => handleOpenCategoryModal(false)}
         />
