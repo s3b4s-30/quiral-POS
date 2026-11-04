@@ -63,7 +63,6 @@ export default function DesktopModal({
       aria-modal="true"
       aria-labelledby="desktop-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:p-6 bg-black/60 dark:bg-black/75 backdrop-blur-sm animate-in fade-in duration-150 select-none"
-      onClick={handleClose}
     >
       <div
         className={`w-full ${maxWidth} max-h-[88vh] flex flex-col rounded-3xl border border-[var(--border-color)] bg-[var(--bg-elevated)] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 transition-colors ${className}`}
@@ -96,7 +95,9 @@ export default function DesktopModal({
         </header>
 
         {/* Área de Contenido Scrolleable sin restricciones táctiles */}
-        <div className={`flex-1 min-h-0 overflow-y-auto px-6 py-5 ${contentClassName}`}>
+        <div
+          className={`flex-1 min-h-0 overflow-y-auto px-6 py-5 ${contentClassName}`}
+        >
           {children}
         </div>
 

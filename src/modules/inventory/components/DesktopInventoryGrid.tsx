@@ -1,5 +1,6 @@
 import {
   ArrowDown,
+  ShoppingCart,
   ArrowUp,
   ArrowUpDown,
   Plus,
@@ -95,6 +96,7 @@ export default function DesktopInventoryGrid({
   // Referencias para enfoque programático de celdas e inputs
   const cellRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const activeInputRef = useRef<HTMLInputElement | null>(null);
+  const hasSelectedInputRef = useRef(false);
 
   // Exponer disparador para Ctrl + N hacia el campo Nombre de Quick-Add
   useEffect(() => {
@@ -260,8 +262,15 @@ export default function DesktopInventoryGrid({
     const applyFocus = () => {
       if (isEditingCell) {
         activeInputRef.current?.focus();
-        activeInputRef.current?.select();
+        if (!hasSelectedInputRef.current) {
+          activeInputRef.current?.select();
+          hasSelectedInputRef.current = true;
+        } else if (activeInputRef.current) {
+          const len = activeInputRef.current.value.length;
+          activeInputRef.current.setSelectionRange?.(len, len);
+        }
       } else {
+        hasSelectedInputRef.current = false;
         const el = cellRefs.current.get(
           `${activeCell.rowIndex}:${activeCell.colKey}`
         );
@@ -287,7 +296,8 @@ export default function DesktopInventoryGrid({
     }
     applyFocus();
     return undefined;
-  }, [activeCell, isEditingCell, isVirtualized, virtualizer]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCell?.rowIndex, activeCell?.colKey, isEditingCell, isVirtualized]);
 
   // Limpiar selecciones huérfanas si cambian los productos
   useEffect(() => {
@@ -342,6 +352,7 @@ export default function DesktopInventoryGrid({
       const { showCosts: costsVisible, enrichedRows: rows } = latestRef.current;
       if (colKey === "cost" && !costsVisible) return;
       if (!rows[rowIndex]) return;
+      hasSelectedInputRef.current = initialOverride !== undefined;
       setActiveCell({ rowIndex, colKey });
       setEditDraftValue(
         initialOverride !== undefined
@@ -652,6 +663,21 @@ export default function DesktopInventoryGrid({
       setSelectedIds(new Set(enrichedRows.map((r) => r.product.id)));
     }
   };
+
+  const [bulkCartSuccess, setBulkCartSuccess] = useState(false);
+
+  const handleBulkAddToCart = useCallback(() => {
+    if (selectedIds.size === 0) return;
+    let addedCount = 0;
+    selectedIds.forEach((id) => {
+      const ok = latestRef.current.addToCart(id);
+      if (ok) addedCount++;
+    });
+    if (addedCount > 0) {
+      setBulkCartSuccess(true);
+      setTimeout(() => setBulkCartSuccess(false), 2000);
+    }
+  }, [selectedIds]);
 
   const handleBulkCategoryChange = () => {
     if (selectedIds.size === 0) return;
@@ -965,6 +991,20 @@ export default function DesktopInventoryGrid({
           <span className="rounded-lg bg-accent px-2.5 py-1 text-xs font-extrabold text-white tabular-nums">
             {selectedIds.size} seleccionados
           </span>
+          {/* Adición Masiva al Carrito de POS */}
+          <button
+            type="button"
+            data-testid="desktop-bulk-add-to-cart-btn"
+            onClick={handleBulkAddToCart}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-accent-glow hover:bg-accent-hover active:scale-95 transition-all duration-150"
+          >
+            <ShoppingCart size={13} strokeWidth={2.5} />
+            <span>
+              {bulkCartSuccess
+                ? "¡Añadidos al carrito!"
+                : "+ Añadir al carrito"}
+            </span>
+          </button>
 
           {/* Cambiar categoría en lote */}
           <div className="flex items-center gap-1.5 border-l border-[var(--border-color)] pl-3">

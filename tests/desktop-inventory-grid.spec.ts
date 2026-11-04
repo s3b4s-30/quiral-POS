@@ -66,12 +66,6 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     const stockCell1 = page.getByTestId("grid-cell-stock-1");
     await expect(stockCell1).toHaveClass(/ring-accent/);
 
-    // Seleccionar "Todos" en el selector denso de paginación de escritorio
-    await page
-      .getByTestId("desktop-page-size-bar")
-      .getByRole("button", { name: "Todos" })
-      .click();
-
     // Probar Fila de Creación Rápida en Línea (Quick-Add Inline Row)
     const quickNameInput = page.getByTestId("quick-add-name-input");
     const quickStockInput = page.getByTestId("quick-add-stock-input");
@@ -106,9 +100,11 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(page.getByTestId("quick-count-mode-banner")).toBeVisible();
     await expect(quickCountBtn).toHaveClass(/bg-accent/);
 
-    // Revelar Costos con el botón de privacidad de escritorio
-    const toggleCostsBtn = page.getByTestId("desktop-toggle-costs-btn");
-    await toggleCostsBtn.click();
+    // Revelar Costos con el botón de Modo Administrador de la barra lateral de escritorio
+    const adminModeBtn = desktopSidebar.getByRole("button", {
+      name: /Modo Administrador/i,
+    });
+    await adminModeBtn.click();
     await expect(page.getByTestId("grid-cell-cost-0")).not.toContainText(
       "••••••"
     );
@@ -134,7 +130,8 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       "emerald"
     );
   });
-  test("3. Modal de Creación Avanzada de Productos y Navegación Horizontal con Chevrons", async ({
+
+  test("3. Modal de Creación Avanzada de Productos Split-Layout y Navegación Horizontal con Chevrons", async ({
     page,
   }) => {
     await page.goto("/");
@@ -154,7 +151,7 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(newProductBtn).toBeVisible();
     await newProductBtn.click();
 
-    // 3. Validar renderizado del diálogo modal centrado de escritorio
+    // 3. Validar renderizado del diálogo modal centrado de escritorio Split-Layout
     const modal = page.getByTestId("desktop-new-product-modal");
     await expect(modal).toBeVisible();
     await expect(
@@ -175,10 +172,68 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await stockInput.fill("10");
 
     // Verificar cálculo en tarjeta de márgenes (Utilidad: 89,000 - 45,000 = 44,000)
-    await expect(modal.getByText(/44.000/)).toBeVisible();
+    await expect(modal.getByText(/44\.000/)).toBeVisible();
 
     // 5. Cerrar modal con tecla Escape
     await page.keyboard.press("Escape");
     await expect(modal).not.toBeVisible();
+  });
+
+  test("4. Selección múltiple y Adición Masiva al Carrito de POS (+ Añadir al carrito)", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const desktopSidebar = page.getByRole("complementary", {
+      name: /Navegación principal de escritorio/i,
+    });
+    await expect(desktopSidebar).toBeVisible({ timeout: 10000 });
+    await desktopSidebar.getByRole("button", { name: "Inventario" }).click();
+
+    // Seleccionar fila 0 y fila 1 mediante casillas de verificación
+    const rowCheckbox0 = page.getByTestId("grid-row-checkbox-0");
+    const rowCheckbox1 = page.getByTestId("grid-row-checkbox-1");
+    await rowCheckbox0.click();
+    await rowCheckbox1.click();
+
+    // Validar que la barra flotante de acciones masivas aparece
+    const bulkBar = page.getByTestId("desktop-bulk-actions-bar");
+    await expect(bulkBar).toBeVisible();
+    await expect(bulkBar.getByText(/2 seleccionados/i)).toBeVisible();
+
+    // Enviar masivamente los productos al carrito de POS
+    const bulkAddToCartBtn = page.getByTestId("desktop-bulk-add-to-cart-btn");
+    await expect(bulkAddToCartBtn).toBeVisible();
+    await bulkAddToCartBtn.click();
+
+    // Verificar que el badge del carrito en la barra lateral aumenta
+    const sellBtn = desktopSidebar.getByRole("button", { name: /Vender/i });
+    await expect(sellBtn).toContainText("2");
+  });
+
+  test("5. Edición Numérica Fluida de Celdas (escritura de múltiples dígitos sin sobreescritura accidental)", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const desktopSidebar = page.getByRole("complementary", {
+      name: /Navegación principal de escritorio/i,
+    });
+    await expect(desktopSidebar).toBeVisible({ timeout: 10000 });
+    await desktopSidebar.getByRole("button", { name: "Inventario" }).click();
+
+    // Enfocar celda de stock de fila 0
+    const stockCell0 = page.getByTestId("grid-cell-stock-0");
+    await stockCell0.click();
+    await page.keyboard.press("Enter");
+
+    // Escribir 7 y luego 0 consecutivamente para pasar a 70
+    const input = page.getByTestId("grid-input-stock-0");
+    await expect(input).toBeVisible();
+    await input.pressSequentially("70");
+    await page.keyboard.press("Enter");
+
+    // Verificar que el stock resultante contiene 70
+    await expect(stockCell0).toContainText("70");
   });
 });

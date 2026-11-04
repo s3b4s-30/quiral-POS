@@ -402,6 +402,7 @@ export default function InventoryView({
 
   // Subconjunto visible según la paginación activa
   const paginatedProducts = useMemo(() => {
+    if (isDesktopViewport) return filteredProducts;
     if (pageSize === "all") return filteredProducts;
     return filteredProducts.slice(0, visibleCount);
   }, [filteredProducts, pageSize, visibleCount]);
@@ -595,26 +596,6 @@ export default function InventoryView({
                 </kbd>
               </button>
 
-              {/* Switch Privacidad / Costos (Ojo Abierto / Tachado) */}
-              <button
-                type="button"
-                data-testid="desktop-toggle-costs-btn"
-                onClick={() => setShowCosts((prev) => !prev)}
-                title={
-                  showCosts
-                    ? "Ocultar costos y márgenes (Modo Privacidad)"
-                    : "Revelar costos por mayor y márgenes"
-                }
-                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all duration-150 ${
-                  showCosts
-                    ? "border-accent/40 bg-accent-subtle text-accent"
-                    : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                }`}
-              >
-                {showCosts ? <Eye size={14} /> : <EyeOff size={14} />}
-                <span>{showCosts ? "Costos visibles" : "Costos ocultos"}</span>
-              </button>
-
               {/* Gestión de Categorías y Atributos */}
               <button
                 type="button"
@@ -648,29 +629,6 @@ export default function InventoryView({
 
             {/* Derecha: Paginación Densa en Escritorio + Selector de Vista (Tabla Excel / Tarjetas) */}
             <div className="flex items-center gap-2">
-              <div
-                data-testid="desktop-page-size-bar"
-                className="flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1"
-              >
-                {DESKTOP_PAGE_SIZES.map((item) => {
-                  const active = pageSize === item.value;
-                  return (
-                    <button
-                      key={String(item.value)}
-                      type="button"
-                      onClick={() => handleSelectPageSize(item.value)}
-                      className={`rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums transition-colors duration-150 ${
-                        active
-                          ? "bg-accent text-white shadow-sm"
-                          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </div>
-
               <div className="flex items-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1">
                 <button
                   type="button"

@@ -51,9 +51,13 @@ export default function DesktopProductDrawer({
   const liveProduct = products.find((p) => p.id === product?.id) ?? product;
 
   const [baseName, setBaseName] = useState("");
-  const [category, setCategory] = useState<ProductCategory>("Cargadores y Cables");
+  const [category, setCategory] = useState<ProductCategory>(
+    "Cargadores y Cables"
+  );
   const [includeAttributesInName, setIncludeAttributesInName] = useState(false);
-  const [dynamicSelections, setDynamicSelections] = useState<Record<string, string>>({});
+  const [dynamicSelections, setDynamicSelections] = useState<
+    Record<string, string>
+  >({});
   const [priceInput, setPriceInput] = useState("");
   const [warrantyInput, setWarrantyInput] = useState("15");
   const [savedBanner, setSavedBanner] = useState(false);
@@ -64,7 +68,9 @@ export default function DesktopProductDrawer({
 
   // Estado para nuevo lote
   const [isAddingBatch, setIsAddingBatch] = useState(false);
-  const [newBatchSupplierId, setNewBatchSupplierId] = useState(suppliers[0]?.id || "");
+  const [newBatchSupplierId, setNewBatchSupplierId] = useState(
+    suppliers[0]?.id || ""
+  );
   const [newBatchCostInput, setNewBatchCostInput] = useState("");
   const [newBatchStockInput, setNewBatchStockInput] = useState("5");
 
@@ -88,7 +94,8 @@ export default function DesktopProductDrawer({
       isSameCatalogText(c.name, liveProduct.category)
     );
     const attrKeys =
-      catCfg?.attributeKeys ?? inferAttributeKeysForCategory(liveProduct.category);
+      catCfg?.attributeKeys ??
+      inferAttributeKeysForCategory(liveProduct.category);
 
     const initialMap: Record<string, string> = {};
     attrKeys.forEach((key) => {
@@ -120,7 +127,8 @@ export default function DesktopProductDrawer({
     isSameCatalogText(c.name, category)
   );
   const activeAttributeKeys =
-    activeCategoryConfig?.attributeKeys ?? inferAttributeKeysForCategory(category);
+    activeCategoryConfig?.attributeKeys ??
+    inferAttributeKeysForCategory(category);
 
   const selectedAttrValues = activeAttributeKeys
     .map((k) => dynamicSelections[k]?.trim())
@@ -137,11 +145,14 @@ export default function DesktopProductDrawer({
       : baseName.trim();
 
   const totalStock = liveProduct.batches.reduce((sum, b) => sum + b.stock, 0);
-  const totalCost = liveProduct.batches.reduce((sum, b) => sum + b.cost * b.stock, 0);
+  const totalCost = liveProduct.batches.reduce(
+    (sum, b) => sum + b.cost * b.stock,
+    0
+  );
   const avgCost =
     totalStock > 0
       ? Math.round(totalCost / totalStock)
-      : liveProduct.batches[0]?.cost ?? 0;
+      : (liveProduct.batches[0]?.cost ?? 0);
 
   const numericPrice = parseCOPInput(priceInput);
   const unitProfit = numericPrice - avgCost;
@@ -244,9 +255,6 @@ export default function DesktopProductDrawer({
       className={`fixed inset-0 z-50 flex justify-end bg-black/45 dark:bg-black/65 backdrop-blur-[2px] transition-opacity duration-150 ease-out will-change-[opacity] ${
         isClosing ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) handleRequestClose();
-      }}
     >
       <aside
         role="dialog"
@@ -276,7 +284,11 @@ export default function DesktopProductDrawer({
             <button
               type="button"
               onClick={() => setShowCosts((prev) => !prev)}
-              title={showCosts ? "Ocultar costos y márgenes" : "Revelar costos y márgenes"}
+              title={
+                showCosts
+                  ? "Ocultar costos y márgenes"
+                  : "Revelar costos y márgenes"
+              }
               className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-colors duration-150 ${
                 showCosts
                   ? "border-accent/40 bg-accent-subtle text-accent"
@@ -387,7 +399,9 @@ export default function DesktopProductDrawer({
                         <button
                           type="button"
                           onClick={() =>
-                            setAddingAttrKey(addingAttrKey === attrKey ? null : attrKey)
+                            setAddingAttrKey(
+                              addingAttrKey === attrKey ? null : attrKey
+                            )
                           }
                           className="text-[11px] font-bold text-accent hover:underline"
                         >
@@ -400,7 +414,9 @@ export default function DesktopProductDrawer({
                           <input
                             type="text"
                             value={newAttrOptionText}
-                            onChange={(e) => setNewAttrOptionText(e.target.value)}
+                            onChange={(e) =>
+                              setNewAttrOptionText(e.target.value)
+                            }
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 e.preventDefault();
@@ -646,7 +662,9 @@ export default function DesktopProductDrawer({
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         type="button"
-                        onClick={() => adjustBatchStock(liveProduct.id, batch.id, -1)}
+                        onClick={() =>
+                          adjustBatchStock(liveProduct.id, batch.id, -1)
+                        }
                         disabled={batch.stock <= 0}
                         className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] disabled:opacity-40"
                       >
@@ -657,7 +675,9 @@ export default function DesktopProductDrawer({
                       </span>
                       <button
                         type="button"
-                        onClick={() => adjustBatchStock(liveProduct.id, batch.id, 1)}
+                        onClick={() =>
+                          adjustBatchStock(liveProduct.id, batch.id, 1)
+                        }
                         className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-white"
                       >
                         <Plus size={13} />

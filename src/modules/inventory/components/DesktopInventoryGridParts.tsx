@@ -266,6 +266,7 @@ export const InventoryGridRow = memo(
           <div className="flex items-center justify-center gap-1.5">
             <input
               type="checkbox"
+              data-testid={`grid-row-checkbox-${rowIndex}`}
               checked={isSelected}
               onChange={() => handlers.toggleRowSelect(product.id)}
               aria-label={`Seleccionar ${product.name}`}
