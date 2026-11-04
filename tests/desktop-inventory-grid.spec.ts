@@ -93,18 +93,22 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       pageSizeBar.getByRole("button", { name: "Todos", exact: true })
     ).toHaveClass(/bg-accent/);
 
-    // Probar Fila de Creación Rápida en Línea (Quick-Add Inline Row)
+    // Probar Fila de Creación Rápida en Línea (Quick-Add Inline Row) con Costo accesible sin Modo Admin
     const quickNameInput = page.getByTestId("quick-add-name-input");
     const quickStockInput = page.getByTestId("quick-add-stock-input");
+    const quickCostInput = page.getByTestId("quick-add-cost-input");
     const quickPriceInput = page.getByTestId("quick-add-price-input");
 
+    await expect(quickCostInput).toBeVisible();
     await quickNameInput.fill("Silicona Case iPhone 16 Pro Max");
     await quickStockInput.fill("15");
+    await quickCostInput.fill("28000");
     await quickPriceInput.fill("55000");
     await quickPriceInput.press("Enter");
 
-    // El campo nombre debe limpiarse y mantener el foco para ingreso continuo
+    // El campo nombre y costo deben limpiarse y mantener el foco para ingreso continuo
     await expect(quickNameInput).toHaveValue("");
+    await expect(quickCostInput).toHaveValue("");
     await expect(
       page.getByText("Silicona Case iPhone 16 Pro Max")
     ).toBeVisible();
@@ -223,10 +227,11 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await rowCheckbox0.click();
     await rowCheckbox1.click();
 
-    // Validar que la barra flotante de acciones masivas aparece
+    // Validar que la barra flotante de acciones masivas aparece en estricta fila única (flex-nowrap)
     const bulkBar = page.getByTestId("desktop-bulk-actions-bar");
     await expect(bulkBar).toBeVisible();
     await expect(bulkBar.getByText(/2 seleccionados/i)).toBeVisible();
+    await expect(bulkBar).toHaveClass(/flex-nowrap/);
 
     // Enviar masivamente los productos al carrito de POS
     const bulkAddToCartBtn = page.getByTestId("desktop-bulk-add-to-cart-btn");

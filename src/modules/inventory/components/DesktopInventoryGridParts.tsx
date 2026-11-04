@@ -579,7 +579,7 @@ export const QuickAddRow = memo(function QuickAddRow({
       name: name.trim(),
       category,
       stock: Math.max(0, parseInt(stock, 10) || 0),
-      cost: showCosts ? parseCOPInput(cost) : 0,
+      cost: parseCOPInput(cost),
       price: parsedPrice,
     });
     // Limpiar campos y mantener foco en Nombre para ingreso en serie
@@ -644,26 +644,20 @@ export const QuickAddRow = memo(function QuickAddRow({
         />
       </td>
       <td className="border-r border-[var(--border-color)] px-2 py-1.5">
-        {showCosts ? (
-          <input
-            data-testid="quick-add-cost-input"
-            type="text"
-            inputMode="numeric"
-            value={cost}
-            onChange={(e) => {
-              const n = parseCOPInput(e.target.value);
-              setCost(n > 0 ? formatCOP(n) : "");
-            }}
-            onKeyDown={onKeyDown}
-            placeholder="$ Costo"
-            aria-label="Costo para creación rápida"
-            className="tabular-nums w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2 py-1 text-right text-xs font-semibold text-[var(--text-primary)] outline-none focus:border-accent"
-          />
-        ) : (
-          <div className="px-2 py-1 text-right text-[11px] font-semibold text-[var(--text-secondary)] select-none">
-            ••••••
-          </div>
-        )}
+        <input
+          data-testid="quick-add-cost-input"
+          type="text"
+          inputMode="numeric"
+          value={cost}
+          onChange={(e) => {
+            const n = parseCOPInput(e.target.value);
+            setCost(n > 0 ? formatCOP(n) : "");
+          }}
+          onKeyDown={onKeyDown}
+          placeholder="$ Costo"
+          aria-label="Costo para creación rápida"
+          className="tabular-nums w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2 py-1 text-right text-xs font-semibold text-[var(--text-primary)] outline-none focus:border-accent"
+        />
       </td>
       <td className="border-r border-[var(--border-color)] px-2 py-1.5">
         <input
