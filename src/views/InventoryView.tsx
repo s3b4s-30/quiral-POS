@@ -48,6 +48,7 @@ interface InventoryViewProps {
 const DESKTOP_PAGE_SIZES: Array<{ value: InventoryPageSize; label: string }> = [
   { value: 10, label: "10" },
   { value: 20, label: "20" },
+  { value: 30, label: "30" },
   { value: 50, label: "50" },
   { value: 100, label: "100" },
   { value: "all", label: "Todos" },
@@ -629,6 +630,30 @@ export default function InventoryView({
 
             {/* Derecha: Paginación Densa en Escritorio + Selector de Vista (Tabla Excel / Tarjetas) */}
             <div className="flex items-center gap-2">
+              {/* Selector de cantidad de registros a visualizar */}
+              <div
+                data-testid="desktop-page-size-bar"
+                className="flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1"
+              >
+                {DESKTOP_PAGE_SIZES.map((item) => {
+                  const active = pageSize === item.value;
+                  return (
+                    <button
+                      key={String(item.value)}
+                      type="button"
+                      onClick={() => handleSelectPageSize(item.value)}
+                      className={`rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums transition-colors duration-150 ${
+                        active
+                          ? "bg-accent text-white shadow-sm"
+                          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+
               <div className="flex items-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1">
                 <button
                   type="button"
