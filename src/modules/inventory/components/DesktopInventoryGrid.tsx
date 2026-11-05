@@ -45,6 +45,7 @@ interface DesktopInventoryGridProps {
   quickCountMode: boolean;
   focusQuickAddRef?: React.MutableRefObject<(() => void) | null>;
   onOpenNewProduct?: () => void;
+  onCloneProduct?: (product: Product) => void;
 }
 
 /** Altura estimada (px) de una fila antes de su medición real en el DOM. */
@@ -56,6 +57,7 @@ export default function DesktopInventoryGrid({
   quickCountMode,
   focusQuickAddRef,
   onOpenNewProduct,
+  onCloneProduct,
 }: DesktopInventoryGridProps) {
   const {
     suppliers,
@@ -215,6 +217,8 @@ export default function DesktopInventoryGrid({
     editDraftValue,
     suppliers,
     onInspectProduct,
+    onOpenNewProduct,
+    onCloneProduct,
     addToCart,
     addProduct,
     updateProduct,
@@ -232,6 +236,8 @@ export default function DesktopInventoryGrid({
       editDraftValue,
       suppliers,
       onInspectProduct,
+      onOpenNewProduct,
+      onCloneProduct,
       addToCart,
       addProduct,
       updateProduct,
@@ -562,17 +568,11 @@ export default function DesktopInventoryGrid({
   }, []);
 
   const handleDuplicateRow = useCallback((product: Product) => {
-    latestRef.current.addProduct({
-      name: `${product.name} (Copia)`,
-      category: product.category,
-      subtitle: product.subtitle,
-      price: product.price,
-      warrantyDays: product.warrantyDays,
-      batches: product.batches.map((b) => ({
-        ...b,
-        id: `batch-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      })),
-    });
+    if (latestRef.current.onCloneProduct) {
+      latestRef.current.onCloneProduct(product);
+    } else if (latestRef.current.onOpenNewProduct) {
+      latestRef.current.onOpenNewProduct();
+    }
   }, []);
 
   const handleDeleteRow = useCallback((product: Product) => {

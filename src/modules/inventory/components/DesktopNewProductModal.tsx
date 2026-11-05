@@ -21,7 +21,12 @@ import React, {
   useState,
 } from "react";
 import { useInventory } from "../../../context/InventoryContext";
-import { ProductCategory, Supplier } from "../../../types/domain";
+import {
+  CatalogConfig,
+  Product,
+  ProductCategory,
+  Supplier,
+} from "../../../types/domain";
 import {
   getAttributePresets,
   getEffectiveAttributeOptions,
@@ -34,7 +39,50 @@ import { formatCOP, parseCOPInput } from "../../../utils/formatters";
 export interface DesktopNewProductModalProps {
   onClose: () => void;
   initialCategory?: ProductCategory;
+  initialProduct?: Product | null;
   onOpenSuppliers?: () => void;
+}
+
+// Estándar de diseño para botones de acción principal, creación y guardado (Design System UI)
+const PRIMARY_ACTION_BTN_CLASS =
+  "inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-accent-glow active:scale-95 transition-all duration-150 cursor-pointer select-none disabled:opacity-50 disabled:pointer-events-none shrink-0 tabular-nums";
+
+/**
+ * Extrae de forma segura los atributos existentes desde un producto de origen
+ */
+function extractProductAttributes(
+  prod: Product | null | undefined,
+  config: CatalogConfig
+): Record<string, string> {
+  if (!prod) return {};
+  const subtitleParts = (prod.subtitle || "")
+    .split("·")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const catCfg = config.categories.find((c) =>
+    isSameCatalogText(c.name, prod.category)
+  );
+  const attrKeys =
+    catCfg?.attributeKeys ?? inferAttributeKeysForCategory(prod.category);
+
+  const selections: Record<string, string> = {};
+  for (const key of attrKeys) {
+    const opts = getEffectiveAttributeOptions(config, prod.category, key);
+    let matched = subtitleParts.find((part) =>
+      opts.some((o) => isSameCatalogText(o, part))
+    );
+    if (!matched) {
+      matched = opts.find((o) =>
+        prod.name.toLowerCase().includes(o.toLowerCase())
+      );
+    }
+    if (matched) {
+      const canonical = opts.find((o) => isSameCatalogText(o, matched!));
+      selections[key] = canonical || matched;
+    }
+  }
+  return selections;
 }
 
 /**
@@ -47,6 +95,7 @@ export interface DesktopNewProductModalProps {
 export default function DesktopNewProductModal({
   onClose,
   initialCategory,
+  initialProduct,
   onOpenSuppliers,
 }: DesktopNewProductModalProps) {
   const {
@@ -62,8 +111,9 @@ export default function DesktopNewProductModal({
     showCosts,
   } = useInventory();
 
-  // 1. Categoría Activa: Inicia en blanco si no se suministra categoría explícita
+  // 1. Categoría Activa: Inicia con la categoría del producto a clonar o la inicial si está definida
   const [category, setCategory] = useState<ProductCategory | "">(() => {
+    if (initialProduct?.category) return initialProduct.category;
     if (initialCategory && initialCategory !== "Todos") return initialCategory;
     return "";
   });
@@ -102,9 +152,10 @@ export default function DesktopNewProductModal({
   }, [category, catalogConfig.attributes, activeAttributeKeys]);
 
   // Estado de selecciones dinámicas de atributos: { [attrKey]: string }
+  // Precargado con los atributos del producto a clonar si existe
   const [attributeSelections, setAttributeSelections] = useState<
     Record<string, string>
-  >({});
+  >(() => extractProductAttributes(initialProduct, catalogConfig));
 
   // Input inline para añadir una nueva opción a un atributo (+ Nueva Opción)
   const [addingOptionKey, setAddingOptionKey] = useState<string | null>(null);
@@ -115,35 +166,72 @@ export default function DesktopNewProductModal({
     null
   );
 
-  // Sincronizar selecciones dinámicas al cambiar de categoría
+  // Sincronizar selecciones dinámicas al cambiar de categoría.
+  // IMPORTANTE: Los atributos son 100% opcionales. NO se fuerza selección de opts[0].
   useEffect(() => {
     if (!category) return;
     setAttributeSelections((prev) => {
       const next = { ...prev };
-      for (const key of activeAttributeKeys) {
-        const opts = catalogConfig.attributes[key]?.options ?? [];
-        if (!next[key] || !opts.includes(next[key])) {
-          next[key] = opts[0] || "";
+      // Limpiar claves de atributos que ya no pertenezcan a la categoría activa
+      for (const key of Object.keys(next)) {
+        if (!activeAttributeKeys.includes(key)) {
+          delete next[key];
         }
       }
       return next;
     });
-  }, [category, activeAttributeKeys, catalogConfig.attributes]);
+  }, [category, activeAttributeKeys]);
 
   // 5. Nombre y Nomenclatura del Producto
-  const [name, setName] = useState("");
-  const [autoGenerateName, setAutoGenerateName] = useState(true);
-
-  // 6. Gestión Multi-Lote Inicial
-  const [selectedSupplierId, setSelectedSupplierId] = useState<string>(
-    suppliers[0]?.id || ""
+  const [name, setName] = useState<string>(() => {
+    if (initialProduct?.name) return `${initialProduct.name} (Copia)`;
+    return "";
+  });
+  const [autoGenerateName, setAutoGenerateName] = useState<boolean>(
+    () => !initialProduct
   );
-  const [stockInput, setStockInput] = useState<string>("1");
-  const [warrantyDays, setWarrantyDays] = useState<number>(15);
 
-  // 7. Precios y Costos Financieros (COP)
-  const [costInput, setCostInput] = useState<string>("");
-  const [priceInput, setPriceInput] = useState<string>("");
+  // 6. Gestión Multi-Lote Inicial (precargado si viene de clonación)
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>(() => {
+    if (initialProduct?.batches && initialProduct.batches[0]?.supplierId) {
+      return initialProduct.batches[0].supplierId;
+    }
+    return suppliers[0]?.id || "";
+  });
+  const [stockInput, setStockInput] = useState<string>(() => {
+    if (initialProduct?.batches && initialProduct.batches.length > 0) {
+      const totalStock = initialProduct.batches.reduce(
+        (sum, b) => sum + b.stock,
+        0
+      );
+      return String(totalStock);
+    }
+    return "1";
+  });
+  const [warrantyDays, setWarrantyDays] = useState<number>(() => {
+    if (initialProduct?.warrantyDays !== undefined) {
+      return initialProduct.warrantyDays;
+    }
+    return 15;
+  });
+
+  // 7. Precios y Costos Financieros (COP) (precargados si viene de clonación)
+  const [costInput, setCostInput] = useState<string>(() => {
+    if (
+      initialProduct?.batches &&
+      initialProduct.batches[0]?.cost !== undefined &&
+      initialProduct.batches[0].cost > 0
+    ) {
+      return formatCOP(initialProduct.batches[0].cost);
+    }
+    return "";
+  });
+  const [priceInput, setPriceInput] = useState<string>(() => {
+    if (initialProduct?.price && initialProduct.price > 0) {
+      return formatCOP(initialProduct.price);
+    }
+    return "";
+  });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Cálculos financieros derivados en tiempo real
@@ -159,21 +247,21 @@ export default function DesktopNewProductModal({
   const totalBatchRevenue = parsedPrice * parsedStock;
   const totalBatchProfit = unitProfit * parsedStock;
 
-  // Construir descriptor técnico / subtítulo
+  // Construir descriptor técnico / subtítulo única y exclusivamente con atributos explícitamente seleccionados
   const technicalSubtitle = useMemo(() => {
     if (!category) return "Sin categoría seleccionada";
     const vals = activeAttributeKeys
       .map((k) => attributeSelections[k])
-      .filter(Boolean);
+      .filter((v): v is string => Boolean(v && v.trim()));
     return vals.length > 0 ? vals.join(" · ") : category;
   }, [activeAttributeKeys, attributeSelections, category]);
 
-  // Construir nombre autogenerado
+  // Construir nombre autogenerado única y exclusivamente con atributos explícitamente seleccionados
   const autoGeneratedName = useMemo(() => {
     if (!category) return "";
     const vals = activeAttributeKeys
       .map((k) => attributeSelections[k])
-      .filter(Boolean);
+      .filter((v): v is string => Boolean(v && v.trim()));
     if (vals.length === 0) return category;
     return `${category} ${vals.join(" ")}`;
   }, [category, activeAttributeKeys, attributeSelections]);
@@ -380,15 +468,16 @@ export default function DesktopNewProductModal({
                 id="desktop-new-product-title"
                 className="text-lg font-black text-white"
               >
-                Nuevo Producto
+                {initialProduct ? "Clonar Producto" : "Nuevo Producto"}
               </h2>
               <span className="rounded-md bg-accent/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-accent border border-accent/30">
-                Estación Desktop
+                {initialProduct ? "Plantilla Clonada" : "Estación Desktop"}
               </span>
             </div>
             <p className="text-xs text-[var(--text-secondary)]">
-              Registro integral con taxonomía modular, multi-lote y análisis
-              financiero en tiempo real
+              {initialProduct
+                ? `Plantilla precargada desde «${initialProduct.name}». Ajusta cualquier campo antes de registrar.`
+                : "Registro integral con taxonomía modular, multi-lote y análisis financiero en tiempo real"}
             </p>
           </div>
         </div>
@@ -459,7 +548,7 @@ export default function DesktopNewProductModal({
                 <button
                   type="submit"
                   disabled={!newCatNameInput.trim()}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-xs cursor-pointer disabled:opacity-40"
+                  className={PRIMARY_ACTION_BTN_CLASS}
                 >
                   Crear
                 </button>
@@ -551,7 +640,7 @@ export default function DesktopNewProductModal({
                   <button
                     type="submit"
                     disabled={!newAttrLabel.trim()}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-xs cursor-pointer disabled:opacity-40"
+                    className={PRIMARY_ACTION_BTN_CLASS}
                   >
                     <Plus size={13} strokeWidth={2.5} />
                     <span>Crear y Vincular</span>
@@ -601,11 +690,40 @@ export default function DesktopNewProductModal({
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              currentSelected ? "bg-accent" : "bg-white/30"
+                            }`}
+                          />
                           <span>{label}</span>
+                          {currentSelected ? (
+                            <span className="text-[10px] text-accent font-semibold ml-1">
+                              ({currentSelected})
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-[var(--text-secondary)] italic ml-1">
+                              (Opcional)
+                            </span>
+                          )}
                         </span>
 
                         <div className="flex items-center gap-1">
+                          {currentSelected && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setAttributeSelections((prev) => ({
+                                  ...prev,
+                                  [attrKey]: "",
+                                }))
+                              }
+                              title={`Desmarcar selección de ${label}`}
+                              data-testid={`clear-selection-${attrKey}`}
+                              className="text-[10px] text-[var(--text-secondary)] hover:text-white hover:underline cursor-pointer px-1 mr-1"
+                            >
+                              Desmarcar
+                            </button>
+                          )}
                           {/* Reordenar prioridad in-situ */}
                           <button
                             type="button"
@@ -832,7 +950,7 @@ export default function DesktopNewProductModal({
                             type="button"
                             onClick={() => handleConfirmInlineOption(attrKey)}
                             disabled={!newOptionValue.trim()}
-                            className="inline-flex items-center gap-1 rounded-xl bg-accent px-2.5 py-1 text-xs font-bold text-white shadow-2xs hover:bg-accent-hover disabled:opacity-40 cursor-pointer"
+                            className={PRIMARY_ACTION_BTN_CLASS}
                           >
                             Guardar
                           </button>
@@ -858,7 +976,7 @@ export default function DesktopNewProductModal({
                                 onClick={() => {
                                   setAttributeSelections((prev) => ({
                                     ...prev,
-                                    [attrKey]: opt,
+                                    [attrKey]: prev[attrKey] === opt ? "" : opt,
                                   }));
                                 }}
                                 className="px-2.5 py-1 cursor-pointer"
@@ -1256,10 +1374,14 @@ export default function DesktopNewProductModal({
                   type="button"
                   data-testid="desktop-new-product-submit-btn"
                   onClick={submitProduct}
-                  className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-xs font-bold text-white shadow-accent-glow hover:bg-accent-hover active:scale-95 transition-all duration-150 cursor-pointer"
+                  className={`${PRIMARY_ACTION_BTN_CLASS} px-5 py-2.5 text-xs`}
                 >
                   <Plus size={15} strokeWidth={2.5} />
-                  <span>Crear Producto</span>
+                  <span>
+                    {initialProduct
+                      ? "Guardar Copia / Clonar"
+                      : "Crear Producto"}
+                  </span>
                 </button>
               </div>
             </div>

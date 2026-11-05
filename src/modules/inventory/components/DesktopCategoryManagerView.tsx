@@ -1600,9 +1600,6 @@ export default function DesktopCategoryManagerView({
                           <span className="font-bold text-xs truncate">
                             {attr.label}
                           </span>
-                          <span className="text-[10px] font-mono text-zinc-500 bg-white/5 px-1.5 py-0.5 rounded">
-                            {attr.key}
-                          </span>
                         </div>
                         <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--text-secondary)]">
                           <span className="tabular-nums font-semibold">
@@ -1701,7 +1698,7 @@ export default function DesktopCategoryManagerView({
                           <button
                             type="button"
                             onClick={() => handleSaveEdit(opt)}
-                            className="rounded-lg bg-accent px-2 py-1 text-xs font-bold text-white hover:bg-accent-hover cursor-pointer shrink-0"
+                            className={PRIMARY_ACTION_BTN_CLASS}
                           >
                             Guardar
                           </button>

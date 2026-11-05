@@ -502,9 +502,10 @@ const RowActionButtons = memo(function RowActionButtons({
           e.stopPropagation();
           handlers.duplicate(product);
         }}
-        title="Duplicar referencia"
-        aria-label={`Duplicar ${product.name}`}
-        className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent hover:border-[var(--border-color)] hover:bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all duration-150"
+        title="Clonar referencia (abrir plantilla editable)"
+        aria-label={`Clonar referencia ${product.name}`}
+        data-testid={`clone-product-btn-${product.id}`}
+        className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent hover:border-[var(--border-color)] hover:bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all duration-150 cursor-pointer"
       >
         <Copy size={13} />
       </button>

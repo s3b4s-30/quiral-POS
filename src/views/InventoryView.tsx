@@ -84,6 +84,7 @@ export default function InventoryView({
   const [isAttributeModalOpen, setIsAttributeModalOpen] = useState(false);
   const [isDesktopNewProductModalOpen, setIsDesktopNewProductModalOpen] =
     useState(false);
+  const [cloningProduct, setCloningProduct] = useState<Product | null>(null);
 
   // Estados exclusivos de la Estación de Trabajo de Escritorio (Data Grid / Excel)
   const isDesktopViewport = useIsDesktop();
@@ -481,7 +482,11 @@ export default function InventoryView({
   if (isDesktopViewport && isDesktopNewProductModalOpen) {
     return (
       <DesktopNewProductModal
-        onClose={() => setIsDesktopNewProductModalOpen(false)}
+        onClose={() => {
+          setIsDesktopNewProductModalOpen(false);
+          setCloningProduct(null);
+        }}
+        initialProduct={cloningProduct}
         onOpenSuppliers={_onOpenSuppliers}
       />
     );
@@ -624,7 +629,10 @@ export default function InventoryView({
               <button
                 type="button"
                 data-testid="desktop-toolbar-new-product-btn"
-                onClick={() => setIsDesktopNewProductModalOpen(true)}
+                onClick={() => {
+                  setCloningProduct(null);
+                  setIsDesktopNewProductModalOpen(true);
+                }}
                 className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-accent-glow hover:bg-accent-hover active:scale-95 transition-all duration-150"
               >
                 <Plus size={13} strokeWidth={2.5} />
@@ -873,7 +881,14 @@ export default function InventoryView({
               onInspectProduct={(prod) => setInspectedProduct(prod)}
               quickCountMode={quickCountMode}
               focusQuickAddRef={focusQuickAddRef}
-              onOpenNewProduct={() => setIsDesktopNewProductModalOpen(true)}
+              onOpenNewProduct={() => {
+                setCloningProduct(null);
+                setIsDesktopNewProductModalOpen(true);
+              }}
+              onCloneProduct={(prod) => {
+                setCloningProduct(prod);
+                setIsDesktopNewProductModalOpen(true);
+              }}
             />
           ) : (
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

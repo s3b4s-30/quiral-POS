@@ -155,3 +155,16 @@ flowchart TD
   - **Limpieza de Código Huérfano:** Eliminación de importaciones residuales (`DesktopAttributeConfigView` en `InventoryView.tsx`) e integración de nombres de proveedores en el índice de búsqueda precalculado.
   - **Certificación de Calidad 100% Exit 0:** 56/56 pruebas unitarias pasando en Vitest, 0 errores en TypeScript estricto, bundle de producción optimizado en Vite y 70/70 pruebas E2E aprobadas en Playwright (Chromium y Mobile Safari).
   - **Persistencia de Paneles de Vinculación y Presets:** En `DesktopCategoryManagerView.tsx`, se configuró la persistencia activa de `link-attr-popover` y `manager-presets-popover` al hacer clic en chips individuales, permitiendo al usuario asociar múltiples atributos y valores consecutivamente sin cierres prematuros, manteniendo cierre explícito mediante botón `(X)` o agotamiento reactivo de opciones.
+
+---
+
+### Fase de Atributos Opcionales en Modal, Clonación Editable y Limpieza Visual de IDs
+
+- **Objetivo:** Refinar la ergonomía de creación y clonación de referencias en la estación de escritorio (>= 768px), garantizar la opcionalidad total de los atributos dinámicos sin contaminación del Banco Global y erradicar la visualización de IDs internos en el catálogo maestro.
+- **Hitos Implementados:**
+  - **Atributos Dinámicos 100% Opcionales (`DesktopNewProductModal.tsx`):** Supresión de la preselección obligatoria forzada (`opts[0]`). Los chips ahora permiten alternancia activa/inactiva al hacer clic sobre ellos (`toggle`), con botón explícito de "Desmarcar" e indicador contextual `(Opcional)`. La autogeneración de nombre y el subtítulo técnico se construyen única y exclusivamente con los atributos explícitamente elegidos.
+  - **Aislamiento Estricto del Banco Global (`InventoryContext.tsx`):** La adición de opciones a un atributo con ámbito de categoría (`categoryName`) enriquece exclusivamente `categoryAttributeValues`, sin mutar ni contaminar `attributes[key].options` en las plantillas del Banco Global Maestro.
+  - **Flujo de Clonación Inteligente (`DesktopInventoryGrid.tsx` / `DesktopInventoryGridParts.tsx`):** El botón de clonar `<Copy />` ya no crea productos ciegamente en base de datos. En su lugar, transfiere la referencia hacia `DesktopNewProductModal` con categoría, atributos, costo, precio, proveedor y stock precargados bajo la nomenclatura editable `${nombre} (Copia)`, permitiendo al usuario ajustar cualquier parámetro antes de persistir.
+  - **Limpieza de IDs Crudos en Banco Maestro (`DesktopCategoryManagerView.tsx`):** Eliminación de las etiquetas visuales con keys internas (`{attr.key}`) en el listado de atributos maestros, mostrando únicamente el nombre legible y limpio (`attr.label`).
+  - **Estandarización de Botones Primarios (`PRIMARY_ACTION_BTN_CLASS`):** Unificación de estilo, curvatura `rounded-xl`, hover glow y micro-interacción `active:scale-95` entre `DesktopCategoryManagerView.tsx` y `DesktopNewProductModal.tsx`.
+  - **Certificación 100% Exit 0:** 56/56 pruebas unitarias en verde, compilación limpia en Vite sin errores de TypeScript y 72/72 pruebas E2E aprobadas en Playwright (Chromium y Mobile Safari).

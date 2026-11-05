@@ -628,4 +628,72 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(managerView).not.toBeVisible();
     await expect(page.locator("#inventory-scroll")).toBeVisible();
   });
+
+  test("7. Flujo de Clonación Inteligente, Atributos Opcionales (deselección y desmarcado) y Limpieza de IDs en Banco Maestro", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const desktopSidebar = page.getByRole("complementary", {
+      name: /Navegación principal de escritorio/i,
+    });
+    await expect(desktopSidebar).toBeVisible({ timeout: 10000 });
+    await desktopSidebar.getByRole("button", { name: "Inventario" }).click();
+
+    // 1. Probar botón de clonación en la fila 0 de la tabla
+    const cloneBtn0 = page.locator('button[title*="Clonar"]').first();
+    await expect(cloneBtn0).toBeVisible();
+    await cloneBtn0.click();
+
+    // Verificar que NO duplicó directamente, sino que abrió DesktopNewProductModal en modo edición
+    const modal = page.getByTestId("desktop-new-product-modal");
+    await expect(modal).toBeVisible();
+    await expect(
+      modal.getByText(/Clonar Producto|Plantilla Clonada/i).first()
+    ).toBeVisible();
+
+    // El nombre debe estar precargado con "(Copia)"
+    const nameInput = modal.getByTestId("desktop-new-product-name-input");
+    await expect(nameInput).toBeVisible();
+    const nameVal = await nameInput.inputValue();
+    expect(nameVal).toContain("(Copia)");
+
+    // Probar Atributos Opcionales: desmarcar o deseleccionar chip
+    const clearBtn = modal
+      .locator('button[data-testid^="clear-selection-"]')
+      .first();
+    if (await clearBtn.isVisible()) {
+      await clearBtn.click();
+      // Debe mostrar ahora que el atributo es (Opcional)
+      await expect(modal.getByText("(Opcional)").first()).toBeVisible();
+    }
+
+    // Cerrar modal
+    await modal
+      .getByRole("button", { name: /Regresar al Inventario/i })
+      .click();
+    await expect(modal).not.toBeVisible();
+
+    // 2. Probar Banco Maestro sin IDs crudos
+    const settingsBtn = page.getByTestId("desktop-catalog-settings-btn");
+    await expect(settingsBtn).toBeVisible();
+    await settingsBtn.click();
+
+    const managerView = page.getByTestId("desktop-category-manager-view");
+    await expect(managerView).toBeVisible();
+
+    const presetsTabBtn = managerView.getByTestId("mode-tab-presets");
+    await presetsTabBtn.click();
+
+    // Validar que se ve la etiqueta limpia "Subtipo" y NO el ID crudo "chargersubtypes"
+    await expect(
+      managerView.getByText("Subtipo", { exact: true }).first()
+    ).toBeVisible();
+    await expect(managerView.locator("text=chargersubtypes")).toHaveCount(0);
+
+    // Salir
+    const saveBtn = managerView.getByTestId("save-category-order-btn");
+    await saveBtn.click();
+    await expect(managerView).not.toBeVisible();
+  });
 });
