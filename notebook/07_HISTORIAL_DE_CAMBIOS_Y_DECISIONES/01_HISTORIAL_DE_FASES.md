@@ -168,3 +168,15 @@ flowchart TD
   - **Limpieza de IDs Crudos en Banco Maestro (`DesktopCategoryManagerView.tsx`):** Eliminación de las etiquetas visuales con keys internas (`{attr.key}`) en el listado de atributos maestros, mostrando únicamente el nombre legible y limpio (`attr.label`).
   - **Estandarización de Botones Primarios (`PRIMARY_ACTION_BTN_CLASS`):** Unificación de estilo, curvatura `rounded-xl`, hover glow y micro-interacción `active:scale-95` entre `DesktopCategoryManagerView.tsx` y `DesktopNewProductModal.tsx`.
   - **Certificación 100% Exit 0:** 56/56 pruebas unitarias en verde, compilación limpia en Vite sin errores de TypeScript y 72/72 pruebas E2E aprobadas en Playwright (Chromium y Mobile Safari).
+
+---
+
+### Fase de Refinamiento de Glassmorfismo Real (Liquid Glass) en Modo Claro
+
+- **Objetivo:** Perfeccionar la fidelidad visual de las superficies translúcidas en escritorio (>= 768px), eliminando fondos blancos lechosos u opacos en Modo Claro para permitir que los colores vivos y el contenido del catálogo se filtren nítidamente a través del cristal con desenfoque profundo.
+- **Hitos Implementados:**
+  - **Barra Flotante Masiva (`DesktopInventoryGrid.tsx`):** Contenedor principal estilizado con `bg-white/40 border border-white/60 text-gray-900 shadow-xl backdrop-blur-xl ring-1 ring-black/5` (y variante dual `dark:bg-black/45 dark:border-white/15 dark:text-white dark:shadow-2xl dark:backdrop-blur-xl dark:ring-white/10`).
+  - **Controles Internos Cristalinos:** Selectores de categoría, botones de incremento/decremento de stock (`±1`) y botón de deselección `(X)` adaptados con `bg-white/40 border-gray-200/60 dark:bg-white/10 dark:border-white/15 backdrop-blur-md` y separadores sutiles `bg-gray-300/60 dark:bg-white/15`.
+  - **Cabecera Pegajosa de Inventario (`InventoryView.tsx`):** Superficie superior ajustada a `bg-white/50 backdrop-blur-xl border-b border-gray-200/60` (y `dark:bg-black/60 dark:border-white/10`), permitiendo el deslizamiento subyacente y difuminado de las filas de productos al desplazarse verticalmente.
+  - **Aserción E2E Flexible (`tests/desktop-inventory-grid.spec.ts`):** Actualización de la prueba de la barra masiva a `/backdrop-blur-(md|xl)/` para validar tanto desenfoque estándar como profundo.
+  - **Certificación 100% Exit 0:** TypeScript estricto sin errores (`tsc`), 56/56 pruebas unitarias en Vitest, compilación limpia de producción en Vite y suite Playwright E2E aprobada.

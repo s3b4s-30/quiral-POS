@@ -370,7 +370,7 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(bulkBar).toBeVisible();
     await expect(bulkBar.getByText(/2 seleccionados/i)).toBeVisible();
     await expect(bulkBar).toHaveClass(/flex-nowrap/);
-    await expect(bulkBar).toHaveClass(/backdrop-blur-md/);
+    await expect(bulkBar).toHaveClass(/backdrop-blur-(md|xl)/);
 
     // 1. Probar incremento masivo de stock (+1 Stock)
     const stockCell0 = page.getByTestId("grid-cell-stock-0");

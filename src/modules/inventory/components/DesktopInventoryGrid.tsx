@@ -978,14 +978,14 @@ export default function DesktopInventoryGrid({
           const bulkBar = (
             <div
               data-testid="desktop-bulk-actions-bar"
-              className="fixed bottom-6 left-1/2 z-[999] -translate-x-1/2 flex flex-row items-center justify-between gap-3 flex-nowrap w-max max-w-[95vw] mx-auto rounded-2xl bg-white/60 dark:bg-black/55 border border-white/80 dark:border-white/20 text-gray-900 dark:text-white shadow-[0_8px_32px_0_rgba(0,0,0,0.18)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.7)] ring-1 ring-black/5 dark:ring-white/10 backdrop-blur-md px-4 py-2.5 select-none animate-in fade-in slide-in-from-bottom-2 duration-150"
+              className="fixed bottom-6 left-1/2 z-[999] -translate-x-1/2 flex flex-row items-center justify-between gap-3 flex-nowrap w-max max-w-[95vw] mx-auto rounded-2xl bg-white/40 border border-white/60 text-gray-900 shadow-xl backdrop-blur-xl ring-1 ring-black/5 dark:bg-black/45 dark:border-white/15 dark:text-white dark:shadow-2xl dark:backdrop-blur-xl dark:ring-white/10 px-4 py-2.5 select-none animate-in fade-in slide-in-from-bottom-2 duration-150"
             >
               {/* Badge contador */}
               <span className="shrink-0 whitespace-nowrap rounded-xl bg-accent px-3 py-1.5 text-xs font-extrabold text-white tabular-nums shadow-xs">
                 {selectedIds.size} seleccionados
               </span>
 
-              <div className="h-4 w-px bg-gray-300/80 dark:bg-white/20 shrink-0" />
+              <div className="h-4 w-px bg-gray-300/60 dark:bg-white/15 shrink-0" />
 
               {/* Adición Masiva al Carrito de POS */}
               <button
@@ -1002,7 +1002,7 @@ export default function DesktopInventoryGrid({
                 </span>
               </button>
 
-              <div className="h-4 w-px bg-gray-300/80 dark:bg-white/20 shrink-0" />
+              <div className="h-4 w-px bg-gray-300/60 dark:bg-white/15 shrink-0" />
 
               {/* Cambiar categoría en lote con Menú Desplegable Glassmorphic */}
               <div className="shrink-0 flex items-center gap-2 whitespace-nowrap">
@@ -1012,7 +1012,7 @@ export default function DesktopInventoryGrid({
                     setBulkCategory(e.target.value as ProductCategory)
                   }
                   aria-label="Seleccionar nueva categoría en lote"
-                  className="shrink-0 rounded-xl border border-gray-200/80 dark:border-white/15 bg-white/60 dark:bg-black/40 backdrop-blur-md px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white outline-none focus:border-accent max-w-[145px] truncate cursor-pointer transition-colors"
+                  className="shrink-0 rounded-xl border border-gray-200/60 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white outline-none focus:border-accent max-w-[145px] truncate cursor-pointer transition-colors"
                 >
                   {catalogConfig.categoryOrder.map((cat) => (
                     <option
@@ -1033,27 +1033,27 @@ export default function DesktopInventoryGrid({
                 </button>
               </div>
 
-              <div className="h-4 w-px bg-gray-300/80 dark:bg-white/20 shrink-0" />
+              <div className="h-4 w-px bg-gray-300/60 dark:bg-white/15 shrink-0" />
 
               {/* Ajustar stock en lote */}
               <div className="shrink-0 flex items-center gap-1.5 whitespace-nowrap">
                 <button
                   type="button"
                   onClick={() => handleBulkStockDelta(-1)}
-                  className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200/80 dark:border-white/15 bg-white/60 dark:bg-white/10 backdrop-blur-md px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
+                  className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200/60 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
                 >
                   -1 Stock
                 </button>
                 <button
                   type="button"
                   onClick={() => handleBulkStockDelta(1)}
-                  className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200/80 dark:border-white/15 bg-white/60 dark:bg-white/10 backdrop-blur-md px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
+                  className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200/60 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
                 >
                   +1 Stock
                 </button>
               </div>
 
-              <div className="h-4 w-px bg-gray-300/80 dark:bg-white/20 shrink-0" />
+              <div className="h-4 w-px bg-gray-300/60 dark:bg-white/15 shrink-0" />
 
               {/* Eliminar seleccionados y limpiar */}
               <div className="shrink-0 flex items-center gap-2 whitespace-nowrap">
@@ -1071,7 +1071,7 @@ export default function DesktopInventoryGrid({
                   onClick={() => setSelectedIds(new Set())}
                   title="Limpiar selección"
                   aria-label="Limpiar selección"
-                  className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200/80 dark:border-white/15 bg-white/60 dark:bg-white/10 backdrop-blur-md text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white hover:border-accent active:scale-95 transition-all cursor-pointer"
+                  className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200/60 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white hover:border-accent active:scale-95 transition-all cursor-pointer"
                 >
                   <X size={15} />
                 </button>

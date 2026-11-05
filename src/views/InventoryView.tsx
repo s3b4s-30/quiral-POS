@@ -509,7 +509,7 @@ export default function InventoryView({
         <div
           className={`sticky top-0 z-20 ${
             isDesktopViewport
-              ? "-mx-6 lg:-mx-8 px-6 lg:px-8 bg-white/70 dark:bg-black/60 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/10 shadow-xs"
+              ? "-mx-6 lg:-mx-8 px-6 lg:px-8 bg-white/50 backdrop-blur-xl border-b border-gray-200/60 dark:bg-black/60 dark:border-white/10 shadow-xs"
               : "-mx-4 px-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)]"
           } pt-1 pb-2.5 mb-3 transition-colors duration-75`}
         >
