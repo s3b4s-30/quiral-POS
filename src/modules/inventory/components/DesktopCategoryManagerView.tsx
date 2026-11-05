@@ -31,6 +31,7 @@ import {
   BTN_PRIMARY,
   BTN_SECONDARY,
   BTN_TERTIARY,
+  PRIMARY_ACTION_BTN_CLASS,
 } from "../../../constants/uiButtons";
 
 export interface DesktopCategoryManagerViewProps {
@@ -716,7 +717,7 @@ export default function DesktopCategoryManagerView({
             <button
               type="button"
               onClick={() => setCategoryPendingDelete(null)}
-              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent"
+              className={BTN_TERTIARY}
             >
               Cancelar
             </button>
@@ -775,7 +776,7 @@ export default function DesktopCategoryManagerView({
                     onChange={(e) => setNewCategoryName(e.target.value)}
                     placeholder="Ej. Accesorios, Fundas..."
                     autoFocus
-                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <div className="flex items-center justify-end gap-2 pt-1">
                     <button
@@ -1018,14 +1019,14 @@ export default function DesktopCategoryManagerView({
                     onChange={(e) => setNewAttributeLabel(e.target.value)}
                     placeholder="Nombre (ej. Material, Conexión, Potencia...)"
                     autoFocus
-                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <input
                     type="text"
                     value={newAttributeFirstOption}
                     onChange={(e) => setNewAttributeFirstOption(e.target.value)}
                     placeholder="Primera opción / valor (opcional)"
-                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <div className="flex items-center justify-between pt-1">
                     <button
@@ -1246,7 +1247,7 @@ export default function DesktopCategoryManagerView({
                     value={newOptionInput}
                     onChange={(e) => setNewOptionInput(e.target.value)}
                     placeholder="Nueva opción..."
-                    className="flex-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="flex-1 min-w-0 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <button
                     type="submit"
@@ -1411,14 +1412,14 @@ export default function DesktopCategoryManagerView({
                             <button
                               type="button"
                               onClick={() => handleSaveEdit(option)}
-                              className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white cursor-pointer shrink-0"
+                              className={BTN_PRIMARY}
                             >
                               Guardar
                             </button>
                             <button
                               type="button"
                               onClick={() => setEditingOption(null)}
-                              className="rounded-lg border border-[var(--border-color)] px-2 py-1 text-xs text-[var(--text-secondary)] cursor-pointer shrink-0"
+                              className={BTN_TERTIARY}
                             >
                               Cancelar
                             </button>
@@ -1515,11 +1516,11 @@ export default function DesktopCategoryManagerView({
                     onClick={() =>
                       setIsCreatingGlobalAttribute((prev) => !prev)
                     }
-                    className={BTN_SECONDARY}
+                    className={PRIMARY_ACTION_BTN_CLASS}
                     title="Crear un nuevo atributo maestro en el Banco Global"
                   >
                     <Plus size={14} strokeWidth={2.5} />
-                    <span>+ Atributo Global</span>
+                    <span>Atributo Global</span>
                   </button>
                 </div>
                 <p className="text-[11px] text-[var(--text-secondary)] mt-1">
@@ -1545,7 +1546,7 @@ export default function DesktopCategoryManagerView({
                     onChange={(e) => setNewGlobalAttributeLabel(e.target.value)}
                     placeholder="Nombre (ej. Talla, Voltaje, Capacidad...)"
                     autoFocus
-                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <input
                     type="text"
@@ -1554,7 +1555,7 @@ export default function DesktopCategoryManagerView({
                       setNewGlobalAttributeFirstOption(e.target.value)
                     }
                     placeholder="Primera opción / valor maestro (opcional)"
-                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <div className="flex items-center justify-end gap-2 pt-1">
                     <button
@@ -1663,15 +1664,15 @@ export default function DesktopCategoryManagerView({
                     value={newOptionInput}
                     onChange={(e) => setNewOptionInput(e.target.value)}
                     placeholder="Nuevo preset maestro para este atributo..."
-                    className="flex-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="flex-1 min-w-0 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <button
                     type="submit"
                     disabled={!newOptionInput.trim()}
-                    className={BTN_PRIMARY}
+                    className="shrink-0 whitespace-nowrap inline-flex items-center justify-center gap-1.5 rounded-xl border border-[var(--border-color)] bg-transparent hover:bg-black/5 dark:hover:bg-white/5 px-3.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all duration-150 cursor-pointer select-none disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Plus size={14} strokeWidth={2.5} />
-                    <span>+ Agregar Preset</span>
+                    <span>Agregar Preset</span>
                   </button>
                 </form>
               </div>
