@@ -740,241 +740,249 @@ export default function DesktopInventoryGrid({
   );
 
   return (
-    <div
-      data-testid="desktop-inventory-grid-wrapper"
-      data-virtualized={virtual.enabled ? "true" : "false"}
-      className="relative rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] shadow-sm overflow-hidden antialiased-hd"
-    >
-      {/* Barra de Acciones y Creación de la Estación de Trabajo Desktop */}
+    <>
       <div
-        data-testid="desktop-grid-action-bar"
-        className="flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-elevated)] px-4 py-3 select-none"
+        data-testid="desktop-inventory-grid-wrapper"
+        data-virtualized={virtual.enabled ? "true" : "false"}
+        className="relative rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] shadow-sm overflow-hidden antialiased-hd"
       >
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs sm:text-sm font-extrabold text-[var(--text-primary)]">
-              Catálogo de Inventario
-            </span>
-            <span className="tabular-nums rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-2 py-0.5 text-[11px] font-bold text-[var(--text-secondary)]">
-              {enrichedRows.length} referencias
-            </span>
-          </div>
-
-          {selectedIds.size > 0 && (
-            <div className="flex items-center gap-2 animate-in fade-in duration-100">
-              <span className="tabular-nums rounded-md bg-accent-subtle px-2 py-0.5 text-[11px] font-extrabold text-accent">
-                {selectedIds.size} seleccionados
-              </span>
-              <button
-                type="button"
-                onClick={handleBulkDelete}
-                className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1 text-[11px] font-bold text-red-500 hover:bg-red-500/20 active:scale-95 transition-all"
-              >
-                <Trash2 size={12} />
-                <span>Eliminar en lote</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Banner informativo sutil cuando Modo Conteo Rápido está activo */}
-      {quickCountMode && (
+        {/* Barra de Acciones y Creación de la Estación de Trabajo Desktop */}
         <div
-          data-testid="quick-count-mode-banner"
-          className="flex items-center justify-between border-b border-accent/40 bg-[var(--bg-elevated)] dark:bg-black/95 px-4 py-2.5 antialiased-hd shadow-xs"
+          data-testid="desktop-grid-action-bar"
+          className="flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-elevated)] px-4 py-3 select-none"
         >
-          <div className="flex items-center gap-2.5 font-bold text-[var(--text-primary)]">
-            <Zap size={16} className="text-accent shrink-0 fill-accent/20" />
-            <span className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-white select-none">
-              Modo Conteo Rápido
-            </span>
-            <span className="text-xs sm:text-sm font-semibold text-[var(--text-primary)] leading-none">
-              Digita la cantidad física y presiona{" "}
-              <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-primary)] px-1.5 py-0.5 text-xs font-black text-accent shadow-2xs">
-                Enter ↵
-              </kbd>{" "}
-              para guardar y avanzar a la fila siguiente.
-            </span>
-          </div>
-          <span className="text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">
-            Usa ↑ / ↓ para desplazarte · Esc para cancelar
-          </span>
-        </div>
-      )}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm font-extrabold text-[var(--text-primary)]">
+                Catálogo de Inventario
+              </span>
+              <span className="tabular-nums rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-2 py-0.5 text-[11px] font-bold text-[var(--text-secondary)]">
+                {enrichedRows.length} referencias
+              </span>
+            </div>
 
-      {/* Contenedor de Tabla con Scroll Horizontal Seguro */}
-      <div className="overflow-x-auto">
-        <table
-          data-testid="desktop-inventory-table"
-          className="w-full border-collapse text-left"
-        >
-          {/* Cabecera Fija con Bordes Milimétricos */}
-          <thead className="sticky top-0 z-10 bg-[var(--bg-elevated)] border-b border-[var(--border-color)] select-none">
-            <tr className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-              {/* 1. [✓] / Nº (48px) */}
-              <th className="w-12 border-r border-[var(--border-color)] px-2.5 py-2.5 text-center">
-                <div className="flex items-center justify-center gap-1">
-                  <input
-                    type="checkbox"
-                    checked={allVisibleSelected}
-                    onChange={handleToggleSelectAll}
-                    aria-label="Seleccionar todas las filas visibles"
-                    className="h-3.5 w-3.5 rounded accent-[var(--accent-primary)] cursor-pointer"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleToggleSort("index")}
-                    className="group inline-flex items-center gap-0.5 hover:text-[var(--text-primary)]"
-                    title="Ordenar por Nº consecutivo"
-                  >
-                    <span>Nº</span>
-                  </button>
-                </div>
-              </th>
-
-              {/* 2. Artículo / Referencia (min-w-[260px]) */}
-              <th className="min-w-[260px] border-r border-[var(--border-color)] px-3.5 py-2.5">
+            {selectedIds.size > 0 && (
+              <div className="flex items-center gap-2 animate-in fade-in duration-100">
+                <span className="tabular-nums rounded-md bg-accent-subtle px-2 py-0.5 text-[11px] font-extrabold text-accent">
+                  {selectedIds.size} seleccionados
+                </span>
                 <button
                   type="button"
-                  onClick={() => handleToggleSort("name")}
-                  className={`group flex w-full items-center justify-between hover:text-[var(--text-primary)] ${
-                    sortColumn === "name" && sortDirection ? "text-accent" : ""
-                  }`}
+                  onClick={handleBulkDelete}
+                  className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1 text-[11px] font-bold text-red-500 hover:bg-red-500/20 active:scale-95 transition-all"
                 >
-                  <span>Artículo / Referencia</span>
-                  {renderSortIcon("name")}
+                  <Trash2 size={12} />
+                  <span>Eliminar en lote</span>
                 </button>
-              </th>
+              </div>
+            )}
+          </div>
+        </div>
 
-              {renderSortableHeader("category", "Categoría", "w-[160px]")}
-              {renderSortableHeader("stock", "Stock", "w-[120px]")}
-              {renderSortableHeader("cost", "Costo / Mayor", "w-[140px]")}
-              {renderSortableHeader("price", "Precio Sugerido", "w-[150px]")}
-              {renderSortableHeader("profit", "Utilidad", "w-[120px]")}
-
-              {/* 8. Acciones Rápidas (110px) */}
-              <th className="w-[110px] px-2.5 py-2.5 text-center">
-                <span>Acciones</span>
-              </th>
-            </tr>
-          </thead>
-
-          {/* Fila Permanente de Inserción Rápida (+ Quick-Add Inline Row) */}
-          <tbody className="divide-y divide-[var(--border-color)] text-xs border-b border-[var(--border-color)]">
-            <QuickAddRow
-              categoryOrder={catalogConfig.categoryOrder}
-              showCosts={showCosts}
-              inputRef={quickNameInputRef}
-              onSubmit={handleQuickAddSubmit}
-            />
-          </tbody>
-
-          {/* Filas de Productos (virtualizadas al superar el umbral) */}
-          <tbody
-            ref={rowsBodyRef}
-            className="divide-y divide-[var(--border-color)] text-xs"
+        {/* Banner informativo sutil cuando Modo Conteo Rápido está activo */}
+        {quickCountMode && (
+          <div
+            data-testid="quick-count-mode-banner"
+            className="flex items-center justify-between border-b border-accent/40 bg-[var(--bg-elevated)] dark:bg-black/95 px-4 py-2.5 antialiased-hd shadow-xs"
           >
-            {virtual.paddingTop > 0 && (
-              <tr aria-hidden="true" data-virtual-spacer="top">
-                <td
-                  colSpan={8}
-                  style={{ height: virtual.paddingTop, padding: 0, border: 0 }}
-                />
-              </tr>
-            )}
+            <div className="flex items-center gap-2.5 font-bold text-[var(--text-primary)]">
+              <Zap size={16} className="text-accent shrink-0 fill-accent/20" />
+              <span className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-white select-none">
+                Modo Conteo Rápido
+              </span>
+              <span className="text-xs sm:text-sm font-semibold text-[var(--text-primary)] leading-none">
+                Digita la cantidad física y presiona{" "}
+                <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-primary)] px-1.5 py-0.5 text-xs font-black text-accent shadow-2xs">
+                  Enter ↵
+                </kbd>{" "}
+                para guardar y avanzar a la fila siguiente.
+              </span>
+            </div>
+            <span className="text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">
+              Usa ↑ / ↓ para desplazarte · Esc para cancelar
+            </span>
+          </div>
+        )}
 
-            {virtual.indexes.map((rowIndex) => {
-              const row = enrichedRows[rowIndex];
-              if (!row) return null;
-              const isActiveRow = activeCell?.rowIndex === rowIndex;
-              const rowIsEditing = isActiveRow && isEditingCell;
-              return (
-                <InventoryGridRow
-                  key={row.product.id}
-                  row={row}
-                  rowIndex={rowIndex}
-                  isSelected={selectedIds.has(row.product.id)}
-                  activeColKey={isActiveRow ? activeCell.colKey : null}
-                  isEditing={rowIsEditing}
-                  draftValue={rowIsEditing ? editDraftValue : ""}
-                  showCosts={showCosts}
-                  isAddedToCart={addedCartId === row.product.id}
-                  supplierMap={supplierMap}
-                  handlers={handlers}
-                  measureRef={measureRowRef}
-                />
-              );
-            })}
+        {/* Contenedor de Tabla con Scroll Horizontal Seguro */}
+        <div className="overflow-x-auto">
+          <table
+            data-testid="desktop-inventory-table"
+            className="w-full border-collapse text-left"
+          >
+            {/* Cabecera Fija con Bordes Milimétricos */}
+            <thead className="sticky top-0 z-10 bg-[var(--bg-elevated)] border-b border-[var(--border-color)] select-none">
+              <tr className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                {/* 1. [✓] / Nº (48px) */}
+                <th className="w-12 border-r border-[var(--border-color)] px-2.5 py-2.5 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={handleToggleSelectAll}
+                      aria-label="Seleccionar todas las filas visibles"
+                      className="h-3.5 w-3.5 rounded accent-[var(--accent-primary)] cursor-pointer"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleToggleSort("index")}
+                      className="group inline-flex items-center gap-0.5 hover:text-[var(--text-primary)]"
+                      title="Ordenar por Nº consecutivo"
+                    >
+                      <span>Nº</span>
+                    </button>
+                  </div>
+                </th>
 
-            {virtual.paddingBottom > 0 && (
-              <tr aria-hidden="true" data-virtual-spacer="bottom">
-                <td
-                  colSpan={8}
-                  style={{
-                    height: virtual.paddingBottom,
-                    padding: 0,
-                    border: 0,
-                  }}
-                />
+                {/* 2. Artículo / Referencia (min-w-[260px]) */}
+                <th className="min-w-[260px] border-r border-[var(--border-color)] px-3.5 py-2.5">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSort("name")}
+                    className={`group flex w-full items-center justify-between hover:text-[var(--text-primary)] ${
+                      sortColumn === "name" && sortDirection
+                        ? "text-accent"
+                        : ""
+                    }`}
+                  >
+                    <span>Artículo / Referencia</span>
+                    {renderSortIcon("name")}
+                  </button>
+                </th>
+
+                {renderSortableHeader("category", "Categoría", "w-[160px]")}
+                {renderSortableHeader("stock", "Stock", "w-[120px]")}
+                {renderSortableHeader("cost", "Costo / Mayor", "w-[140px]")}
+                {renderSortableHeader("price", "Precio Sugerido", "w-[150px]")}
+                {renderSortableHeader("profit", "Utilidad", "w-[120px]")}
+
+                {/* 8. Acciones Rápidas (110px) */}
+                <th className="w-[110px] px-2.5 py-2.5 text-center">
+                  <span>Acciones</span>
+                </th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+
+            {/* Fila Permanente de Inserción Rápida (+ Quick-Add Inline Row) */}
+            <tbody className="divide-y divide-[var(--border-color)] text-xs border-b border-[var(--border-color)]">
+              <QuickAddRow
+                categoryOrder={catalogConfig.categoryOrder}
+                showCosts={showCosts}
+                inputRef={quickNameInputRef}
+                onSubmit={handleQuickAddSubmit}
+              />
+            </tbody>
+
+            {/* Filas de Productos (virtualizadas al superar el umbral) */}
+            <tbody
+              ref={rowsBodyRef}
+              className="divide-y divide-[var(--border-color)] text-xs"
+            >
+              {virtual.paddingTop > 0 && (
+                <tr aria-hidden="true" data-virtual-spacer="top">
+                  <td
+                    colSpan={8}
+                    style={{
+                      height: virtual.paddingTop,
+                      padding: 0,
+                      border: 0,
+                    }}
+                  />
+                </tr>
+              )}
+
+              {virtual.indexes.map((rowIndex) => {
+                const row = enrichedRows[rowIndex];
+                if (!row) return null;
+                const isActiveRow = activeCell?.rowIndex === rowIndex;
+                const rowIsEditing = isActiveRow && isEditingCell;
+                return (
+                  <InventoryGridRow
+                    key={row.product.id}
+                    row={row}
+                    rowIndex={rowIndex}
+                    isSelected={selectedIds.has(row.product.id)}
+                    activeColKey={isActiveRow ? activeCell.colKey : null}
+                    isEditing={rowIsEditing}
+                    draftValue={rowIsEditing ? editDraftValue : ""}
+                    showCosts={showCosts}
+                    isAddedToCart={addedCartId === row.product.id}
+                    supplierMap={supplierMap}
+                    handlers={handlers}
+                    measureRef={measureRowRef}
+                  />
+                );
+              })}
+
+              {virtual.paddingBottom > 0 && (
+                <tr aria-hidden="true" data-virtual-spacer="bottom">
+                  <td
+                    colSpan={8}
+                    style={{
+                      height: virtual.paddingBottom,
+                      padding: 0,
+                      border: 0,
+                    }}
+                  />
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pie de Tabla con Guía de Atajos Keyboard-First */}
+        <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-2 text-[11px] text-[var(--text-secondary)]">
+          <div className="flex flex-wrap items-center gap-3">
+            <span>
+              <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] px-1.5 py-0.5 text-[10px] font-bold">
+                ↑ ↓ ← →
+              </kbd>{" "}
+              Navegar celdas
+            </span>
+            <span>
+              <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] px-1.5 py-0.5 text-[10px] font-bold">
+                Enter ↵
+              </kbd>{" "}
+              Editar / Guardar y bajar
+            </span>
+            <span>
+              <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] px-1.5 py-0.5 text-[10px] font-bold">
+                Tab
+              </kbd>{" "}
+              Siguiente columna
+            </span>
+            <span>
+              <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] px-1.5 py-0.5 text-[10px] font-bold">
+                Espacio
+              </kbd>{" "}
+              Abrir Inspector
+            </span>
+            <span>
+              <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] px-1.5 py-0.5 text-[10px] font-bold">
+                Alt+M
+              </kbd>{" "}
+              Conteo Rápido
+            </span>
+          </div>
+
+          <div className="font-semibold tabular-nums">
+            {enrichedRows.length} referencias en tabla
+          </div>
+        </footer>
       </div>
-
-      {/* Pie de Tabla con Guía de Atajos Keyboard-First */}
-      <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-2 text-[11px] text-[var(--text-secondary)]">
-        <div className="flex flex-wrap items-center gap-3">
-          <span>
-            <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] px-1.5 py-0.5 text-[10px] font-bold">
-              ↑ ↓ ← →
-            </kbd>{" "}
-            Navegar celdas
-          </span>
-          <span>
-            <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] px-1.5 py-0.5 text-[10px] font-bold">
-              Enter ↵
-            </kbd>{" "}
-            Editar / Guardar y bajar
-          </span>
-          <span>
-            <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] px-1.5 py-0.5 text-[10px] font-bold">
-              Tab
-            </kbd>{" "}
-            Siguiente columna
-          </span>
-          <span>
-            <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] px-1.5 py-0.5 text-[10px] font-bold">
-              Espacio
-            </kbd>{" "}
-            Abrir Inspector
-          </span>
-          <span>
-            <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] px-1.5 py-0.5 text-[10px] font-bold">
-              Alt+M
-            </kbd>{" "}
-            Conteo Rápido
-          </span>
-        </div>
-
-        <div className="font-semibold tabular-nums">
-          {enrichedRows.length} referencias en tabla
-        </div>
-      </footer>
 
       {/* Barra Flotante de Acciones en Lote (Glassmorfismo Puro & Layout Inflexible en 1 Fila) */}
       {selectedIds.size > 0 && (
         <div
           data-testid="desktop-bulk-actions-bar"
-          className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 flex flex-row items-center justify-between gap-3 flex-nowrap w-max max-w-[95vw] mx-auto rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)]/95 backdrop-blur-md px-4 py-2.5 shadow-2xl select-none animate-in fade-in slide-in-from-bottom-2 duration-150 text-[var(--text-primary)]"
+          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 flex flex-row items-center justify-between gap-3 flex-nowrap w-max max-w-[95vw] mx-auto rounded-2xl bg-white/90 border border-gray-200/80 text-gray-900 shadow-2xl backdrop-blur-md dark:bg-black/80 dark:border-white/15 dark:text-white dark:shadow-2xl px-4 py-2.5 select-none animate-in fade-in slide-in-from-bottom-2 duration-150"
         >
           {/* Badge contador */}
           <span className="shrink-0 whitespace-nowrap rounded-xl bg-accent px-3 py-1.5 text-xs font-extrabold text-white tabular-nums shadow-xs">
             {selectedIds.size} seleccionados
           </span>
 
-          <div className="h-4 w-px bg-[var(--border-color)] shrink-0" />
+          <div className="h-4 w-px bg-gray-300 dark:bg-white/15 shrink-0" />
 
           {/* Adición Masiva al Carrito de POS */}
           <button
@@ -989,7 +997,7 @@ export default function DesktopInventoryGrid({
             </span>
           </button>
 
-          <div className="h-4 w-px bg-[var(--border-color)] shrink-0" />
+          <div className="h-4 w-px bg-gray-300 dark:bg-white/15 shrink-0" />
 
           {/* Cambiar categoría en lote con Menú Desplegable Glassmorphic */}
           <div className="shrink-0 flex items-center gap-2 whitespace-nowrap">
@@ -999,13 +1007,13 @@ export default function DesktopInventoryGrid({
                 setBulkCategory(e.target.value as ProductCategory)
               }
               aria-label="Seleccionar nueva categoría en lote"
-              className="shrink-0 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent max-w-[145px] truncate cursor-pointer"
+              className="shrink-0 rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-black/60 px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white outline-none focus:border-accent max-w-[145px] truncate cursor-pointer transition-colors"
             >
               {catalogConfig.categoryOrder.map((cat) => (
                 <option
                   key={cat}
                   value={cat}
-                  className="bg-[var(--bg-elevated)] text-[var(--text-primary)]"
+                  className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-white"
                 >
                   {cat}
                 </option>
@@ -1020,34 +1028,34 @@ export default function DesktopInventoryGrid({
             </button>
           </div>
 
-          <div className="h-4 w-px bg-[var(--border-color)] shrink-0" />
+          <div className="h-4 w-px bg-gray-300 dark:bg-white/15 shrink-0" />
 
           {/* Ajustar stock en lote */}
           <div className="shrink-0 flex items-center gap-1.5 whitespace-nowrap">
             <button
               type="button"
               onClick={() => handleBulkStockDelta(-1)}
-              className="shrink-0 whitespace-nowrap rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
+              className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-white/5 px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
             >
               -1 Stock
             </button>
             <button
               type="button"
               onClick={() => handleBulkStockDelta(1)}
-              className="shrink-0 whitespace-nowrap rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
+              className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-white/5 px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
             >
               +1 Stock
             </button>
           </div>
 
-          <div className="h-4 w-px bg-[var(--border-color)] shrink-0" />
+          <div className="h-4 w-px bg-gray-300 dark:bg-white/15 shrink-0" />
 
           {/* Eliminar seleccionados y limpiar */}
           <div className="shrink-0 flex items-center gap-2 whitespace-nowrap">
             <button
               type="button"
               onClick={handleBulkDelete}
-              className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded-xl border border-red-500/30 bg-red-500/15 px-3 py-1.5 text-xs font-bold text-red-500 dark:text-red-400 hover:bg-red-500 hover:text-white transition-all duration-150 cursor-pointer active:scale-95"
+              className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded-xl border border-red-500/30 bg-red-500/15 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-500 hover:text-white transition-all duration-150 cursor-pointer active:scale-95"
             >
               <Trash2 size={13} />
               <span>Eliminar</span>
@@ -1058,13 +1066,13 @@ export default function DesktopInventoryGrid({
               onClick={() => setSelectedIds(new Set())}
               title="Limpiar selección"
               aria-label="Limpiar selección"
-              className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent active:scale-95 transition-all cursor-pointer"
+              className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 dark:border-white/15 bg-white dark:bg-white/5 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white hover:border-accent active:scale-95 transition-all cursor-pointer"
             >
               <X size={15} />
             </button>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
