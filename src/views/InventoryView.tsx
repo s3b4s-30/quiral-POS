@@ -498,11 +498,21 @@ export default function InventoryView({
       >
         {/* 1. Buscador Instantáneo, Embudo Multifiltro y Categorías Modulares Fijas */}
         <div
-          className={`sticky top-0 z-20 ${isDesktopViewport ? "-mx-6 lg:-mx-8 px-6 lg:px-8" : "-mx-4 px-4"} pt-1 pb-2.5 mb-3 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75`}
+          className={`sticky top-0 z-20 ${
+            isDesktopViewport
+              ? "-mx-6 lg:-mx-8 px-6 lg:px-8 bg-black/60 backdrop-blur-md border-b border-white/10 shadow-2xl"
+              : "-mx-4 px-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)]"
+          } pt-1 pb-2.5 mb-3 transition-colors duration-75`}
         >
           <div className="flex items-center gap-2 mb-2.5">
             <div className="relative flex-1">
-              <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm transition-colors duration-200 focus-within:border-accent">
+              <div
+                className={`flex min-h-12 items-center gap-2.5 rounded-2xl border ${
+                  isDesktopViewport
+                    ? "border-white/10 bg-white/5"
+                    : "border-[var(--border-color)] bg-[var(--bg-elevated)]"
+                } px-3.5 shadow-sm transition-colors duration-200 focus-within:border-accent`}
+              >
                 <Search
                   size={18}
                   className="text-[var(--text-secondary)] shrink-0"
@@ -544,7 +554,9 @@ export default function InventoryView({
               className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border transition-all duration-200 active:scale-95 ${
                 hasActiveAdvancedFilters
                   ? "border-accent bg-accent-subtle text-accent shadow-sm"
-                  : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  : isDesktopViewport
+                    ? "border-white/10 bg-white/5 text-[var(--text-secondary)] hover:text-white"
+                    : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               <Filter size={18} />
@@ -557,7 +569,7 @@ export default function InventoryView({
           {/* Barra de Herramientas de Alta Productividad (Exclusiva Escritorio >= 768px) */}
           <div
             data-testid="desktop-workstation-toolbar"
-            className="hidden md:flex flex-wrap items-center justify-between gap-2 mb-2.5 pb-2 border-b border-[var(--border-color)]/60 select-none"
+            className="hidden md:flex flex-wrap items-center justify-between gap-2 mb-2.5 pb-2 border-b border-white/10 select-none"
           >
             {/* Izquierda: Controles de Conteo Rápido, Categorías, Atributos y Nuevo Producto */}
             <div className="flex flex-wrap items-center gap-2">
@@ -719,10 +731,16 @@ export default function InventoryView({
                     setSelectedAttributeTag("");
                   }}
                   title="Toca para filtrar · Mantén presionado para organizar categorías"
-                  className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition-all duration-200 select-none ${
+                  className={`whitespace-nowrap ${
+                    isDesktopViewport
+                      ? "rounded-xl px-3.5 py-1.5"
+                      : "rounded-full px-4 py-2"
+                  } text-xs font-bold transition-all duration-200 select-none cursor-pointer ${
                     isActive
                       ? "bg-accent text-white shadow-sm"
-                      : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10"
+                      : isDesktopViewport
+                        ? "border border-white/10 bg-white/5 text-[var(--text-secondary)] hover:text-white hover:border-white/20 hover:bg-white/10"
+                        : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10"
                   } ${isZeroStock && !isActive ? "opacity-60" : ""}`}
                 >
                   {cat}

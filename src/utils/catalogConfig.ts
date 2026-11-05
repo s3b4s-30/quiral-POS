@@ -1,4 +1,9 @@
-import { AttributeDefinition, CatalogConfig, CategoryConfig, ProductCategory } from "../types/domain";
+import {
+  AttributeDefinition,
+  CatalogConfig,
+  CategoryConfig,
+  ProductCategory,
+} from "../types/domain";
 
 /**
  * Categorías base de fábrica que actúan como respaldo predeterminado.
@@ -40,26 +45,83 @@ export function normalizeCatalogText(raw: string): string {
  */
 export function isSameCatalogText(a: string, b: string): boolean {
   return (
-    normalizeCatalogText(a).toLowerCase() === normalizeCatalogText(b).toLowerCase()
+    normalizeCatalogText(a).toLowerCase() ===
+    normalizeCatalogText(b).toLowerCase()
   );
 }
 
 /**
  * Infiere inteligentemente los bloques de atributos recomendados según el nombre de la categoría.
  */
+/**
+ * Obtiene las opciones efectivas de un atributo para una categoría específica.
+ * Arquitectura de Cascarones Globales e Instanciación Local:
+ * - Si no se pasa categoryName: retorna los Presets Históricos maestros del Banco Global.
+ * - Si se pasa categoryName: retorna las opciones aisladas de dicha categoría.
+ *   Si la categoría aún no tiene opciones asignadas para ese atributo, retorna [] (instancia limpia vacía)
+ *   evitando heredar o contaminar masivamente marcas o presets de otras categorías.
+ */
+export function getEffectiveAttributeOptions(
+  config: CatalogConfig,
+  categoryName?: string | null,
+  attributeKey?: string
+): string[] {
+  if (!attributeKey || !config.attributes[attributeKey]) return [];
+  const masterPresets = config.attributes[attributeKey].options ?? [];
+  if (!categoryName) return masterPresets;
+
+  const scopedCatKey = Object.keys(config.categoryAttributeValues || {}).find(
+    (cat) => isSameCatalogText(cat, categoryName)
+  );
+
+  if (
+    scopedCatKey &&
+    config.categoryAttributeValues?.[scopedCatKey]?.[attributeKey] !== undefined
+  ) {
+    return config.categoryAttributeValues[scopedCatKey][attributeKey];
+  }
+
+  // Instanciación local vacía para atributos recién vinculados o categorías personalizadas
+  return [];
+}
+
+/**
+ * Retorna todos los Presets Históricos / Maestros disponibles en el Banco Global para un atributo.
+ */
+export function getAttributePresets(
+  config: CatalogConfig,
+  attributeKey: string
+): string[] {
+  return config.attributes[attributeKey]?.options ?? [];
+}
+
 export function inferAttributeKeysForCategory(categoryName: string): string[] {
   const lower = categoryName.trim().toLowerCase();
 
   if (/cargador|cable|cubo|adaptador/.test(lower)) {
-    return ["chargerSubtypes", "brands", "powers", "cableFinishes", "cableLengths"];
+    return [
+      "chargerSubtypes",
+      "brands",
+      "powers",
+      "cableFinishes",
+      "cableLengths",
+    ];
   }
   if (/forro|funda|case|estuche|protector|vidrio|mica/.test(lower)) {
     return ["caseMaterials", "caseModels"];
   }
-  if (/audio|airpod|auricular|audifono|audífono|parlante|bocina|microfono|micrófono/.test(lower)) {
+  if (
+    /audio|airpod|auricular|audifono|audífono|parlante|bocina|microfono|micrófono/.test(
+      lower
+    )
+  ) {
     return ["audioModels", "connections"];
   }
-  if (/bateria|batería|power\s*bank|portatil|portátiles|portatiles|magsafe/.test(lower)) {
+  if (
+    /bateria|batería|power\s*bank|portatil|portátiles|portatiles|magsafe/.test(
+      lower
+    )
+  ) {
     return ["capacities", "ports"];
   }
   if (/ssd|disco|memoria|almacenamiento|pendrive|micro\s*sd|usb/.test(lower)) {
@@ -110,42 +172,22 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
   powers: {
     key: "powers",
     label: "Potencia (W)",
-    options: [
-      "20W",
-      "25W",
-      "30W",
-      "35W",
-      "45W",
-      "60W",
-      "65W",
-    ],
+    options: ["20W", "25W", "30W", "35W", "45W", "60W", "65W"],
   },
   cableFinishes: {
     key: "cableFinishes",
     label: "Acabado del cable",
-    options: [
-      "Normal",
-      "Trenzado",
-    ],
+    options: ["Normal", "Trenzado"],
   },
   cableLengths: {
     key: "cableLengths",
     label: "Longitud del cable",
-    options: [
-      "1 Metro",
-      "1.5 Metros",
-      "2 Metros",
-      "3 Metros",
-    ],
+    options: ["1 Metro", "1.5 Metros", "2 Metros", "3 Metros"],
   },
   caseMaterials: {
     key: "caseMaterials",
     label: "Material",
-    options: [
-      "Silicona Líquida",
-      "Transparente Anti-amarilleo",
-      "Lujo",
-    ],
+    options: ["Silicona Líquida", "Transparente Anti-amarilleo", "Lujo"],
   },
   caseModels: {
     key: "caseModels",
@@ -242,7 +284,16 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
   perfumeVolumes: {
     key: "perfumeVolumes",
     label: "Presentación (ml)",
-    options: ["30ml", "50ml", "75ml", "100ml", "120ml", "150ml", "200ml", "Decant 10ml"],
+    options: [
+      "30ml",
+      "50ml",
+      "75ml",
+      "100ml",
+      "120ml",
+      "150ml",
+      "200ml",
+      "Decant 10ml",
+    ],
   },
   perfumeTypes: {
     key: "perfumeTypes",
@@ -273,7 +324,13 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
   streamingDurations: {
     key: "streamingDurations",
     label: "Vigencia",
-    options: ["Perfil 1 Mes", "Cuenta Completa 1 Mes", "3 Meses", "6 Meses", "1 Año"],
+    options: [
+      "Perfil 1 Mes",
+      "Cuenta Completa 1 Mes",
+      "3 Meses",
+      "6 Meses",
+      "1 Año",
+    ],
   },
 };
 
@@ -315,6 +372,43 @@ export const DEFAULT_CATEGORY_CONFIGS: CategoryConfig[] = [
   },
 ];
 
+export const DEFAULT_CATEGORY_ATTRIBUTE_VALUES: Record<
+  string,
+  Record<string, string[]>
+> = {
+  "Cargadores y Cables": {
+    chargerSubtypes: [...DEFAULT_ATTRIBUTES.chargerSubtypes.options],
+    brands: [...DEFAULT_ATTRIBUTES.brands.options],
+    powers: [...DEFAULT_ATTRIBUTES.powers.options],
+    cableFinishes: [...DEFAULT_ATTRIBUTES.cableFinishes.options],
+  },
+  "Forros / Fundas": {
+    caseMaterials: [...DEFAULT_ATTRIBUTES.caseMaterials.options],
+    caseModels: [...DEFAULT_ATTRIBUTES.caseModels.options],
+  },
+  Audio: {
+    audioModels: [...DEFAULT_ATTRIBUTES.audioModels.options],
+    connections: [...DEFAULT_ATTRIBUTES.connections.options],
+  },
+  "Power Banks / Baterías portatiles": {
+    capacities: [...DEFAULT_ATTRIBUTES.capacities.options],
+    ports: [...DEFAULT_ATTRIBUTES.ports.options],
+  },
+  Celulares: {
+    brands: [...DEFAULT_ATTRIBUTES.brands.options],
+    storageCapacities: [...DEFAULT_ATTRIBUTES.storageCapacities.options],
+    colors: [...DEFAULT_ATTRIBUTES.colors.options],
+  },
+  Perfumes: {
+    perfumeVolumes: [...DEFAULT_ATTRIBUTES.perfumeVolumes.options],
+    perfumeTypes: [...DEFAULT_ATTRIBUTES.perfumeTypes.options],
+  },
+  Streaming: {
+    streamingPlatforms: [...DEFAULT_ATTRIBUTES.streamingPlatforms.options],
+    streamingDurations: [...DEFAULT_ATTRIBUTES.streamingDurations.options],
+  },
+};
+
 export const DEFAULT_CATALOG_CONFIG: CatalogConfig = {
   categoryOrder: [
     "Cargadores y Cables",
@@ -327,6 +421,7 @@ export const DEFAULT_CATALOG_CONFIG: CatalogConfig = {
   ],
   categories: DEFAULT_CATEGORY_CONFIGS,
   attributes: DEFAULT_ATTRIBUTES,
+  categoryAttributeValues: DEFAULT_CATEGORY_ATTRIBUTE_VALUES,
 };
 
 /**
@@ -364,7 +459,12 @@ export function mergeWithDefaultCatalogConfig(
         for (const opt of userAttr.options) {
           if (typeof opt === "string") {
             const norm = normalizeCatalogText(opt);
-            if (norm && !cleanOptions.some((existing) => isSameCatalogText(existing, norm))) {
+            if (
+              norm &&
+              !cleanOptions.some((existing) =>
+                isSameCatalogText(existing, norm)
+              )
+            ) {
               cleanOptions.push(norm);
             }
           }
@@ -412,7 +512,8 @@ export function mergeWithDefaultCatalogConfig(
           attributeKeys:
             Array.isArray(cat.attributeKeys) && cat.attributeKeys.length > 0
               ? [...cat.attributeKeys]
-              : defaultMatch?.attributeKeys ?? inferAttributeKeysForCategory(finalCatName),
+              : (defaultMatch?.attributeKeys ??
+                inferAttributeKeysForCategory(finalCatName)),
         });
       }
     }
@@ -444,7 +545,9 @@ export function mergeWithDefaultCatalogConfig(
         norm = "Power Banks / Baterías portatiles";
       }
 
-      const matchCat = mergedCategories.find((c) => isSameCatalogText(c.name, norm));
+      const matchCat = mergedCategories.find((c) =>
+        isSameCatalogText(c.name, norm)
+      );
       const finalName = matchCat ? matchCat.name : norm;
       if (!finalName || finalName.toLowerCase() === "todos") continue;
       const lower = finalName.toLowerCase();
@@ -463,14 +566,75 @@ export function mergeWithDefaultCatalogConfig(
     }
   }
 
+  // 4. Opciones de atributos aisladas por categoría (Scoping sin contaminación)
+  const mergedCategoryValues: Record<string, Record<string, string[]>> = {};
+
+  // Inicializar primero con las 7 categorías base de fábrica para garantizar cero rompimiento
+  for (const [catName, attrMap] of Object.entries(
+    DEFAULT_CATEGORY_ATTRIBUTE_VALUES
+  )) {
+    mergedCategoryValues[catName] = {};
+    for (const [attrKey, opts] of Object.entries(attrMap)) {
+      mergedCategoryValues[catName][attrKey] = [...opts];
+    }
+  }
+
+  // Superponer valores almacenados por el usuario
+  if (
+    stored.categoryAttributeValues &&
+    typeof stored.categoryAttributeValues === "object"
+  ) {
+    for (const [catName, attrMap] of Object.entries(
+      stored.categoryAttributeValues
+    )) {
+      if (attrMap && typeof attrMap === "object") {
+        const cleanCatName = normalizeCatalogText(catName);
+        if (!cleanCatName) continue;
+        if (!mergedCategoryValues[cleanCatName]) {
+          mergedCategoryValues[cleanCatName] = {};
+        }
+        for (const [attrKey, opts] of Object.entries(attrMap)) {
+          if (Array.isArray(opts)) {
+            const cleanOpts: string[] = [];
+            for (const opt of opts) {
+              if (typeof opt === "string") {
+                const norm = normalizeCatalogText(opt);
+                if (
+                  norm &&
+                  !cleanOpts.some((e) => isSameCatalogText(e, norm))
+                ) {
+                  cleanOpts.push(norm);
+                }
+              }
+            }
+            mergedCategoryValues[cleanCatName][attrKey] = cleanOpts;
+          }
+        }
+      }
+    }
+  }
+
   return {
     categoryOrder: mergedOrder,
     categories: mergedCategories,
     attributes: mergedAttributes,
+    categoryAttributeValues: mergedCategoryValues,
   };
 }
 
 export function structuredCloneConfig(config: CatalogConfig): CatalogConfig {
+  const clonedCategoryValues: Record<string, Record<string, string[]>> = {};
+  if (config.categoryAttributeValues) {
+    for (const [catName, attrMap] of Object.entries(
+      config.categoryAttributeValues
+    )) {
+      clonedCategoryValues[catName] = {};
+      for (const [attrKey, opts] of Object.entries(attrMap)) {
+        clonedCategoryValues[catName][attrKey] = [...opts];
+      }
+    }
+  }
+
   return {
     categoryOrder: [...config.categoryOrder],
     categories: config.categories.map((c) => ({
@@ -484,5 +648,6 @@ export function structuredCloneConfig(config: CatalogConfig): CatalogConfig {
         { key: v.key, label: v.label, options: [...v.options] },
       ])
     ),
+    categoryAttributeValues: clonedCategoryValues,
   };
 }

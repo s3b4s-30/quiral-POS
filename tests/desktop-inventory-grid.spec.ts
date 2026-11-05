@@ -219,11 +219,39 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(newProductBtn).toBeVisible();
     await newProductBtn.click();
 
-    // 3. Validar renderizado del diálogo modal centrado de escritorio Split-Layout
+    // 3. Validar renderizado del diálogo modal centrado de escritorio Split-Layout con Glassmorfismo
     const modal = page.getByTestId("desktop-new-product-modal");
     await expect(modal).toBeVisible();
     await expect(
       modal.getByRole("heading", { name: /Nuevo Producto/i })
+    ).toBeVisible();
+
+    // Verificar CERO scroll horizontal en el modal de Nuevo Producto (Prohibido overflow-x-auto)
+    const hasHorizontalOverflow = await modal.evaluate((el) => {
+      const scrollEls = el.querySelectorAll(".overflow-x-auto");
+      return scrollEls.length > 0;
+    });
+    expect(hasHorizontalOverflow).toBe(false);
+
+    // Verificar estado inicial: Categoría en blanco con prompt elegante
+    await expect(
+      modal.getByText(/Selecciona una categoría de catálogo/i)
+    ).toBeVisible();
+
+    // Seleccionar categoría "Forros / Fundas" en el flex-wrap de categorías
+    const fundasBtn = modal.getByRole("button", {
+      name: "Forros / Fundas",
+      exact: true,
+    });
+    await expect(fundasBtn).toBeVisible();
+    await fundasBtn.click();
+
+    // Despliegue progresivo: el prompt desaparece y se muestran los atributos de Forros / Fundas
+    await expect(
+      modal.getByText(/Selecciona una categoría de catálogo/i)
+    ).not.toBeVisible();
+    await expect(
+      modal.getByText(/Atributos Dinámicos de Forros \/ Fundas/i)
     ).toBeVisible();
 
     // 4. Llenar campos principales y verificar cálculos financieros en tiempo real
@@ -239,10 +267,83 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     const stockInput = page.getByTestId("desktop-new-product-stock-input");
     await stockInput.fill("10");
 
+    // Probar ajuste ergonómico de stock mediante la rueda del mouse (onWheel)
+    await stockInput.hover();
+    try {
+      await page.mouse.wheel(0, -100);
+    } catch {
+      await stockInput.dispatchEvent("wheel", { deltaY: -100 });
+    }
+    // Verificar que el stock incrementó por rueda del mouse
+    await expect(stockInput).toHaveValue("11");
+
+    // Probar campo de Garantía Numérica Editable (Días)
+    const warrantyInput = page.getByTestId(
+      "desktop-new-product-warranty-input"
+    );
+    await expect(warrantyInput).toBeVisible();
+    await warrantyInput.fill("30");
+    await expect(warrantyInput).toHaveValue("30");
+
     // Verificar cálculo en tarjeta de márgenes (Utilidad: 89,000 - 45,000 = 44,000)
     await expect(modal.getByText(/44\.000/)).toBeVisible();
 
-    // 5. Cerrar modal con tecla Escape
+    // 5. Probar Banco Global Dinámico, Instanciación Vacía y Popover de Presets en Nuevo Producto
+    const unlinkedBlock = modal.getByTestId("unlinked-global-attributes-block");
+    await expect(unlinkedBlock).toBeVisible();
+
+    // El atributo "Color / Acabado" debe estar disponible en el bloque global no vinculado
+    const linkColorBtn = modal.getByTestId("link-global-attr-colors");
+    await expect(linkColorBtn).toBeVisible();
+    await linkColorBtn.click();
+
+    // Al hacer clic, se añade a los atributos activos y desaparece del bloque global disponible (Reducción Progresiva)
+    await expect(linkColorBtn).not.toBeVisible();
+    await expect(
+      modal.getByText("Color / Acabado", { exact: true })
+    ).toBeVisible();
+
+    // Verificar que arranca como instancia local limpia (0 opciones) con botón de Presets
+    const presetsToggleBtn = modal.getByTestId("toggle-presets-btn-colors");
+    await expect(presetsToggleBtn).toBeVisible();
+    await presetsToggleBtn.click();
+
+    // El popover de presets debe desplegarse
+    const presetsPopover = modal.getByTestId("presets-popover-colors");
+    await expect(presetsPopover).toBeVisible();
+
+    // Elegir individualmente el preset "Negro Espacial"
+    const pickNegroPreset = modal.getByTestId("pick-preset-Negro_Espacial");
+    await expect(pickNegroPreset).toBeVisible();
+    await pickNegroPreset.click();
+
+    // Debe agregarse a las opciones activas locales y desaparecer del popover de disponibles
+    const negroPill = modal.getByTestId("active-option-pill-Negro_Espacial");
+    await expect(negroPill).toBeVisible();
+    await expect(pickNegroPreset).not.toBeVisible();
+
+    // Probar eliminación in-situ de opción con botón x
+    const removeOptionBtn = modal.getByRole("button", {
+      name: "Quitar opción Negro Espacial",
+      exact: true,
+    });
+    if (await removeOptionBtn.isVisible()) {
+      await removeOptionBtn.click();
+      await expect(negroPill).not.toBeVisible();
+    }
+
+    // Probar desvinculación completa del atributo in-situ (botón × de cabecera de tarjeta)
+    const unlinkColorsBtn = modal.getByTestId("unlink-attr-colors");
+    await expect(unlinkColorsBtn).toBeVisible();
+    await unlinkColorsBtn.click();
+
+    // Debe desaparecer de las tarjetas de atributos activos y retornar al bloque inferior de disponibles
+    await expect(
+      modal.getByTestId("active-attribute-card-colors")
+    ).not.toBeVisible();
+    await expect(modal.getByTestId("link-global-attr-colors")).toBeVisible();
+
+    // 6. Cerrar modal con tecla Escape
     await page.keyboard.press("Escape");
     await expect(modal).not.toBeVisible();
   });
@@ -384,32 +485,57 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       managerView.getByRole("heading", { name: "Prueba Desktop" })
     ).toBeVisible();
 
-    // 4. Columna 2: Acceso Universal a Atributos Globales (Clic directo sin vinculación forzada)
-    const globalBankHeading = managerView.getByText(
-      /Banco Global de Atributos/i
+    // 4. Modo "Gestionar Categorías": Vincular atributo "Material" y gestionar opciones locales
+    // Verificar que existen las pestañas del switch superior
+    await expect(managerView.getByTestId("mode-tab-categories")).toBeVisible();
+    await expect(managerView.getByTestId("mode-tab-presets")).toBeVisible();
+
+    // Vincular atributo "Material" a «Prueba Desktop» usando el popover de vinculación
+    const linkAttrBtn = managerView.getByTestId(
+      "link-attribute-to-category-btn"
     );
-    await expect(globalBankHeading).toBeVisible();
+    await expect(linkAttrBtn).toBeVisible();
+    await linkAttrBtn.click();
 
-    // Seleccionar directamente un atributo global desde el banco inferior
-    const materialAttrCard = managerView
-      .getByText("Material", { exact: false })
-      .first();
-    await materialAttrCard.click();
+    const linkMaterialChip = managerView.getByTestId(
+      "link-attr-chip-caseMaterials"
+    );
+    await expect(linkMaterialChip).toBeVisible();
+    await linkMaterialChip.click();
 
-    // Columna 3 (Derecha): Verificar carga instantánea y vincular a la categoría activa
+    // Columna 3 (Derecha): Verificar carga instantánea de Material en Prueba Desktop
     await expect(
       managerView.getByRole("heading", { name: "Material" })
     ).toBeVisible();
 
-    // Si tiene el botón de vincular a «Prueba Desktop», vincularlo
-    const linkBtn = managerView.getByRole("button", {
-      name: /Vincular a «Prueba Desktop»/i,
-    });
-    if (await linkBtn.isVisible()) {
-      await linkBtn.click();
-    }
+    // Probar Popover de Presets en Columna 3 de Configuración con cálculo y decremento en tiempo real
+    const togglePresetsBtn = managerView.getByTestId(
+      "toggle-manager-presets-btn"
+    );
+    await expect(togglePresetsBtn).toBeVisible();
+    // Debe indicar la cantidad de presets disponibles del banco maestro que no están en la categoría
+    await expect(togglePresetsBtn).toContainText(/Presets Disponibles/i);
 
-    // Agregar nueva opción al atributo activo
+    await togglePresetsBtn.click();
+
+    const managerPresetsPopover = managerView.getByTestId(
+      "manager-presets-popover"
+    );
+    await expect(managerPresetsPopover).toBeVisible();
+
+    // Elegir el preset "Silicona Líquida"
+    const pickSiliconaBtn = managerView.getByTestId(
+      "manager-pick-preset-Silicona_Líquida"
+    );
+    await expect(pickSiliconaBtn).toBeVisible();
+    await pickSiliconaBtn.click();
+
+    // Debe aparecer en las opciones de "Prueba Desktop"
+    await expect(
+      managerView.getByText("Silicona Líquida", { exact: true })
+    ).toBeVisible();
+
+    // Agregar nueva opción manual al atributo activo
     const newOptionInput = managerView.getByPlaceholder("Nueva opción...");
     await expect(newOptionInput).toBeVisible();
     await newOptionInput.fill("Opción Alfa");
@@ -421,7 +547,63 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       managerView.getByText("Opción Alfa", { exact: true })
     ).toBeVisible();
 
-    // 5. Guardar y regresar al inventario
+    // 5. Probar Switch de Enfoque hacia Modo "Banco Maestro (Presets)"
+    const presetsTabBtn = managerView.getByTestId("mode-tab-presets");
+    await presetsTabBtn.click();
+
+    // Verificar que se renderiza el Banco Global Maestro
+    const globalBankHeading = managerView.getByText(
+      /Banco Global de Atributos/i
+    );
+    await expect(globalBankHeading).toBeVisible();
+
+    // Probar Creación Directa en Banco Global
+    const createGlobalAttrBtn = managerView.getByTestId(
+      "create-global-attribute-btn"
+    );
+    await expect(createGlobalAttrBtn).toBeVisible();
+    await createGlobalAttrBtn.click();
+
+    const globalForm = managerView.getByTestId("global-attribute-create-form");
+    await expect(globalForm).toBeVisible();
+
+    const globalNameInput = managerView.getByTestId(
+      "global-attribute-name-input"
+    );
+    await globalNameInput.fill("Garantía Extendida");
+
+    const submitGlobalAttrBtn = managerView.getByTestId(
+      "confirm-create-global-attr-btn"
+    );
+    await submitGlobalAttrBtn.click();
+
+    // Debe quedar registrado y visible en el panel del Banco Global
+    await expect(
+      managerView.getByText("Garantía Extendida", { exact: true }).first()
+    ).toBeVisible();
+
+    // 6. Probar Regreso a Modo "Gestionar Categorías" y Aislamiento de Valores
+    const categoriesTabBtn = managerView.getByTestId("mode-tab-categories");
+    await categoriesTabBtn.click();
+
+    // Seleccionar "Cargadores y Cables" en Columna 1
+    const cargadoresCatBtn = managerView.getByRole("button", {
+      name: /Cargadores y Cables\s+\d+\s+prods/i,
+    });
+    await cargadoresCatBtn.click();
+
+    // Seleccionar el atributo "Marca" en Columna 2
+    const marcaAttrBtn = managerView
+      .getByRole("button", { name: /Marca/i })
+      .first();
+    await marcaAttrBtn.click();
+
+    // Verificar que "iPhone" está presente en "Cargadores y Cables"
+    await expect(
+      managerView.getByText("iPhone", { exact: true })
+    ).toBeVisible();
+
+    // 7. Guardar y regresar al inventario
     const saveBtn = managerView.getByTestId("save-category-order-btn");
     await expect(saveBtn).toBeVisible();
     await saveBtn.click();
