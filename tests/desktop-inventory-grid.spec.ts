@@ -485,36 +485,37 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       managerView.getByRole("heading", { name: "Prueba Desktop" })
     ).toBeVisible();
 
-    // 4. Columna 2: Acceso Universal a Atributos Globales (Clic directo sin vinculación forzada)
-    const globalBankHeading = managerView.getByText(
-      /Banco Global de Atributos/i
+    // 4. Modo "Gestionar Categorías": Vincular atributo "Material" y gestionar opciones locales
+    // Verificar que existen las pestañas del switch superior
+    await expect(managerView.getByTestId("mode-tab-categories")).toBeVisible();
+    await expect(managerView.getByTestId("mode-tab-presets")).toBeVisible();
+
+    // Vincular atributo "Material" a «Prueba Desktop» usando el popover de vinculación
+    const linkAttrBtn = managerView.getByTestId(
+      "link-attribute-to-category-btn"
     );
-    await expect(globalBankHeading).toBeVisible();
+    await expect(linkAttrBtn).toBeVisible();
+    await linkAttrBtn.click();
 
-    // Seleccionar directamente un atributo global desde el banco inferior
-    const materialAttrCard = managerView
-      .getByText("Material", { exact: false })
-      .first();
-    await materialAttrCard.click();
+    const linkMaterialChip = managerView.getByTestId(
+      "link-attr-chip-caseMaterials"
+    );
+    await expect(linkMaterialChip).toBeVisible();
+    await linkMaterialChip.click();
 
-    // Columna 3 (Derecha): Verificar carga instantánea y vincular a la categoría activa
+    // Columna 3 (Derecha): Verificar carga instantánea de Material en Prueba Desktop
     await expect(
       managerView.getByRole("heading", { name: "Material" })
     ).toBeVisible();
 
-    // Si tiene el botón de vincular a «Prueba Desktop», vincularlo
-    const linkBtn = managerView.getByRole("button", {
-      name: /Vincular a «Prueba Desktop»/i,
-    });
-    if (await linkBtn.isVisible()) {
-      await linkBtn.click();
-    }
-
-    // Probar Popover de Presets en Columna 3 de Configuración
+    // Probar Popover de Presets en Columna 3 de Configuración con cálculo y decremento en tiempo real
     const togglePresetsBtn = managerView.getByTestId(
       "toggle-manager-presets-btn"
     );
     await expect(togglePresetsBtn).toBeVisible();
+    // Debe indicar la cantidad de presets disponibles del banco maestro que no están en la categoría
+    await expect(togglePresetsBtn).toContainText(/Presets Disponibles/i);
+
     await togglePresetsBtn.click();
 
     const managerPresetsPopover = managerView.getByTestId(
@@ -546,7 +547,17 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       managerView.getByText("Opción Alfa", { exact: true })
     ).toBeVisible();
 
-    // 5. Probar Creación Directa en Banco Global (Sin vincular forzosamente a Prueba Desktop)
+    // 5. Probar Switch de Enfoque hacia Modo "Banco Maestro (Presets)"
+    const presetsTabBtn = managerView.getByTestId("mode-tab-presets");
+    await presetsTabBtn.click();
+
+    // Verificar que se renderiza el Banco Global Maestro
+    const globalBankHeading = managerView.getByText(
+      /Banco Global de Atributos/i
+    );
+    await expect(globalBankHeading).toBeVisible();
+
+    // Probar Creación Directa en Banco Global
     const createGlobalAttrBtn = managerView.getByTestId(
       "create-global-attribute-btn"
     );
@@ -566,13 +577,15 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     );
     await submitGlobalAttrBtn.click();
 
-    // Debe quedar seleccionado de inmediato en Columna 3 como Banco Global Maestro
+    // Debe quedar registrado y visible en el panel del Banco Global
     await expect(
-      managerView.getByRole("heading", { name: "Garantía Extendida" })
+      managerView.getByText("Garantía Extendida", { exact: true }).first()
     ).toBeVisible();
-    await expect(managerView.getByText("Banco Global Maestro")).toBeVisible();
 
-    // 6. Probar Aislamiento de Valores por Categoría (Scoping sin Contaminación)
+    // 6. Probar Regreso a Modo "Gestionar Categorías" y Aislamiento de Valores
+    const categoriesTabBtn = managerView.getByTestId("mode-tab-categories");
+    await categoriesTabBtn.click();
+
     // Seleccionar "Cargadores y Cables" en Columna 1
     const cargadoresCatBtn = managerView.getByRole("button", {
       name: /Cargadores y Cables\s+\d+\s+prods/i,
