@@ -16,7 +16,11 @@ import { useInventory } from "../../../context/InventoryContext";
 import { PaymentMethod } from "../../../types/domain";
 import { formatCOP, parseCOPInput } from "../../../utils/formatters";
 
-const PAYMENT_METHODS: Array<{ id: PaymentMethod; label: string; icon: typeof DollarSign }> = [
+const PAYMENT_METHODS: Array<{
+  id: PaymentMethod;
+  label: string;
+  icon: typeof DollarSign;
+}> = [
   { id: "Efectivo", label: "Efectivo", icon: DollarSign },
   { id: "Nequi", label: "Nequi", icon: CreditCard },
   { id: "Bancolombia", label: "Bancolombia", icon: CreditCard },
@@ -27,7 +31,9 @@ interface DesktopPosTicketProps {
   onSaleCompleteSuccess?: () => void;
 }
 
-export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTicketProps) {
+export default function DesktopPosTicket({
+  onSaleCompleteSuccess,
+}: DesktopPosTicketProps) {
   const {
     cart,
     cartUnits,
@@ -55,7 +61,10 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
   const nextSaleNumber = useMemo(() => {
     if (!sales || sales.length === 0) return 1;
     const maxNumber = sales.reduce((max, s) => {
-      const num = typeof s.saleNumber === "number" ? s.saleNumber : parseInt(String(s.saleNumber || 0), 10);
+      const num =
+        typeof s.saleNumber === "number"
+          ? s.saleNumber
+          : parseInt(String(s.saleNumber || 0), 10);
       return Math.max(max, isNaN(num) ? 0 : num);
     }, 0);
     return maxNumber + 1;
@@ -66,8 +75,11 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
     [cart]
   );
 
-  const parsedCustom = customTotalInput ? parseCOPInput(customTotalInput) : null;
-  const effectiveTotal = parsedCustom !== null ? Math.min(subtotal, parsedCustom) : subtotal;
+  const parsedCustom = customTotalInput
+    ? parseCOPInput(customTotalInput)
+    : null;
+  const effectiveTotal =
+    parsedCustom !== null ? Math.min(subtotal, parsedCustom) : subtotal;
 
   const totalCost = useMemo(() => {
     return cart.reduce((sum, item) => {
@@ -83,7 +95,11 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
     if (!cart.length || submittingRef.current) return;
     submittingRef.current = true;
 
-    const ok = completeSale(payment, effectiveTotal, customerName.trim() || undefined);
+    const ok = completeSale(
+      payment,
+      effectiveTotal,
+      customerName.trim() || undefined
+    );
     if (ok) {
       setCustomTotalInput("");
       setCustomerName("");
@@ -117,7 +133,7 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
       className="w-80 lg:w-96 xl:w-[400px] 2xl:w-[420px] shrink-0 h-full flex flex-col bg-[var(--bg-elevated)] border-l border-[var(--border-color)] dark:border-white/10 select-none transition-colors duration-150 z-10"
     >
       {/* 1. Header del Ticket: Título, consecutivo, contador de ítems y botón vaciar */}
-      <div className="p-4 border-b border-[var(--border-color)] flex items-center justify-between shrink-0 bg-[var(--bg-elevated)]/90 backdrop-blur-md">
+      <div className="p-4 border-b border-[var(--border-color)] flex items-center justify-between shrink-0 bg-[var(--bg-elevated)]">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-subtle text-accent border border-accent/20">
             <Receipt size={18} />
@@ -132,7 +148,8 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
               </span>
             </div>
             <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] truncate">
-              {cartUnits} {cartUnits === 1 ? "artículo" : "artículos"} seleccionados
+              {cartUnits} {cartUnits === 1 ? "artículo" : "artículos"}{" "}
+              seleccionados
             </p>
           </div>
         </div>
@@ -186,7 +203,9 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
             <Check size={14} className="stroke-[3]" />
             <span>¡Venta registrada con éxito!</span>
           </div>
-          <span className="text-[10px] opacity-75">Listo para el siguiente cliente</span>
+          <span className="text-[10px] opacity-75">
+            Listo para el siguiente cliente
+          </span>
         </div>
       )}
 
@@ -197,16 +216,23 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5 border border-dashed border-[var(--border-color)] mb-3 text-[var(--text-secondary)]">
               <ShoppingCart size={28} className="opacity-40" />
             </div>
-            <p className="text-sm font-bold text-[var(--text-primary)]">Ticket Vacío</p>
+            <p className="text-sm font-bold text-[var(--text-primary)]">
+              Ticket Vacío
+            </p>
             <p className="text-xs text-[var(--text-secondary)] mt-1 max-w-[220px]">
-              Haz clic en los productos del catálogo a la izquierda para añadirlos a este ticket.
+              Haz clic en los productos del catálogo a la izquierda para
+              añadirlos a este ticket.
             </p>
           </div>
         ) : (
           cart.map((item) => {
-            const product = products.find((entry) => entry.id === item.productId);
+            const product = products.find(
+              (entry) => entry.id === item.productId
+            );
             if (!product) return null;
-            const activeBatch = product.batches.find((b) => b.id === item.batchId);
+            const activeBatch = product.batches.find(
+              (b) => b.id === item.batchId
+            );
             const maxStock = activeBatch?.stock ?? 0;
 
             return (
@@ -245,7 +271,9 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
                     <button
                       type="button"
                       aria-label={`Disminuir cantidad de ${product.name}`}
-                      onClick={() => updateCartQuantity(product.id, item.quantity - 1)}
+                      onClick={() =>
+                        updateCartQuantity(product.id, item.quantity - 1)
+                      }
                       className="flex h-7 w-7 items-center justify-center rounded-lg text-accent hover:bg-accent-subtle active:scale-90 transition-all"
                     >
                       <Minus size={13} />
@@ -260,9 +288,13 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
                       type="button"
                       aria-label={`Aumentar cantidad de ${product.name}`}
                       disabled={item.quantity >= maxStock}
-                      onClick={() => updateCartQuantity(product.id, item.quantity + 1)}
+                      onClick={() =>
+                        updateCartQuantity(product.id, item.quantity + 1)
+                      }
                       className={`flex h-7 w-7 items-center justify-center rounded-lg text-accent hover:bg-accent-subtle active:scale-90 transition-all ${
-                        item.quantity >= maxStock ? "opacity-30 cursor-not-allowed" : ""
+                        item.quantity >= maxStock
+                          ? "opacity-30 cursor-not-allowed"
+                          : ""
                       }`}
                     >
                       <Plus size={13} />
@@ -271,13 +303,18 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
 
                   {/* Input de Precio Unitario Editable en vivo */}
                   <div className="flex items-center gap-1.5 text-right">
-                    <span className="text-xs text-[var(--text-secondary)] font-semibold">c/u:</span>
+                    <span className="text-xs text-[var(--text-secondary)] font-semibold">
+                      c/u:
+                    </span>
                     <input
                       type="text"
                       inputMode="numeric"
                       value={formatCOP(item.unitPrice)}
                       onChange={(e) =>
-                        updateCartItemPrice(product.id, parseCOPInput(e.target.value))
+                        updateCartItemPrice(
+                          product.id,
+                          parseCOPInput(e.target.value)
+                        )
                       }
                       className="tabular-nums w-24 sm:w-28 text-right rounded-lg border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2 py-1 text-xs sm:text-sm font-black text-[var(--text-primary)] outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
                     />
@@ -293,17 +330,25 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
                     {product.batches
                       .filter((b) => b.stock > 0)
                       .map((batch) => {
-                        const sup = suppliers.find((s) => s.id === batch.supplierId);
+                        const sup = suppliers.find(
+                          (s) => s.id === batch.supplierId
+                        );
                         const isCurrentBatch = batch.id === item.batchId;
                         const supColor = sup?.color || "#007aff";
                         return (
                           <button
                             key={batch.id}
                             type="button"
-                            onClick={() => updateCartItemBatch(product.id, batch.id)}
+                            onClick={() =>
+                              updateCartItemBatch(product.id, batch.id)
+                            }
                             style={
                               isCurrentBatch
-                                ? { backgroundColor: supColor, borderColor: supColor, color: "#ffffff" }
+                                ? {
+                                    backgroundColor: supColor,
+                                    borderColor: supColor,
+                                    color: "#ffffff",
+                                  }
                                 : { borderColor: `${supColor}40` }
                             }
                             className={`rounded-lg px-2 py-0.5 text-[10px] font-bold transition-all shadow-xs flex items-center gap-1.5 ${
@@ -314,9 +359,15 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
                           >
                             <span
                               className="h-1.5 w-1.5 rounded-full shrink-0"
-                              style={{ backgroundColor: isCurrentBatch ? "#ffffff" : supColor }}
+                              style={{
+                                backgroundColor: isCurrentBatch
+                                  ? "#ffffff"
+                                  : supColor,
+                              }}
                             />
-                            <span>{sup?.name || "Prov"} ({batch.stock} uds)</span>
+                            <span>
+                              {sup?.name || "Prov"} ({batch.stock} uds)
+                            </span>
                           </button>
                         );
                       })}
@@ -390,18 +441,26 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
           {showCosts && cart.length > 0 && (
             <div className="flex items-center justify-between text-[11px] text-emerald-600 dark:text-emerald-400 font-bold pt-1 border-t border-[var(--border-color)]/60">
               <span>Utilidad esperada</span>
-              <span className="tabular-nums">+{formatCOP(estimatedProfit)}</span>
+              <span className="tabular-nums">
+                +{formatCOP(estimatedProfit)}
+              </span>
             </div>
           )}
 
           <div className="pt-1 border-t border-[var(--border-color)]/80 flex items-center justify-between">
-            <span className="text-sm font-black text-[var(--text-primary)]">Total a Cobrar</span>
+            <span className="text-sm font-black text-[var(--text-primary)]">
+              Total a Cobrar
+            </span>
             <div className="flex items-center gap-1.5">
               <input
                 type="text"
                 data-testid="pos-custom-total-input"
                 inputMode="numeric"
-                value={customTotalInput ? formatCOP(parseCOPInput(customTotalInput)) : ""}
+                value={
+                  customTotalInput
+                    ? formatCOP(parseCOPInput(customTotalInput))
+                    : ""
+                }
                 onChange={(e) => {
                   const raw = e.target.value.replace(/\D/g, "");
                   if (!raw) {
@@ -432,7 +491,9 @@ export default function DesktopPosTicket({ onSaleCompleteSuccess }: DesktopPosTi
           }`}
         >
           <span>Completar Venta</span>
-          <span className="tabular-nums font-extrabold">· {formatCOP(effectiveTotal)}</span>
+          <span className="tabular-nums font-extrabold">
+            · {formatCOP(effectiveTotal)}
+          </span>
           <kbd className="hidden lg:inline-flex items-center ml-1 px-1.5 py-0.5 text-[10px] font-mono font-medium text-white/80 bg-white/20 rounded border border-white/25">
             Ctrl + ↵
           </kbd>

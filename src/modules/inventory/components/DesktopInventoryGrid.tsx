@@ -748,7 +748,7 @@ export default function DesktopInventoryGrid({
       {/* Barra de Acciones y Creación de la Estación de Trabajo Desktop */}
       <div
         data-testid="desktop-grid-action-bar"
-        className="flex items-center justify-between border-b border-white/10 bg-black/40 backdrop-blur-md px-4 py-3 select-none"
+        className="flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-elevated)] px-4 py-3 select-none"
       >
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
@@ -809,8 +809,8 @@ export default function DesktopInventoryGrid({
           data-testid="desktop-inventory-table"
           className="w-full border-collapse text-left"
         >
-          {/* Cabecera con Desenfoque Translúcido y Bordes Milimétricos */}
-          <thead className="sticky top-0 z-10 backdrop-blur-md bg-black/60 border-b border-white/10 select-none">
+          {/* Cabecera Fija con Bordes Milimétricos */}
+          <thead className="sticky top-0 z-10 bg-[var(--bg-elevated)] border-b border-[var(--border-color)] select-none">
             <tr className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
               {/* 1. [✓] / Nº (48px) */}
               <th className="w-12 border-r border-[var(--border-color)] px-2.5 py-2.5 text-center">

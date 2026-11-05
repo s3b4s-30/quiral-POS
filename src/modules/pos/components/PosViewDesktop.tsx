@@ -190,7 +190,7 @@ export default function PosViewDesktop({
       {/* Columna Izquierda: Catálogo y Búsqueda Rápida (~65% - 70%) */}
       <section className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-[var(--bg-primary)]">
         {/* Header Superior del Catálogo en Desktop */}
-        <div className="p-4 pb-3 border-b border-[var(--border-color)] bg-[var(--bg-primary)]/80 backdrop-blur-md shrink-0 space-y-3">
+        <div className="p-4 pb-3 border-b border-[var(--border-color)] bg-[var(--bg-primary)] shrink-0 space-y-3">
           <div className="flex items-center gap-3">
             {/* Buscador Rápido con atajo de teclado */}
             <div className="flex-1 flex min-h-11 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-xs focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all duration-150">

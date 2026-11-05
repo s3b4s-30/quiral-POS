@@ -190,3 +190,21 @@
 - **Consecuencias:**
   - _Positivas:_ Catálogo inmaculado sin contaminación cruzada entre categorías, títulos técnicos limpios, cero duplicaciones accidentales y respeto irrestricto al Platform Split.
   - _Negativas:_ Ninguna. Los flujos de escritorio se benefician de mayor control y claridad operativa.
+
+---
+
+## ADR-012: Creación Limpia de Categorías (Zero-Attributes), Inputs en Cascada Dinámica y Aislamiento de Glassmorfismo
+
+- **Estado:** Aceptado.
+- **Fecha:** 2026-11-05
+- **Contexto:**
+  1. Al crear nuevas categorías en `DesktopCategoryManagerView`, `CategoryManagerModal` o `DesktopNewProductModal`, la inferencia automática forzaba la asignación de atributos por defecto (ej. `brands` o `colors`), impidiendo registrar categorías limpias para rubros sin variantes obligatorias.
+  2. En `DesktopNewProductModal`, la creación in-situ de atributos permitía un único valor inicial en lugar de múltiples presets simultáneos, limitando la agilidad en mostrador.
+  3. El uso generalizado de `backdrop-blur-md` combinado con fondos fijos oscuros (`bg-black/60` y `border-white/10`) en barras superiores de navegación de POS/Inventario y contenedores divididos provocaba degradación estética y problemas de contraste en modo claro.
+- **Decisión:**
+  1. **Categorías Nuevas Totalmente Vacías:** Garantizar que toda categoría nueva nazca con `attributeKeys: []` sin inferencia forzada. `updateCategoryAttributes` permite explícitamente guardar y persistir categorías con cero atributos.
+  2. **Atributos In-Situ con Entradas en Cascada Dinámica:** En `DesktopNewProductModal`, el formulario inline soporta inputs progresivos en cascada (`newAttrOptions: string[]`). Al escribir en la última línea, se genera automáticamente una nueva fila con contraste sutil (`opacity-60 hover:opacity-100 focus-within:opacity-100 border-dashed`), consolidando todas las opciones en el Banco Maestro Global y vinculándolas a la categoría activa.
+  3. **Aislamiento Estricto del Glassmorfismo:** Restringir `backdrop-blur-md` única y exclusivamente a modales flotantes y popovers interactivos (`presets-popover`, `link-attr-popover`). Cabeceras y barras fijas de estación de trabajo adoptan superficies sólidas y adaptativas (`bg-[var(--bg-primary)]`, `bg-[var(--bg-elevated)]`, `border-[var(--border-color)]`), garantizando contraste perfecto en temas claros y oscuros.
+- **Consecuencias:**
+  - _Positivas:_ Flexibilidad taxonómica total para el comerciante, agilidad en la definición de presets in-situ, navegación nítida y contraste óptimo en ambos temas sin sobrecarga de GPU por desenfoques innecesarios.
+  - _Negativas:_ Ninguna. Cobertura E2E y unitaria al 100% Exit 0.

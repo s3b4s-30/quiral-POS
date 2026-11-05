@@ -30,7 +30,6 @@ import {
 import {
   getAttributePresets,
   getEffectiveAttributeOptions,
-  inferAttributeKeysForCategory,
   isSameCatalogText,
   normalizeCatalogText,
 } from "../../../utils/catalogConfig";
@@ -63,8 +62,7 @@ function extractProductAttributes(
   const catCfg = config.categories.find((c) =>
     isSameCatalogText(c.name, prod.category)
   );
-  const attrKeys =
-    catCfg?.attributeKeys ?? inferAttributeKeysForCategory(prod.category);
+  const attrKeys = catCfg?.attributeKeys ?? [];
 
   const selections: Record<string, string> = {};
   for (const key of attrKeys) {
@@ -125,7 +123,7 @@ export default function DesktopNewProductModal({
   // 3. Creación in-situ de nuevo atributo maestro
   const [isCreatingAttribute, setIsCreatingAttribute] = useState(false);
   const [newAttrLabel, setNewAttrLabel] = useState("");
-  const [newAttrFirstOption, setNewAttrFirstOption] = useState("");
+  const [newAttrOptions, setNewAttrOptions] = useState<string[]>([""]);
 
   // 4. Atributos dinámicos de la categoría activa
   const activeCategoryConfig = useMemo(() => {
@@ -137,10 +135,7 @@ export default function DesktopNewProductModal({
 
   const activeAttributeKeys = useMemo(() => {
     if (!category) return [];
-    return (
-      activeCategoryConfig?.attributeKeys ??
-      inferAttributeKeysForCategory(category)
-    );
+    return activeCategoryConfig?.attributeKeys ?? [];
   }, [activeCategoryConfig, category]);
 
   // Atributos del Banco Global maestro que aún no han sido vinculados a esta categoría
@@ -323,14 +318,13 @@ export default function DesktopNewProductModal({
     }
   };
 
-  // Manejador para crear nueva categoría in-situ
+  // Manejador para crear nueva categoría in-situ (totalmente limpia, 0 atributos preasignados)
   const handleCreateCategory = (e: React.FormEvent) => {
     e.preventDefault();
     const clean = normalizeCatalogText(newCatNameInput);
     if (!clean || clean.toLowerCase() === "todos") return;
 
-    const keys = inferAttributeKeysForCategory(clean);
-    const created = addCategory(clean, keys);
+    const created = addCategory(clean, []);
     if (created) {
       setCategory(created.name);
       setNewCatNameInput("");
@@ -338,29 +332,53 @@ export default function DesktopNewProductModal({
     }
   };
 
-  // Manejador para crear un nuevo atributo maestro in-situ
+  // Manejadores para la creación de opciones en cascada dinámica
+  const handleAttrOptionChange = (index: number, val: string) => {
+    setNewAttrOptions((prev) => {
+      const next = [...prev];
+      next[index] = val;
+      // Si se escribe en el último elemento y no está vacío, añade automáticamente la siguiente línea en cascada
+      if (index === next.length - 1 && val.trim().length > 0) {
+        next.push("");
+      }
+      return next;
+    });
+  };
+
+  const handleRemoveAttrOptionLine = (index: number) => {
+    setNewAttrOptions((prev) => {
+      if (prev.length <= 1) return [""];
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  // Manejador para crear un nuevo atributo maestro in-situ con opciones en cascada
   const handleCreateAttribute = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanLabel = normalizeCatalogText(newAttrLabel);
     if (!cleanLabel || !category) return;
 
-    const cleanOption = normalizeCatalogText(newAttrFirstOption);
-    const newKey = createCustomAttribute(
-      cleanLabel,
-      cleanOption ? [cleanOption] : []
-    );
+    // Extraer y normalizar todas las opciones no vacías
+    const cleanOptions = newAttrOptions
+      .map((opt) => normalizeCatalogText(opt))
+      .filter((opt) => opt.length > 0);
+
+    const newKey = createCustomAttribute(cleanLabel, cleanOptions);
 
     if (newKey) {
       const currentKeys = activeAttributeKeys;
       if (!currentKeys.includes(newKey)) {
         updateCategoryAttributes(category, [...currentKeys, newKey]);
       }
-      if (cleanOption) {
-        setAttributeSelections((prev) => ({ ...prev, [newKey]: cleanOption }));
+      if (cleanOptions.length > 0) {
+        setAttributeSelections((prev) => ({
+          ...prev,
+          [newKey]: cleanOptions[0],
+        }));
       }
       setIsCreatingAttribute(false);
       setNewAttrLabel("");
-      setNewAttrFirstOption("");
+      setNewAttrOptions([""]);
     }
   };
 
@@ -447,26 +465,26 @@ export default function DesktopNewProductModal({
       data-testid="desktop-new-product-modal"
       className="w-full h-full flex flex-col overflow-hidden bg-[var(--bg-primary)] pt-[var(--quiral-header-offset,4rem)] antialiased-hd"
     >
-      {/* 1. Cabecera Fija de la Estación de Trabajo con Glassmorfismo Avanzado */}
-      <div className="shrink-0 border-b border-white/10 bg-black/60 backdrop-blur-md px-6 py-4 flex items-center justify-between select-none shadow-2xl">
+      {/* 1. Cabecera Fija de la Estación de Trabajo */}
+      <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-primary)] px-6 py-4 flex items-center justify-between select-none shadow-xs">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)] hover:text-white hover:border-white/20 active:scale-95 transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all cursor-pointer"
           >
             <ArrowLeft size={16} />
             <span>Regresar al Inventario</span>
-            <kbd className="rounded border border-white/10 bg-black/40 px-1 py-0.5 text-[10px] text-[var(--text-secondary)]">
+            <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-primary)] px-1 py-0.5 text-[10px] text-[var(--text-secondary)]">
               Esc
             </kbd>
           </button>
-          <div className="h-5 w-px bg-white/10" />
+          <div className="h-5 w-px bg-[var(--border-color)]" />
           <div>
             <div className="flex items-center gap-2">
               <h2
                 id="desktop-new-product-title"
-                className="text-lg font-black text-white"
+                className="text-lg font-black text-[var(--text-primary)]"
               >
                 {initialProduct ? "Clonar Producto" : "Nuevo Producto"}
               </h2>
@@ -484,7 +502,7 @@ export default function DesktopNewProductModal({
 
         <div className="flex items-center gap-3">
           {category && (
-            <span className="hidden sm:inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-accent tabular-nums">
+            <span className="hidden sm:inline-flex items-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-accent tabular-nums">
               {technicalSubtitle}
             </span>
           )}
@@ -492,17 +510,17 @@ export default function DesktopNewProductModal({
             type="button"
             onClick={onClose}
             aria-label="Cerrar ventana de creación"
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[var(--text-secondary)] hover:text-white hover:border-white/20 active:scale-95 transition-all cursor-pointer"
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all cursor-pointer"
           >
             <X size={16} />
           </button>
         </div>
       </div>
 
-      {/* 2. Cuerpo en Formato Split-Layout (2 Columnas Fijas con Glassmorfismo) */}
+      {/* 2. Cuerpo en Formato Split-Layout (2 Columnas Fijas) */}
       <div className="flex-1 min-h-0 overflow-hidden max-w-7xl mx-auto w-full p-4 lg:p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* COLUMNA IZQUIERDA (7 cols): Taxonomía y Atributos Dinámicos (CERO SCROLL HORIZONTAL) */}
-        <div className="md:col-span-7 flex flex-col min-h-0 overflow-y-auto custom-scrollbar rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md p-6 space-y-6 shadow-2xl">
+        <div className="md:col-span-7 flex flex-col min-h-0 overflow-y-auto custom-scrollbar rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-6 space-y-6 shadow-sm">
           {/* SECCIÓN A: Categoría de Producto y Creación Rápida */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -616,24 +634,66 @@ export default function DesktopNewProductModal({
                   value={newAttrLabel}
                   onChange={(e) => setNewAttrLabel(e.target.value)}
                   placeholder="Nombre del atributo (ej. Conexión, Material, Potencia...)"
-                  className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-1.5 text-xs font-bold text-white outline-none focus:border-accent"
+                  className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
                 />
-                <input
-                  type="text"
-                  value={newAttrFirstOption}
-                  onChange={(e) => setNewAttrFirstOption(e.target.value)}
-                  placeholder="Primera opción / valor (ej. USB-C, MagSafe...)"
-                  className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white outline-none focus:border-accent"
-                />
-                <div className="flex items-center justify-end gap-2 pt-1">
+                <div className="space-y-1.5 pt-1">
+                  <label className="text-[11px] font-semibold text-[var(--text-secondary)]">
+                    Opciones / Presets del atributo (en cascada):
+                  </label>
+                  {newAttrOptions.map((opt, idx) => {
+                    const isTrailingEmpty =
+                      idx > 0 &&
+                      idx === newAttrOptions.length - 1 &&
+                      opt === "";
+                    return (
+                      <div
+                        key={idx}
+                        className={`flex items-center gap-1.5 transition-all ${
+                          isTrailingEmpty
+                            ? "opacity-60 hover:opacity-100 focus-within:opacity-100"
+                            : "opacity-100"
+                        }`}
+                      >
+                        <input
+                          type="text"
+                          value={opt}
+                          onChange={(e) =>
+                            handleAttrOptionChange(idx, e.target.value)
+                          }
+                          placeholder={
+                            idx === 0
+                              ? "Primera opción / valor (ej. USB-C, MagSafe...)"
+                              : `Opción ${idx + 1} (opcional en cascada)...`
+                          }
+                          className={`flex-1 rounded-xl border ${
+                            isTrailingEmpty
+                              ? "border-dashed border-[var(--border-color)]"
+                              : "border-[var(--border-color)]"
+                          } bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-primary)] outline-none focus:border-accent`}
+                        />
+                        {newAttrOptions.length > 1 && opt.trim() !== "" && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveAttrOptionLine(idx)}
+                            className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                            title="Eliminar opción"
+                          >
+                            <X size={13} />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-end gap-2 pt-2">
                   <button
                     type="button"
                     onClick={() => {
                       setIsCreatingAttribute(false);
                       setNewAttrLabel("");
-                      setNewAttrFirstOption("");
+                      setNewAttrOptions([""]);
                     }}
-                    className="px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-white cursor-pointer"
+                    className="px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
                   >
                     Cancelar
                   </button>
@@ -832,12 +892,12 @@ export default function DesktopNewProductModal({
                           return (
                             <div
                               data-testid={`presets-popover-${attrKey}`}
-                              className="rounded-2xl border border-accent/40 bg-black/90 backdrop-blur-md p-3.5 space-y-2.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+                              className="rounded-2xl border border-accent/40 bg-[var(--bg-elevated)]/95 backdrop-blur-md p-3.5 space-y-2.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
                             >
-                              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                              <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-2">
                                 <div className="flex items-center gap-1.5">
                                   <Bookmark size={13} className="text-accent" />
-                                  <span className="text-xs font-black text-white">
+                                  <span className="text-xs font-black text-[var(--text-primary)]">
                                     Presets Históricos: {label}
                                   </span>
                                   <span className="text-[10px] text-[var(--text-secondary)] font-medium tabular-nums">
@@ -871,7 +931,7 @@ export default function DesktopNewProductModal({
                                   <button
                                     type="button"
                                     onClick={() => setOpenPresetsAttrKey(null)}
-                                    className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 cursor-pointer"
+                                    className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
                                   >
                                     <X size={12} />
                                   </button>
@@ -1009,7 +1069,7 @@ export default function DesktopNewProductModal({
             {category && unlinkedGlobalAttributes.length > 0 && (
               <div
                 data-testid="unlinked-global-attributes-block"
-                className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-3.5 space-y-2.5 transition-all duration-200"
+                className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-3.5 space-y-2.5 transition-all duration-200"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-1.5">
@@ -1059,7 +1119,7 @@ export default function DesktopNewProductModal({
         </div>
 
         {/* COLUMNA DERECHA (5 cols): Panel Fijo de Control y Datos Críticos */}
-        <div className="md:col-span-5 flex flex-col min-h-0 overflow-y-auto custom-scrollbar rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md p-6 space-y-5 justify-between shadow-2xl">
+        <div className="md:col-span-5 flex flex-col min-h-0 overflow-y-auto custom-scrollbar rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-6 space-y-5 justify-between shadow-sm">
           <div className="space-y-5">
             {/* SECCIÓN C: Nombre Comercial y Switch de Autogeneración (Zap Icon) */}
             <div className="space-y-2">
@@ -1241,7 +1301,7 @@ export default function DesktopNewProductModal({
             </div>
 
             {/* SECCIÓN F: Costos, Precios y Tarjeta de Análisis Financiero */}
-            <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-4">
+            <div className="space-y-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-4">
               <div className="grid grid-cols-2 gap-3">
                 {/* Costo Unitario */}
                 <div className="space-y-1">

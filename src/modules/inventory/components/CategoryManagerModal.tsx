@@ -214,7 +214,7 @@ export default function CategoryManagerModal({
     const clean = normalizeCatalogText(newCategoryName);
     if (!clean || clean.toLowerCase() === "todos") return;
 
-    const created = addCategory(clean, inferAttributeKeysForCategory(clean));
+    const created = addCategory(clean, []);
     if (created) {
       setDraftOrder((prev) => {
         if (prev.some((c) => isSameCatalogText(c, created.name))) return prev;
@@ -269,13 +269,10 @@ export default function CategoryManagerModal({
     const catConfig = catalogConfig.categories.find((c) =>
       isSameCatalogText(c.name, catName)
     );
-    const currentKeys =
-      catConfig?.attributeKeys ?? inferAttributeKeysForCategory(catName);
+    const currentKeys = catConfig?.attributeKeys ?? [];
     const exists = currentKeys.includes(attrKey);
     const nextKeys = exists
-      ? currentKeys.length > 1
-        ? currentKeys.filter((k) => k !== attrKey)
-        : currentKeys
+      ? currentKeys.filter((k) => k !== attrKey)
       : [...currentKeys, attrKey];
 
     updateCategoryAttributes(catName, nextKeys);
@@ -454,9 +451,7 @@ export default function CategoryManagerModal({
                 const catConfig = catalogConfig.categories.find((c) =>
                   isSameCatalogText(c.name, catName)
                 );
-                const currentAttrKeys =
-                  catConfig?.attributeKeys ??
-                  inferAttributeKeysForCategory(catName);
+                const currentAttrKeys = catConfig?.attributeKeys ?? [];
                 const attrLabels = currentAttrKeys
                   .map(
                     (k, i) =>
