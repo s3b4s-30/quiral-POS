@@ -288,7 +288,7 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     // Verificar cálculo en tarjeta de márgenes (Utilidad: 89,000 - 45,000 = 44,000)
     await expect(modal.getByText(/44\.000/)).toBeVisible();
 
-    // 5. Probar Banco Global Dinámico y Auto-Reductible en Nuevo Producto
+    // 5. Probar Banco Global Dinámico, Instanciación Vacía y Popover de Presets en Nuevo Producto
     const unlinkedBlock = modal.getByTestId("unlinked-global-attributes-block");
     await expect(unlinkedBlock).toBeVisible();
 
@@ -303,17 +303,45 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       modal.getByText("Color / Acabado", { exact: true })
     ).toBeVisible();
 
-    // Probar eliminación/ocultamiento de opción aislada por categoría (icono x)
+    // Verificar que arranca como instancia local limpia (0 opciones) con botón de Presets
+    const presetsToggleBtn = modal.getByTestId("toggle-presets-btn-colors");
+    await expect(presetsToggleBtn).toBeVisible();
+    await presetsToggleBtn.click();
+
+    // El popover de presets debe desplegarse
+    const presetsPopover = modal.getByTestId("presets-popover-colors");
+    await expect(presetsPopover).toBeVisible();
+
+    // Elegir individualmente el preset "Negro Espacial"
+    const pickNegroPreset = modal.getByTestId("pick-preset-Negro_Espacial");
+    await expect(pickNegroPreset).toBeVisible();
+    await pickNegroPreset.click();
+
+    // Debe agregarse a las opciones activas locales y desaparecer del popover de disponibles
+    const negroPill = modal.getByTestId("active-option-pill-Negro_Espacial");
+    await expect(negroPill).toBeVisible();
+    await expect(pickNegroPreset).not.toBeVisible();
+
+    // Probar eliminación in-situ de opción con botón x
     const removeOptionBtn = modal.getByRole("button", {
-      name: "Quitar opción Transparente",
+      name: "Quitar opción Negro Espacial",
       exact: true,
     });
     if (await removeOptionBtn.isVisible()) {
       await removeOptionBtn.click();
-      await expect(
-        modal.getByText("Transparente", { exact: true })
-      ).not.toBeVisible();
+      await expect(negroPill).not.toBeVisible();
     }
+
+    // Probar desvinculación completa del atributo in-situ (botón × de cabecera de tarjeta)
+    const unlinkColorsBtn = modal.getByTestId("unlink-attr-colors");
+    await expect(unlinkColorsBtn).toBeVisible();
+    await unlinkColorsBtn.click();
+
+    // Debe desaparecer de las tarjetas de atributos activos y retornar al bloque inferior de disponibles
+    await expect(
+      modal.getByTestId("active-attribute-card-colors")
+    ).not.toBeVisible();
+    await expect(modal.getByTestId("link-global-attr-colors")).toBeVisible();
 
     // 6. Cerrar modal con tecla Escape
     await page.keyboard.press("Escape");
@@ -482,7 +510,31 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       await linkBtn.click();
     }
 
-    // Agregar nueva opción al atributo activo
+    // Probar Popover de Presets en Columna 3 de Configuración
+    const togglePresetsBtn = managerView.getByTestId(
+      "toggle-manager-presets-btn"
+    );
+    await expect(togglePresetsBtn).toBeVisible();
+    await togglePresetsBtn.click();
+
+    const managerPresetsPopover = managerView.getByTestId(
+      "manager-presets-popover"
+    );
+    await expect(managerPresetsPopover).toBeVisible();
+
+    // Elegir el preset "Silicona Líquida"
+    const pickSiliconaBtn = managerView.getByTestId(
+      "manager-pick-preset-Silicona_Líquida"
+    );
+    await expect(pickSiliconaBtn).toBeVisible();
+    await pickSiliconaBtn.click();
+
+    // Debe aparecer en las opciones de "Prueba Desktop"
+    await expect(
+      managerView.getByText("Silicona Líquida", { exact: true })
+    ).toBeVisible();
+
+    // Agregar nueva opción manual al atributo activo
     const newOptionInput = managerView.getByPlaceholder("Nueva opción...");
     await expect(newOptionInput).toBeVisible();
     await newOptionInput.fill("Opción Alfa");

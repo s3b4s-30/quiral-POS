@@ -9,6 +9,7 @@ import {
   Plus,
   RotateCcw,
   Sliders,
+  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import { ProductCategory } from "../../../types/domain";
 import {
   FACTORY_BASE_CATEGORIES,
   FALLBACK_ORPHAN_CATEGORY,
+  getAttributePresets,
   getEffectiveAttributeOptions,
   inferAttributeKeysForCategory,
   isSameCatalogText,
@@ -54,6 +56,7 @@ export default function DesktopCategoryManagerView({
     deleteAttributeOption,
     reorderAttributeOptions,
     resetCategoryAttributeOptionsToGlobal,
+    importAttributePresetsToCategory,
     createCustomAttribute,
     resetCatalogConfigToDefault,
   } = useInventory();
@@ -96,6 +99,9 @@ export default function DesktopCategoryManagerView({
 
   // Alternancia explícita de visualización en Columna 3
   const [forceGlobalScope, setForceGlobalScope] = useState(false);
+
+  // Estado del Popover de Presets en Columna 3
+  const [isPresetsPopoverOpen, setIsPresetsPopoverOpen] = useState(false);
 
   // Opciones de atributos en Columna 3
   const [newOptionInput, setNewOptionInput] = useState("");
@@ -377,6 +383,14 @@ export default function DesktopCategoryManagerView({
     isAttrLinkedToSelectedCat,
     activeAttrKey,
   ]);
+
+  // Presets Históricos maestros disponibles en el Banco Global para este atributo
+  const masterPresets = getAttributePresets(catalogConfig, activeAttrKey);
+  const availablePresets = useMemo(() => {
+    return masterPresets.filter(
+      (p) => !effectiveOptions.some((o) => isSameCatalogText(o, p))
+    );
+  }, [masterPresets, effectiveOptions]);
 
   // Crear atributo desde Columna 2 Superior (con toggle de vinculación opcional)
   const handleCreateCustomAttr = (e: React.FormEvent) => {
@@ -1229,101 +1243,226 @@ export default function DesktopCategoryManagerView({
                   <span>Agregar</span>
                 </button>
               </form>
+
+              {/* Botón y Desplegable de Presets Disponibles en Ámbito de Categoría */}
+              {activeScopeCategory && (
+                <div className="mt-2.5 flex items-center justify-between">
+                  <button
+                    type="button"
+                    data-testid="toggle-manager-presets-btn"
+                    onClick={() => setIsPresetsPopoverOpen((prev) => !prev)}
+                    className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
+                      isPresetsPopoverOpen
+                        ? "border-accent bg-accent text-white shadow-xs"
+                        : "border-accent/40 bg-accent/10 text-accent hover:bg-accent/20"
+                    }`}
+                    title="Ver Presets Históricos disponibles en el Banco Global"
+                  >
+                    <Sparkles size={12} />
+                    <span>Presets Disponibles ({availablePresets.length})</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Popover / Panel de Presets Disponibles */}
+              {activeScopeCategory && isPresetsPopoverOpen && (
+                <div
+                  data-testid="manager-presets-popover"
+                  className="mt-2.5 rounded-2xl border border-accent/40 bg-black/90 backdrop-blur-md p-3.5 space-y-2.5 shadow-2xl animate-in fade-in duration-150 shrink-0"
+                >
+                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles size={13} className="text-accent" />
+                      <span className="text-xs font-black text-white">
+                        Presets Históricos: {activeAttr?.label || activeAttrKey}
+                      </span>
+                      <span className="text-[10px] text-[var(--text-secondary)] font-medium tabular-nums">
+                        ({availablePresets.length} disponibles)
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {availablePresets.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            importAttributePresetsToCategory(
+                              selectedCategory,
+                              activeAttrKey,
+                              availablePresets
+                            );
+                            showFeedback(
+                              "success",
+                              `Se importaron todos los presets a «${selectedCategory}».`
+                            );
+                            setIsPresetsPopoverOpen(false);
+                          }}
+                          className="text-[10px] font-bold text-accent hover:underline cursor-pointer"
+                        >
+                          + Añadir todos
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setIsPresetsPopoverOpen(false)}
+                        className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 cursor-pointer"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {availablePresets.length === 0 ? (
+                    <p className="text-[11px] text-[var(--text-secondary)] py-1 italic">
+                      Todos los presets del Banco Global ya están presentes en
+                      esta categoría.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-1.5 max-h-36 overflow-y-auto custom-scrollbar p-0.5">
+                      {availablePresets.map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          data-testid={`manager-pick-preset-${preset.replace(/\s+/g, "_")}`}
+                          onClick={() => {
+                            addAttributeOption(
+                              activeAttrKey,
+                              preset,
+                              selectedCategory
+                            );
+                            showFeedback(
+                              "success",
+                              `Preset "${preset}" añadido a «${selectedCategory}».`
+                            );
+                          }}
+                          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-white/20 bg-white/5 hover:border-accent hover:bg-accent/20 hover:text-white px-2.5 py-1 text-[11px] font-semibold text-white/80 transition-all cursor-pointer select-none active:scale-95"
+                        >
+                          <Plus size={11} className="text-accent" />
+                          <span>{preset}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Listado Vertical Scrollable de Opciones */}
             <div className="flex-1 overflow-y-auto mt-3 space-y-2 pr-1 custom-scrollbar min-h-0">
-              {effectiveOptions.map((option, index) => {
-                const isEditing = editingOption === option;
-                return (
-                  <div
-                    key={option}
-                    className="group flex items-center justify-between p-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] transition-all hover:border-accent/40"
-                  >
-                    {isEditing ? (
-                      <div className="flex-1 flex items-center gap-2 mr-2">
-                        <input
-                          type="text"
-                          value={editingValue}
-                          onChange={(e) => setEditingValue(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleSaveEdit(option);
-                            if (e.key === "Escape") setEditingOption(null);
-                          }}
-                          autoFocus
-                          className="flex-1 rounded-xl border border-accent bg-[var(--bg-elevated)] px-3 py-1 text-xs font-bold text-[var(--text-primary)] outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleSaveEdit(option)}
-                          className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white cursor-pointer shrink-0"
-                        >
-                          Guardar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditingOption(null)}
-                          className="rounded-lg border border-[var(--border-color)] px-2 py-1 text-xs text-[var(--text-secondary)] cursor-pointer shrink-0"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
-                        <span className="tabular-nums text-[10px] text-[var(--text-secondary)] font-mono shrink-0">
-                          {index + 1}.
-                        </span>
-                        <span className="text-xs font-bold text-[var(--text-primary)] truncate">
-                          {option}
-                        </span>
-                      </div>
-                    )}
+              {effectiveOptions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-white/10 bg-white/[0.015] text-center space-y-2">
+                  <Sparkles size={22} className="text-accent opacity-60" />
+                  <p className="text-xs font-bold text-white">
+                    Sin valores locales en «{selectedCategory}»
+                  </p>
+                  <p className="text-[11px] text-[var(--text-secondary)] max-w-xs">
+                    Este atributo está instanciado limpio y aislado. Agrega una
+                    nueva opción arriba o importa presets históricos sin
+                    contaminar otras categorías.
+                  </p>
+                  {availablePresets.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsPresetsPopoverOpen(true)}
+                      className="mt-1 text-xs font-bold text-accent hover:underline cursor-pointer"
+                    >
+                      Ver {availablePresets.length} presets disponibles
+                    </button>
+                  )}
+                </div>
+              ) : (
+                effectiveOptions.map((option, index) => {
+                  const isEditing = editingOption === option;
+                  return (
+                    <div
+                      key={option}
+                      className="group flex items-center justify-between p-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] transition-all hover:border-accent/40"
+                    >
+                      {isEditing ? (
+                        <div className="flex-1 flex items-center gap-2 mr-2">
+                          <input
+                            type="text"
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveEdit(option);
+                              if (e.key === "Escape") setEditingOption(null);
+                            }}
+                            autoFocus
+                            className="flex-1 rounded-xl border border-accent bg-[var(--bg-elevated)] px-3 py-1 text-xs font-bold text-[var(--text-primary)] outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSaveEdit(option)}
+                            className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white cursor-pointer shrink-0"
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingOption(null)}
+                            className="rounded-lg border border-[var(--border-color)] px-2 py-1 text-xs text-[var(--text-secondary)] cursor-pointer shrink-0"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                          <span className="tabular-nums text-[10px] text-[var(--text-secondary)] font-mono shrink-0">
+                            {index + 1}.
+                          </span>
+                          <span className="text-xs font-bold text-[var(--text-primary)] truncate">
+                            {option}
+                          </span>
+                        </div>
+                      )}
 
-                    {!isEditing && (
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => moveOption(index, "up")}
-                          disabled={index === 0}
-                          title="Subir opción"
-                          className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent disabled:opacity-20 cursor-pointer"
-                        >
-                          <ArrowUp size={12} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => moveOption(index, "down")}
-                          disabled={index === activeAttr.options.length - 1}
-                          title="Bajar opción"
-                          className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent disabled:opacity-20 cursor-pointer"
-                        >
-                          <ArrowDown size={12} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingOption(option);
-                            setEditingValue(option);
-                          }}
-                          title="Editar opción"
-                          className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-accent hover:border-accent cursor-pointer"
-                        >
-                          <Pencil size={12} />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={`Eliminar opción ${option}`}
-                          onClick={() => handleDeleteOption(option)}
-                          title="Eliminar opción del catálogo"
-                          className="p-1.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      {!isEditing && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => moveOption(index, "up")}
+                            disabled={index === 0}
+                            title="Subir opción"
+                            className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent disabled:opacity-20 cursor-pointer"
+                          >
+                            <ArrowUp size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveOption(index, "down")}
+                            disabled={index === effectiveOptions.length - 1}
+                            title="Bajar opción"
+                            className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent disabled:opacity-20 cursor-pointer"
+                          >
+                            <ArrowDown size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingOption(option);
+                              setEditingValue(option);
+                            }}
+                            title="Editar opción"
+                            className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-accent hover:border-accent cursor-pointer"
+                          >
+                            <Pencil size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Eliminar opción ${option}`}
+                            onClick={() => handleDeleteOption(option)}
+                            title="Eliminar opción del catálogo"
+                            className="p-1.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
 
             {/* Nota de Integridad de Datos en la Base de la Columna 3 */}

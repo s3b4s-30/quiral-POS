@@ -8,6 +8,7 @@ import {
   Minus,
   Plus,
   Sliders,
+  Sparkles,
   Tag,
   Wand2,
   X,
@@ -23,6 +24,7 @@ import React, {
 import { useInventory } from "../../../context/InventoryContext";
 import { ProductCategory, Supplier } from "../../../types/domain";
 import {
+  getAttributePresets,
   getEffectiveAttributeOptions,
   inferAttributeKeysForCategory,
   isSameCatalogText,
@@ -57,6 +59,7 @@ export default function DesktopNewProductModal({
     updateCategoryAttributes,
     addAttributeOption,
     deleteAttributeOption,
+    importAttributePresetsToCategory,
     showCosts,
   } = useInventory();
 
@@ -107,6 +110,11 @@ export default function DesktopNewProductModal({
   // Input inline para añadir una nueva opción a un atributo (+ Nueva Opción)
   const [addingOptionKey, setAddingOptionKey] = useState<string | null>(null);
   const [newOptionValue, setNewOptionValue] = useState("");
+
+  // Estado del Popover de Presets inteligentes activos: attrKey o null
+  const [openPresetsAttrKey, setOpenPresetsAttrKey] = useState<string | null>(
+    null
+  );
 
   // Sincronizar selecciones dinámicas al cambiar de categoría
   useEffect(() => {
@@ -210,6 +218,21 @@ export default function DesktopNewProductModal({
         delete next[attrKey];
         return next;
       });
+    }
+  };
+
+  // Manejador para desvincular un atributo entero de esta categoría in-situ (×)
+  const handleUnlinkAttribute = (attrKeyToRemove: string) => {
+    if (!category) return;
+    const nextKeys = activeAttributeKeys.filter((k) => k !== attrKeyToRemove);
+    updateCategoryAttributes(category, nextKeys);
+    setAttributeSelections((prev) => {
+      const next = { ...prev };
+      delete next[attrKeyToRemove];
+      return next;
+    });
+    if (openPresetsAttrKey === attrKeyToRemove) {
+      setOpenPresetsAttrKey(null);
     }
   };
 
@@ -574,6 +597,7 @@ export default function DesktopNewProductModal({
                   return (
                     <div
                       key={attrKey}
+                      data-testid={`active-attribute-card-${attrKey}`}
                       className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 space-y-2.5"
                     >
                       <div className="flex items-center justify-between">
@@ -603,6 +627,57 @@ export default function DesktopNewProductModal({
                             <ArrowDown size={12} />
                           </button>
 
+                          {/* Desvincular atributo de esta categoría in-situ (×) */}
+                          <button
+                            type="button"
+                            onClick={() => handleUnlinkAttribute(attrKey)}
+                            title={`Desvincular "${label}" de «${category}»`}
+                            aria-label={`Desvincular atributo ${label}`}
+                            data-testid={`unlink-attr-${attrKey}`}
+                            className="p-1 rounded-lg border border-white/10 text-[var(--text-secondary)] hover:text-red-400 hover:border-red-400/30 hover:bg-red-500/10 cursor-pointer transition-all"
+                          >
+                            <X size={12} strokeWidth={2.5} />
+                          </button>
+
+                          {/* Botón Popover Presets Inteligentes */}
+                          {(() => {
+                            const masterPresets = getAttributePresets(
+                              catalogConfig,
+                              attrKey
+                            );
+                            const availablePresets = masterPresets.filter(
+                              (p) =>
+                                !options.some((o) => isSameCatalogText(o, p))
+                            );
+                            const isPresetsOpen =
+                              openPresetsAttrKey === attrKey;
+                            return (
+                              <button
+                                type="button"
+                                data-testid={`toggle-presets-btn-${attrKey}`}
+                                onClick={() =>
+                                  setOpenPresetsAttrKey((prev) =>
+                                    prev === attrKey ? null : attrKey
+                                  )
+                                }
+                                className={`ml-1 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all cursor-pointer select-none ${
+                                  isPresetsOpen
+                                    ? "border-accent bg-accent text-white shadow-2xs"
+                                    : "border-white/10 bg-white/5 text-accent hover:bg-white/10 hover:border-accent/40"
+                                }`}
+                                title="Ver Presets Históricos disponibles para este atributo"
+                              >
+                                <Sparkles
+                                  size={11}
+                                  className={
+                                    isPresetsOpen ? "text-white" : "text-accent"
+                                  }
+                                />
+                                <span>Presets ({availablePresets.length})</span>
+                              </button>
+                            );
+                          })()}
+
                           {!isAddingThis ? (
                             <button
                               type="button"
@@ -626,6 +701,116 @@ export default function DesktopNewProductModal({
                           )}
                         </div>
                       </div>
+
+                      {/* Popover Inteligente de Presets Históricos */}
+                      {openPresetsAttrKey === attrKey &&
+                        (() => {
+                          const masterPresets = getAttributePresets(
+                            catalogConfig,
+                            attrKey
+                          );
+                          const availablePresets = masterPresets.filter(
+                            (p) => !options.some((o) => isSameCatalogText(o, p))
+                          );
+                          return (
+                            <div
+                              data-testid={`presets-popover-${attrKey}`}
+                              className="rounded-2xl border border-accent/40 bg-black/90 backdrop-blur-md p-3.5 space-y-2.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+                            >
+                              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                                <div className="flex items-center gap-1.5">
+                                  <Sparkles size={13} className="text-accent" />
+                                  <span className="text-xs font-black text-white">
+                                    Presets Históricos: {label}
+                                  </span>
+                                  <span className="text-[10px] text-[var(--text-secondary)] font-medium tabular-nums">
+                                    ({availablePresets.length} disponibles)
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  {availablePresets.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        importAttributePresetsToCategory(
+                                          category,
+                                          attrKey,
+                                          availablePresets
+                                        );
+                                        if (availablePresets[0]) {
+                                          setAttributeSelections((prev) => ({
+                                            ...prev,
+                                            [attrKey]: availablePresets[0],
+                                          }));
+                                        }
+                                        setOpenPresetsAttrKey(null);
+                                      }}
+                                      className="text-[10px] font-bold text-accent hover:underline cursor-pointer"
+                                    >
+                                      + Añadir todos
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => setOpenPresetsAttrKey(null)}
+                                    className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 cursor-pointer"
+                                  >
+                                    <X size={12} />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {availablePresets.length === 0 ? (
+                                <p className="text-[11px] text-[var(--text-secondary)] py-1 italic">
+                                  Todos los presets históricos ya han sido
+                                  incorporados a esta categoría.
+                                </p>
+                              ) : (
+                                <div className="flex flex-wrap items-center gap-1.5 max-h-40 overflow-y-auto custom-scrollbar p-0.5">
+                                  {availablePresets.map((preset) => (
+                                    <button
+                                      key={preset}
+                                      type="button"
+                                      data-testid={`pick-preset-${preset.replace(/\s+/g, "_")}`}
+                                      onClick={() => {
+                                        addAttributeOption(
+                                          attrKey,
+                                          preset,
+                                          category
+                                        );
+                                        setAttributeSelections((prev) => ({
+                                          ...prev,
+                                          [attrKey]: preset,
+                                        }));
+                                      }}
+                                      className="inline-flex items-center gap-1 rounded-lg border border-dashed border-white/20 bg-white/5 hover:border-accent hover:bg-accent/20 hover:text-white px-2.5 py-1 text-[11px] font-semibold text-white/80 transition-all cursor-pointer select-none active:scale-95"
+                                    >
+                                      <Plus size={11} className="text-accent" />
+                                      <span>{preset}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+
+                      {/* Estado Vacío de Opciones en esta Categoría */}
+                      {options.length === 0 &&
+                        openPresetsAttrKey !== attrKey && (
+                          <div className="py-2 px-3 rounded-xl border border-dashed border-white/10 bg-white/[0.015] flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
+                            <span>Sin valores asignados a esta categoría.</span>
+                            <button
+                              type="button"
+                              onClick={() => setOpenPresetsAttrKey(attrKey)}
+                              className="inline-flex items-center gap-1 text-accent font-bold hover:underline cursor-pointer"
+                            >
+                              <Sparkles size={11} />
+                              <span>Abrir Presets</span>
+                            </button>
+                          </div>
+                        )}
 
                       {/* Input inline para agregar nueva opción */}
                       {isAddingThis && (
@@ -662,6 +847,7 @@ export default function DesktopNewProductModal({
                           return (
                             <span
                               key={opt}
+                              data-testid={`active-option-pill-${opt.replace(/\s+/g, "_")}`}
                               className={`inline-flex items-center rounded-lg text-[11px] transition-all duration-150 select-none ${
                                 isOptSelected
                                   ? "bg-accent text-white font-bold shadow-2xs border border-accent"

@@ -55,8 +55,11 @@ export function isSameCatalogText(a: string, b: string): boolean {
  */
 /**
  * Obtiene las opciones efectivas de un atributo para una categoría específica.
- * Si la categoría tiene un scope de valores personalizado en categoryAttributeValues,
- * retorna dicho conjunto aislado; de lo contrario, aplica fallback al Banco Global maestro.
+ * Arquitectura de Cascarones Globales e Instanciación Local:
+ * - Si no se pasa categoryName: retorna los Presets Históricos maestros del Banco Global.
+ * - Si se pasa categoryName: retorna las opciones aisladas de dicha categoría.
+ *   Si la categoría aún no tiene opciones asignadas para ese atributo, retorna [] (instancia limpia vacía)
+ *   evitando heredar o contaminar masivamente marcas o presets de otras categorías.
  */
 export function getEffectiveAttributeOptions(
   config: CatalogConfig,
@@ -64,8 +67,8 @@ export function getEffectiveAttributeOptions(
   attributeKey?: string
 ): string[] {
   if (!attributeKey || !config.attributes[attributeKey]) return [];
-  const globalOpts = config.attributes[attributeKey].options ?? [];
-  if (!categoryName) return globalOpts;
+  const masterPresets = config.attributes[attributeKey].options ?? [];
+  if (!categoryName) return masterPresets;
 
   const scopedCatKey = Object.keys(config.categoryAttributeValues || {}).find(
     (cat) => isSameCatalogText(cat, categoryName)
@@ -78,7 +81,18 @@ export function getEffectiveAttributeOptions(
     return config.categoryAttributeValues[scopedCatKey][attributeKey];
   }
 
-  return globalOpts;
+  // Instanciación local vacía para atributos recién vinculados o categorías personalizadas
+  return [];
+}
+
+/**
+ * Retorna todos los Presets Históricos / Maestros disponibles en el Banco Global para un atributo.
+ */
+export function getAttributePresets(
+  config: CatalogConfig,
+  attributeKey: string
+): string[] {
+  return config.attributes[attributeKey]?.options ?? [];
 }
 
 export function inferAttributeKeysForCategory(categoryName: string): string[] {
@@ -358,6 +372,43 @@ export const DEFAULT_CATEGORY_CONFIGS: CategoryConfig[] = [
   },
 ];
 
+export const DEFAULT_CATEGORY_ATTRIBUTE_VALUES: Record<
+  string,
+  Record<string, string[]>
+> = {
+  "Cargadores y Cables": {
+    chargerSubtypes: [...DEFAULT_ATTRIBUTES.chargerSubtypes.options],
+    brands: [...DEFAULT_ATTRIBUTES.brands.options],
+    powers: [...DEFAULT_ATTRIBUTES.powers.options],
+    cableFinishes: [...DEFAULT_ATTRIBUTES.cableFinishes.options],
+  },
+  "Forros / Fundas": {
+    caseMaterials: [...DEFAULT_ATTRIBUTES.caseMaterials.options],
+    caseModels: [...DEFAULT_ATTRIBUTES.caseModels.options],
+  },
+  Audio: {
+    audioModels: [...DEFAULT_ATTRIBUTES.audioModels.options],
+    connections: [...DEFAULT_ATTRIBUTES.connections.options],
+  },
+  "Power Banks / Baterías portatiles": {
+    capacities: [...DEFAULT_ATTRIBUTES.capacities.options],
+    ports: [...DEFAULT_ATTRIBUTES.ports.options],
+  },
+  Celulares: {
+    brands: [...DEFAULT_ATTRIBUTES.brands.options],
+    storageCapacities: [...DEFAULT_ATTRIBUTES.storageCapacities.options],
+    colors: [...DEFAULT_ATTRIBUTES.colors.options],
+  },
+  Perfumes: {
+    perfumeVolumes: [...DEFAULT_ATTRIBUTES.perfumeVolumes.options],
+    perfumeTypes: [...DEFAULT_ATTRIBUTES.perfumeTypes.options],
+  },
+  Streaming: {
+    streamingPlatforms: [...DEFAULT_ATTRIBUTES.streamingPlatforms.options],
+    streamingDurations: [...DEFAULT_ATTRIBUTES.streamingDurations.options],
+  },
+};
+
 export const DEFAULT_CATALOG_CONFIG: CatalogConfig = {
   categoryOrder: [
     "Cargadores y Cables",
@@ -370,7 +421,7 @@ export const DEFAULT_CATALOG_CONFIG: CatalogConfig = {
   ],
   categories: DEFAULT_CATEGORY_CONFIGS,
   attributes: DEFAULT_ATTRIBUTES,
-  categoryAttributeValues: {},
+  categoryAttributeValues: DEFAULT_CATEGORY_ATTRIBUTE_VALUES,
 };
 
 /**
@@ -517,6 +568,18 @@ export function mergeWithDefaultCatalogConfig(
 
   // 4. Opciones de atributos aisladas por categoría (Scoping sin contaminación)
   const mergedCategoryValues: Record<string, Record<string, string[]>> = {};
+
+  // Inicializar primero con las 7 categorías base de fábrica para garantizar cero rompimiento
+  for (const [catName, attrMap] of Object.entries(
+    DEFAULT_CATEGORY_ATTRIBUTE_VALUES
+  )) {
+    mergedCategoryValues[catName] = {};
+    for (const [attrKey, opts] of Object.entries(attrMap)) {
+      mergedCategoryValues[catName][attrKey] = [...opts];
+    }
+  }
+
+  // Superponer valores almacenados por el usuario
   if (
     stored.categoryAttributeValues &&
     typeof stored.categoryAttributeValues === "object"
@@ -527,7 +590,9 @@ export function mergeWithDefaultCatalogConfig(
       if (attrMap && typeof attrMap === "object") {
         const cleanCatName = normalizeCatalogText(catName);
         if (!cleanCatName) continue;
-        mergedCategoryValues[cleanCatName] = {};
+        if (!mergedCategoryValues[cleanCatName]) {
+          mergedCategoryValues[cleanCatName] = {};
+        }
         for (const [attrKey, opts] of Object.entries(attrMap)) {
           if (Array.isArray(opts)) {
             const cleanOpts: string[] = [];

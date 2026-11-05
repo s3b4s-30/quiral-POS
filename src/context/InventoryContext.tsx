@@ -190,6 +190,11 @@ interface InventoryContextType {
     categoryName: ProductCategory,
     attributeKey: string
   ) => void;
+  importAttributePresetsToCategory: (
+    categoryName: ProductCategory,
+    attributeKey: string,
+    presetOptions: string[]
+  ) => void;
   createCustomAttribute: (
     label: string,
     initialOptions?: string[]
@@ -1058,14 +1063,29 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   ) => {
     if (attributeKeys.length === 0) return;
     setCatalogConfig((prev) => {
+      const cleanCat = normalizeCatalogText(categoryName);
       const nextCategories = prev.categories.map((c) =>
         isSameCatalogText(c.name, categoryName)
           ? { ...c, attributeKeys: [...attributeKeys] }
           : c
       );
+
+      // Instanciación local vacía y aislada para cualquier atributo recién vinculado
+      const currentCatValues = prev.categoryAttributeValues?.[cleanCat] || {};
+      const nextCatValues = { ...currentCatValues };
+      for (const key of attributeKeys) {
+        if (nextCatValues[key] === undefined) {
+          nextCatValues[key] = [];
+        }
+      }
+
       const next: CatalogConfig = {
         ...prev,
         categories: nextCategories,
+        categoryAttributeValues: {
+          ...prev.categoryAttributeValues,
+          [cleanCat]: nextCatValues,
+        },
       };
       persistCatalogConfig(next);
       return next;
@@ -1097,8 +1117,24 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       }
 
       const cleanCat = normalizeCatalogText(categoryName);
+
+      // Enriquecer el banco maestro de Presets Históricos si la opción aún no está en él
+      const isAlreadyInPresets = currentAttr.options.some((opt) =>
+        isSameCatalogText(opt, cleanOpt)
+      );
+      const nextPresets = isAlreadyInPresets
+        ? currentAttr.options
+        : [...currentAttr.options, cleanOpt];
+
       const nextConfig: CatalogConfig = {
         ...catalogConfig,
+        attributes: {
+          ...catalogConfig.attributes,
+          [attributeKey]: {
+            ...currentAttr,
+            options: nextPresets,
+          },
+        },
         categoryAttributeValues: {
           ...catalogConfig.categoryAttributeValues,
           [cleanCat]: {
@@ -1327,6 +1363,44 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       categoryAttributeValues: {
         ...catalogConfig.categoryAttributeValues,
         [cleanCat]: nextCatValues,
+      },
+    };
+    setCatalogConfig(nextConfig);
+    persistCatalogConfig(nextConfig);
+  };
+
+  const importAttributePresetsToCategory = (
+    categoryName: ProductCategory,
+    attributeKey: string,
+    presetOptions: string[]
+  ) => {
+    const cleanCat = normalizeCatalogText(categoryName);
+    const currentOpts = getEffectiveAttributeOptions(
+      catalogConfig,
+      categoryName,
+      attributeKey
+    );
+    const toAdd: string[] = [];
+    for (const p of presetOptions) {
+      const norm = normalizeCatalogText(p);
+      if (
+        norm &&
+        !currentOpts.some((o) => isSameCatalogText(o, norm)) &&
+        !toAdd.some((o) => isSameCatalogText(o, norm))
+      ) {
+        toAdd.push(norm);
+      }
+    }
+    if (toAdd.length === 0) return;
+
+    const nextConfig: CatalogConfig = {
+      ...catalogConfig,
+      categoryAttributeValues: {
+        ...catalogConfig.categoryAttributeValues,
+        [cleanCat]: {
+          ...(catalogConfig.categoryAttributeValues?.[cleanCat] || {}),
+          [attributeKey]: [...currentOpts, ...toAdd],
+        },
       },
     };
     setCatalogConfig(nextConfig);
@@ -1872,6 +1946,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         deleteAttributeOption,
         reorderAttributeOptions,
         resetCategoryAttributeOptionsToGlobal,
+        importAttributePresetsToCategory,
         createCustomAttribute,
         resetCatalogConfigToDefault,
         signOut,
