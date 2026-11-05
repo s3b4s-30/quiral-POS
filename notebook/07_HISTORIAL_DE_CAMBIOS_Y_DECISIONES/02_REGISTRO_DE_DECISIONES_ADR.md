@@ -171,3 +171,22 @@
 - **Consecuencias:**
   - _Positivas:_ Textos nítidos y legibles a distancia de mostrador sin fatiga visual ni aberración cromática. Estética profesional de alta gama tipo Linear/Apple.
   - _Negativas:_ Ninguna detectada.
+
+---
+
+## ADR-011: Blindaje contra Regresiones de Catálogo y Ergonomía Desktop (Atributos Opcionales, Aislamiento de Presets y No-Modales)
+
+- **Estado:** Aceptado.
+- **Fecha:** 2026-11-05
+- **Contexto:**  
+  La introducción inadvertida de selecciones forzadas de atributos dinámicos (`opts[0]`), la mutación indiscriminada del Banco Maestro de Atributos al añadir opciones en categorías específicas, la duplicación instantánea sin edición en la tabla de inventario y la reintroducción de modales táctiles o iconografía no profesional (`Sparkles`) generaron fricción en la experiencia de mostrador de escritorio y contaminación de datos.
+- **Decisión:**
+  1. **Atributos 100% Opcionales:** Prohibir la asignación forzada de valores por defecto en creación de productos. El usuario puede desmarcar cualquier chip de opción y el título autogenerado solo incorpora atributos explícitamente elegidos.
+  2. **Aislamiento Estricto de Presets:** La mutación de opciones por categoría solo afecta a `categoryAttributeValues`; el Banco Global (`catalogConfig.attributes`) permanece inmutable salvo acción directa en su vista de administración.
+  3. **Clonación Editable Obligatoria:** El botón `<Copy />` de la tabla de inventario debe transferir la referencia a `DesktopNewProductModal` con campos precargados y nombre `${nombre} (Copia)`, permitiendo ajustes antes de guardar.
+  4. **Prohibición de Modales Móviles en Escritorio:** En pantallas `>= 768px`, las operaciones de creación y configuración se realizan siempre en Vistas Completas / Estaciones Split-Layout.
+  5. **Limpieza Visual de IDs Internos:** Erradicar cualquier renderizado de `{attr.key}` técnico en vistas de usuario.
+  6. **Prohibición Total de `Sparkles` / ✨:** Uso exclusivo de `<Zap />` o iconografía semántica funcional.
+- **Consecuencias:**
+  - _Positivas:_ Catálogo inmaculado sin contaminación cruzada entre categorías, títulos técnicos limpios, cero duplicaciones accidentales y respeto irrestricto al Platform Split.
+  - _Negativas:_ Ninguna. Los flujos de escritorio se benefician de mayor control y claridad operativa.

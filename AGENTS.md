@@ -63,6 +63,14 @@ La sección `[Historial de Descarte]` en [`DESIGN_GUIDELINES.md`](./DESIGN_GUIDE
 > - Controles duplicados o desbordados de «Modo administrador».
 > - Semillas artificiales masivas de ventas (`demo-sale-1..118` / ventas 1000+) en el historial.
 > - Ocultamiento cosmético con CSS (`md:hidden`) para componentes móviles en escritorio; se debe usar siempre el **Platform Split** físico mediante `useIsDesktop.ts`.
+> - **Íconos de destellos o estrellas tipo IA genérica (`Sparkles`, ✨, glitters):** PROHIBIDO en toda la interfaz. Quiral POS es una herramienta de mostrador seria y profesional; utilizar exclusivamente `<Zap />` de `lucide-react` para acciones inteligentes/rápidas o íconos funcionales directos.
+> - **Modales móviles en escritorio (`ModalSheet`, Bottom Sheets táctiles en PC):** PROHIBIDO renderizar modales táctiles angostos para crear o gestionar datos en Desktop (`>= 768px`). Utilizar siempre Vistas Completas o Estaciones de Trabajo Split-Layout (`DesktopNewProductModal`, `DesktopCategoryManagerView`, `DesktopSuppliersView`, `DesktopStoreProfileView`).
+> - **Preselección forzada de atributos dinámicos:** PROHIBIDO forzar valores por defecto (`opts[0]`). Todo atributo dinámico es 100% opcional; el usuario debe poder alternarlo (toggle) o desmarcarlo explícitamente sin que contamine el título ni las propiedades del producto.
+> - **Contaminación del Banco Global de Catálogo:** PROHIBIDO mutar o inyectar opciones al Banco Maestro (`catalogConfig.attributes`) al crear o modificar atributos de una categoría específica; el alcance debe quedar estrictamente aislado en `categoryAttributeValues`.
+> - **Clonación ciega de inventario:** PROHIBIDO invocar `addProduct` de forma inmediata e irreversible desde el botón `<Copy />` de la tabla de inventario. Se debe abrir siempre `DesktopNewProductModal` con los datos precargados para permitir su ajuste antes de registrar.
+> - **Exposición de IDs internos o claves crudas en UI:** PROHIBIDO mostrar `{attr.key}` (ej. `chargersubtypes`, `brands`, `powers`) de cara al usuario. La interfaz debe presentar exclusivamente nombres legibles (`attr.label`).
+> - **Cierre prematuro de paneles en selección múltiple:** PROHIBIDO cerrar popovers de vinculación de atributos o presets al pulsar un solo chip; deben mantenerse abiertos para posibilitar asociaciones consecutivas fluidas hasta su cierre voluntario con `(X)`.
+> - **Inconsistencia de botones primarios:** Obligatorio el uso de la clase centralizada `PRIMARY_ACTION_BTN_CLASS` en botones de confirmación, guardado y creación en escritorio para garantizar coherencia visual (altura, `rounded-xl`, hover glow y micro-interacción `active:scale-95`).
 
 ---
 
