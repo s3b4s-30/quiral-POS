@@ -3,14 +3,13 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  Bookmark,
   Check,
   Info,
   Minus,
   Plus,
   Sliders,
-  Sparkles,
   Tag,
-  Wand2,
   X,
   Zap,
 } from "lucide-react";
@@ -667,7 +666,7 @@ export default function DesktopNewProductModal({
                                 }`}
                                 title="Ver Presets Históricos disponibles para este atributo"
                               >
-                                <Sparkles
+                                <Bookmark
                                   size={11}
                                   className={
                                     isPresetsOpen ? "text-white" : "text-accent"
@@ -719,7 +718,7 @@ export default function DesktopNewProductModal({
                             >
                               <div className="flex items-center justify-between border-b border-white/10 pb-2">
                                 <div className="flex items-center gap-1.5">
-                                  <Sparkles size={13} className="text-accent" />
+                                  <Bookmark size={13} className="text-accent" />
                                   <span className="text-xs font-black text-white">
                                     Presets Históricos: {label}
                                   </span>
@@ -806,7 +805,7 @@ export default function DesktopNewProductModal({
                               onClick={() => setOpenPresetsAttrKey(attrKey)}
                               className="inline-flex items-center gap-1 text-accent font-bold hover:underline cursor-pointer"
                             >
-                              <Sparkles size={11} />
+                              <Bookmark size={11} />
                               <span>Abrir Presets</span>
                             </button>
                           </div>
@@ -944,7 +943,7 @@ export default function DesktopNewProductModal({
         {/* COLUMNA DERECHA (5 cols): Panel Fijo de Control y Datos Críticos */}
         <div className="md:col-span-5 flex flex-col min-h-0 overflow-y-auto custom-scrollbar rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md p-6 space-y-5 justify-between shadow-2xl">
           <div className="space-y-5">
-            {/* SECCIÓN C: Nombre Comercial y Switch de Autogeneración (Wand2 Icon) */}
+            {/* SECCIÓN C: Nombre Comercial y Switch de Autogeneración (Zap Icon) */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
@@ -966,7 +965,10 @@ export default function DesktopNewProductModal({
                       : "border-white/10 bg-white/5 text-[var(--text-secondary)]"
                   }`}
                 >
-                  <Wand2 size={12} />
+                  <Zap
+                    size={12}
+                    className={autoGenerateName ? "fill-accent/20" : ""}
+                  />
                   <span>{autoGenerateName ? "Autogenerado" : "Manual"}</span>
                 </button>
               </div>

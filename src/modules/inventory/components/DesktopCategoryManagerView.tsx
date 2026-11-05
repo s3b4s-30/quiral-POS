@@ -3,13 +3,13 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  Bookmark,
   Check,
   Minus,
   Pencil,
   Plus,
   RotateCcw,
   Sliders,
-  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
@@ -1258,7 +1258,7 @@ export default function DesktopCategoryManagerView({
                     }`}
                     title="Ver Presets Históricos disponibles en el Banco Global"
                   >
-                    <Sparkles size={12} />
+                    <Bookmark size={12} />
                     <span>Presets Disponibles ({availablePresets.length})</span>
                   </button>
                 </div>
@@ -1272,7 +1272,7 @@ export default function DesktopCategoryManagerView({
                 >
                   <div className="flex items-center justify-between border-b border-white/10 pb-2">
                     <div className="flex items-center gap-1.5">
-                      <Sparkles size={13} className="text-accent" />
+                      <Bookmark size={13} className="text-accent" />
                       <span className="text-xs font-black text-white">
                         Presets Históricos: {activeAttr?.label || activeAttrKey}
                       </span>
@@ -1351,7 +1351,7 @@ export default function DesktopCategoryManagerView({
             <div className="flex-1 overflow-y-auto mt-3 space-y-2 pr-1 custom-scrollbar min-h-0">
               {effectiveOptions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-white/10 bg-white/[0.015] text-center space-y-2">
-                  <Sparkles size={22} className="text-accent opacity-60" />
+                  <Bookmark size={22} className="text-accent opacity-60" />
                   <p className="text-xs font-bold text-white">
                     Sin valores locales en «{selectedCategory}»
                   </p>
