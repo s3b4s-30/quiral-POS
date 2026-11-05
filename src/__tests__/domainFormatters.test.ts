@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  foldDiacritics,
   formatCOP,
   formatDateWithTime,
   formatFullDate,
@@ -144,6 +145,28 @@ describe("Utilidades del Dominio — Formatters Universales", () => {
       expect(status.status).toBe("expired");
       expect(status.remainingDays).toBe(0);
       expect(status.progressPct).toBe(0);
+    });
+  });
+  describe("foldDiacritics", () => {
+    it("debe remover tildes y acentos manteniendo texto en minúsculas", () => {
+      expect(foldDiacritics("Cámara")).toBe("camara");
+      expect(foldDiacritics("Silicona Líquida")).toBe("silicona liquida");
+      expect(foldDiacritics("Batería Portátil")).toBe("bateria portatil");
+      expect(foldDiacritics("Andrés Gómez")).toBe("andres gomez");
+      expect(foldDiacritics("USB-C 20W")).toBe("usb-c 20w");
+    });
+
+    it("debe manejar valores nulos, vacíos o indefinidos de forma segura", () => {
+      expect(foldDiacritics(null)).toBe("");
+      expect(foldDiacritics(undefined)).toBe("");
+      expect(foldDiacritics("")).toBe("");
+      expect(foldDiacritics("   ")).toBe("");
+    });
+
+    it("debe ignorar diferencias entre términos con y sin tildes para búsqueda en mostrador", () => {
+      const query = foldDiacritics("rapida");
+      const target = foldDiacritics("Carga Rápida");
+      expect(target.includes(query)).toBe(true);
     });
   });
 });

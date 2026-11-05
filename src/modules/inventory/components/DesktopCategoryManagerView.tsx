@@ -27,6 +27,12 @@ import {
   isSameCatalogText,
   normalizeCatalogText,
 } from "../../../utils/catalogConfig";
+import {
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TERTIARY,
+  PRIMARY_ACTION_BTN_CLASS,
+} from "../../../constants/uiButtons";
 
 export interface DesktopCategoryManagerViewProps {
   onBack: () => void;
@@ -38,9 +44,6 @@ export interface DesktopCategoryManagerViewProps {
  * Cero Scroll Horizontal (100% vertical y adaptativo), Platform Split (>= 768px),
  * Paleta Dual OLED (#000000) y consistencia total con el Banco Maestro de Catálogo.
  */
-// Estándar de diseño para botones de acción principal, creación y guardado (Design System UI)
-const PRIMARY_ACTION_BTN_CLASS =
-  "inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-accent-glow active:scale-95 transition-all duration-150 cursor-pointer select-none disabled:opacity-50 disabled:pointer-events-none shrink-0 tabular-nums";
 
 export default function DesktopCategoryManagerView({
   onBack,
@@ -144,11 +147,8 @@ export default function DesktopCategoryManagerView({
     isSameCatalogText(c.name, selectedCategory)
   );
   const categoryAttrKeys = useMemo(() => {
-    return (
-      currentCategoryConfig?.attributeKeys ??
-      inferAttributeKeysForCategory(selectedCategory)
-    );
-  }, [currentCategoryConfig, selectedCategory]);
+    return currentCategoryConfig?.attributeKeys ?? [];
+  }, [currentCategoryConfig]);
 
   // Atributos del banco maestro disponibles en todo el catálogo global
   const allAttributesList = Object.values(catalogConfig.attributes);
@@ -255,7 +255,7 @@ export default function DesktopCategoryManagerView({
       return;
     }
 
-    const created = addCategory(clean, inferAttributeKeysForCategory(clean));
+    const created = addCategory(clean, []);
     if (created) {
       setDraftOrder((prev) => [...prev, created.name]);
       setSelectedCategory(created.name);
@@ -573,14 +573,14 @@ export default function DesktopCategoryManagerView({
       {/* ======================================================== */}
       {/* CABECERA SUPERIOR: Título, Switch de Enfoque y Acciones */}
       {/* ======================================================== */}
-      <div className="shrink-0 border-b border-white/10 bg-black/60 backdrop-blur-md px-5 lg:px-6 py-2.5 flex items-center justify-between gap-4 shadow-2xl">
+      <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-primary)] px-5 lg:px-6 py-2.5 flex items-center justify-between gap-4 shadow-xs">
         <div className="flex items-center gap-3 shrink-0">
           <button
             type="button"
             data-testid="back-category-manager-btn"
             aria-label="Regresar al Inventario"
             onClick={handleSaveAndClose}
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all cursor-pointer"
           >
             <ArrowLeft size={16} />
             <span>Regresar</span>
@@ -599,7 +599,7 @@ export default function DesktopCategoryManagerView({
         </div>
 
         {/* SWITCH / TOGGLE DE ENFOQUE (Estilo Apple HIG / Linear) */}
-        <div className="flex items-center p-1 rounded-xl bg-white/[0.04] border border-white/10 backdrop-blur-md shrink-0">
+        <div className="flex items-center p-1 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-color)] shrink-0">
           <button
             type="button"
             data-testid="mode-tab-categories"
@@ -610,7 +610,7 @@ export default function DesktopCategoryManagerView({
             className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               viewMode === "categories"
                 ? "bg-accent text-white shadow-xs"
-                : "text-[var(--text-secondary)] hover:text-white hover:bg-white/5"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5"
             }`}
           >
             <FolderTree size={14} />
@@ -629,7 +629,7 @@ export default function DesktopCategoryManagerView({
             className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               viewMode === "presets"
                 ? "bg-accent text-white shadow-xs"
-                : "text-[var(--text-secondary)] hover:text-white hover:bg-white/5"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5"
             }`}
           >
             <Bookmark size={14} />
@@ -646,7 +646,7 @@ export default function DesktopCategoryManagerView({
             type="button"
             onClick={handleResetDefaults}
             title="Restablecer categorías y orden de fábrica"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all cursor-pointer"
+            className={BTN_TERTIARY}
           >
             <RotateCcw size={14} />
             <span>Restablecer Fábrica</span>
@@ -656,7 +656,7 @@ export default function DesktopCategoryManagerView({
             data-testid="save-category-order-btn"
             aria-label="Guardar orden de categorías"
             onClick={handleSaveAndClose}
-            className={PRIMARY_ACTION_BTN_CLASS}
+            className={BTN_PRIMARY}
           >
             <Check size={14} strokeWidth={2.5} />
             <span>Guardar y Confirmar</span>
@@ -717,7 +717,7 @@ export default function DesktopCategoryManagerView({
             <button
               type="button"
               onClick={() => setCategoryPendingDelete(null)}
-              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent"
+              className={BTN_TERTIARY}
             >
               Cancelar
             </button>
@@ -742,8 +742,8 @@ export default function DesktopCategoryManagerView({
             {/* ======================================================== */}
             {/* COLUMNA 1 (IZQUIERDA): Listado de Categorías             */}
             {/* ======================================================== */}
-            <div className="flex flex-col h-full rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md p-4 shadow-2xl overflow-hidden min-h-0">
-              <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
+            <div className="flex flex-col h-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-sm overflow-hidden min-h-0">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)] shrink-0">
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
                     1. Categorías ({draftOrder.length})
@@ -754,8 +754,10 @@ export default function DesktopCategoryManagerView({
                 </div>
                 <button
                   type="button"
+                  data-testid="create-category-btn"
                   onClick={() => setIsCreatingCategory((prev) => !prev)}
-                  className={PRIMARY_ACTION_BTN_CLASS}
+                  className={BTN_SECONDARY}
+                  title="Crear una nueva categoría de catálogo"
                 >
                   <Plus size={14} strokeWidth={2.5} />
                   <span>Nueva Categoría</span>
@@ -774,7 +776,7 @@ export default function DesktopCategoryManagerView({
                     onChange={(e) => setNewCategoryName(e.target.value)}
                     placeholder="Ej. Accesorios, Fundas..."
                     autoFocus
-                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <div className="flex items-center justify-end gap-2 pt-1">
                     <button
@@ -783,14 +785,14 @@ export default function DesktopCategoryManagerView({
                         setIsCreatingCategory(false);
                         setNewCategoryName("");
                       }}
-                      className="px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      className={BTN_TERTIARY}
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
                       disabled={!newCategoryName.trim()}
-                      className={PRIMARY_ACTION_BTN_CLASS}
+                      className={BTN_PRIMARY}
                     >
                       <Plus size={14} strokeWidth={2.5} />
                       <span>Crear Categoría</span>
@@ -906,9 +908,9 @@ export default function DesktopCategoryManagerView({
             {/* ======================================================== */}
             {/* COLUMNA 2 (CENTRO): Atributos de la Categoría Activa     */}
             {/* ======================================================== */}
-            <div className="flex flex-col h-full rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md p-4 shadow-2xl overflow-hidden min-h-0">
+            <div className="flex flex-col h-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-sm overflow-hidden min-h-0">
               {/* Cabecera de Columna 2 */}
-              <div className="pb-3 border-b border-white/10 shrink-0">
+              <div className="pb-3 border-b border-[var(--border-color)] shrink-0">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <h3 className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
@@ -930,7 +932,7 @@ export default function DesktopCategoryManagerView({
                         className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
                           isLinkingAttrOpen
                             ? "border-accent bg-accent text-white shadow-xs"
-                            : "border-white/10 bg-white/5 text-[var(--text-primary)] hover:border-accent/40"
+                            : "border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] hover:border-accent/40"
                         }`}
                         title="Vincular un atributo del Banco Maestro a esta categoría"
                       >
@@ -945,7 +947,7 @@ export default function DesktopCategoryManagerView({
                         setIsCreatingAttribute((prev) => !prev);
                         setIsLinkingAttrOpen(false);
                       }}
-                      className={PRIMARY_ACTION_BTN_CLASS}
+                      className={BTN_SECONDARY}
                       title="Crear un nuevo atributo personalizado"
                     >
                       <Plus size={14} strokeWidth={2.5} />
@@ -963,17 +965,19 @@ export default function DesktopCategoryManagerView({
               {isLinkingAttrOpen && availableAttrsToLink.length > 0 && (
                 <div
                   data-testid="link-attr-popover"
-                  className="mt-3 p-3 rounded-2xl border border-accent/40 bg-black/90 backdrop-blur-md space-y-2 shadow-2xl animate-in fade-in duration-150 shrink-0"
+                  className="mt-3 p-3 rounded-2xl border border-accent/40 bg-[var(--bg-elevated)]/95 backdrop-blur-md space-y-2 shadow-2xl animate-in fade-in duration-150 shrink-0"
                 >
-                  <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-                    <div className="flex items-center gap-1.5 text-xs font-black text-white">
+                  <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-1.5">
+                    <div className="flex items-center gap-1.5 text-xs font-black text-[var(--text-primary)]">
                       <Bookmark size={12} className="text-accent" />
                       <span>Vincular del Banco Maestro:</span>
                     </div>
                     <button
                       type="button"
+                      data-testid="close-link-attr-popover"
                       onClick={() => setIsLinkingAttrOpen(false)}
-                      className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 cursor-pointer"
+                      className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
+                      title="Cerrar vinculación de atributos"
                     >
                       <X size={12} />
                     </button>
@@ -986,13 +990,12 @@ export default function DesktopCategoryManagerView({
                         data-testid={`link-attr-chip-${attr.key}`}
                         onClick={() => {
                           addCategoryAttr(attr.key);
-                          setIsLinkingAttrOpen(false);
                         }}
-                        className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 hover:border-accent hover:bg-accent/20 hover:text-white px-2.5 py-1 text-[11px] font-bold text-white/80 transition-all cursor-pointer active:scale-95"
+                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] hover:border-accent hover:bg-accent/15 hover:text-accent px-2.5 py-1 text-[11px] font-bold text-[var(--text-primary)] transition-all cursor-pointer active:scale-95"
                       >
                         <Plus size={11} className="text-accent" />
                         <span>{attr.label}</span>
-                        <span className="text-[10px] text-zinc-400">
+                        <span className="text-[10px] text-[var(--text-secondary)]">
                           ({attr.options.length})
                         </span>
                       </button>
@@ -1016,14 +1019,14 @@ export default function DesktopCategoryManagerView({
                     onChange={(e) => setNewAttributeLabel(e.target.value)}
                     placeholder="Nombre (ej. Material, Conexión, Potencia...)"
                     autoFocus
-                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <input
                     type="text"
                     value={newAttributeFirstOption}
                     onChange={(e) => setNewAttributeFirstOption(e.target.value)}
                     placeholder="Primera opción / valor (opcional)"
-                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <div className="flex items-center justify-between pt-1">
                     <button
@@ -1049,14 +1052,14 @@ export default function DesktopCategoryManagerView({
                           setNewAttributeLabel("");
                           setNewAttributeFirstOption("");
                         }}
-                        className="px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                        className={BTN_TERTIARY}
                       >
                         Cancelar
                       </button>
                       <button
                         type="submit"
                         disabled={!newAttributeLabel.trim()}
-                        className={PRIMARY_ACTION_BTN_CLASS}
+                        className={BTN_PRIMARY}
                       >
                         <Plus size={14} strokeWidth={2.5} />
                         <span>
@@ -1073,9 +1076,12 @@ export default function DesktopCategoryManagerView({
               {/* Listado Vertical de Atributos Activos Vinculados */}
               <div className="flex-1 overflow-y-auto mt-3 space-y-2 pr-1 custom-scrollbar min-h-0">
                 {categoryAttrKeys.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-white/10 bg-white/[0.015] text-center space-y-2">
-                    <Bookmark size={22} className="text-zinc-500 opacity-60" />
-                    <p className="text-xs font-bold text-white">
+                  <div className="flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-[var(--border-color)] bg-[var(--bg-primary)] text-center space-y-2">
+                    <Bookmark
+                      size={22}
+                      className="text-[var(--text-secondary)] opacity-60"
+                    />
+                    <p className="text-xs font-bold text-[var(--text-primary)]">
                       Sin atributos vinculados
                     </p>
                     <p className="text-[11px] text-[var(--text-secondary)] max-w-xs">
@@ -1157,9 +1163,8 @@ export default function DesktopCategoryManagerView({
                             type="button"
                             aria-label={`Desvincular atributo ${attr?.label || key}`}
                             onClick={() => removeCategoryAttr(key)}
-                            disabled={categoryAttrKeys.length <= 1}
                             title="Desvincular atributo de esta categoría"
-                            className="p-1.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 hover:bg-red-500/10 disabled:opacity-20 active:scale-95 transition-all cursor-pointer"
+                            className="p-1.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
                           >
                             <Trash2 size={13} />
                           </button>
@@ -1176,7 +1181,7 @@ export default function DesktopCategoryManagerView({
                   <button
                     type="button"
                     onClick={() => setIsLinkingAttrOpen(true)}
-                    className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl border border-dashed border-white/10 hover:border-accent/40 bg-white/[0.02] hover:bg-white/[0.04] text-xs font-bold text-accent transition-all cursor-pointer"
+                    className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl border border-dashed border-[var(--border-color)] hover:border-accent/40 bg-[var(--bg-primary)] hover:bg-[var(--bg-elevated)] text-xs font-bold text-accent transition-all cursor-pointer"
                   >
                     <Plus size={12} />
                     <span>
@@ -1191,9 +1196,9 @@ export default function DesktopCategoryManagerView({
             {/* ======================================================== */}
             {/* COLUMNA 3 (DERECHA): Valores del Atributo Seleccionado   */}
             {/* ======================================================== */}
-            <div className="flex flex-col h-full rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md p-4 shadow-2xl overflow-hidden min-h-0">
+            <div className="flex flex-col h-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-sm overflow-hidden min-h-0">
               {/* Cabecera de Columna 3 */}
-              <div className="pb-3 border-b border-white/10 shrink-0">
+              <div className="pb-3 border-b border-[var(--border-color)] shrink-0">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
@@ -1242,12 +1247,12 @@ export default function DesktopCategoryManagerView({
                     value={newOptionInput}
                     onChange={(e) => setNewOptionInput(e.target.value)}
                     placeholder="Nueva opción..."
-                    className="flex-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="flex-1 min-w-0 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <button
                     type="submit"
                     disabled={!newOptionInput.trim()}
-                    className={PRIMARY_ACTION_BTN_CLASS}
+                    className={BTN_PRIMARY}
                   >
                     <Plus size={14} strokeWidth={2.5} />
                     <span>Agregar</span>
@@ -1280,12 +1285,12 @@ export default function DesktopCategoryManagerView({
                 {activeScopeCategory && isPresetsPopoverOpen && (
                   <div
                     data-testid="manager-presets-popover"
-                    className="mt-2.5 rounded-2xl border border-accent/40 bg-black/90 backdrop-blur-md p-3.5 space-y-2.5 shadow-2xl animate-in fade-in duration-150 shrink-0"
+                    className="mt-2.5 rounded-2xl border border-accent/40 bg-[var(--bg-elevated)]/95 backdrop-blur-md p-3.5 space-y-2.5 shadow-2xl animate-in fade-in duration-150 shrink-0"
                   >
-                    <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                    <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-2">
                       <div className="flex items-center gap-1.5">
                         <Bookmark size={13} className="text-accent" />
-                        <span className="text-xs font-black text-white">
+                        <span className="text-xs font-black text-[var(--text-primary)]">
                           Presets Históricos:{" "}
                           {activeAttr?.label || activeAttrKey}
                         </span>
@@ -1318,7 +1323,7 @@ export default function DesktopCategoryManagerView({
                         <button
                           type="button"
                           onClick={() => setIsPresetsPopoverOpen(false)}
-                          className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 cursor-pointer"
+                          className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
                         >
                           <X size={12} />
                         </button>
@@ -1348,7 +1353,7 @@ export default function DesktopCategoryManagerView({
                                 `Preset "${preset}" añadido a «${selectedCategory}».`
                               );
                             }}
-                            className="inline-flex items-center gap-1 rounded-lg border border-dashed border-white/20 bg-white/5 hover:border-accent hover:bg-accent/20 hover:text-white px-2.5 py-1 text-[11px] font-semibold text-white/80 transition-all cursor-pointer select-none active:scale-95"
+                            className="inline-flex items-center gap-1 rounded-lg border border-dashed border-[var(--border-color)] bg-[var(--bg-primary)] hover:border-accent hover:bg-accent/15 hover:text-accent px-2.5 py-1 text-[11px] font-semibold text-[var(--text-primary)] transition-all cursor-pointer select-none active:scale-95"
                           >
                             <Plus size={11} className="text-accent" />
                             <span>{preset}</span>
@@ -1363,9 +1368,9 @@ export default function DesktopCategoryManagerView({
               {/* Listado Vertical Scrollable de Opciones */}
               <div className="flex-1 overflow-y-auto mt-3 space-y-2 pr-1 custom-scrollbar min-h-0">
                 {effectiveOptions.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-white/10 bg-white/[0.015] text-center space-y-2">
+                  <div className="flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-[var(--border-color)] bg-[var(--bg-primary)] text-center space-y-2">
                     <Bookmark size={22} className="text-accent opacity-60" />
-                    <p className="text-xs font-bold text-white">
+                    <p className="text-xs font-bold text-[var(--text-primary)]">
                       Sin valores locales en «{selectedCategory}»
                     </p>
                     <p className="text-[11px] text-[var(--text-secondary)] max-w-xs">
@@ -1407,14 +1412,14 @@ export default function DesktopCategoryManagerView({
                             <button
                               type="button"
                               onClick={() => handleSaveEdit(option)}
-                              className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white cursor-pointer shrink-0"
+                              className={BTN_PRIMARY}
                             >
                               Guardar
                             </button>
                             <button
                               type="button"
                               onClick={() => setEditingOption(null)}
-                              className="rounded-lg border border-[var(--border-color)] px-2 py-1 text-xs text-[var(--text-secondary)] cursor-pointer shrink-0"
+                              className={BTN_TERTIARY}
                             >
                               Cancelar
                             </button>
@@ -1494,8 +1499,8 @@ export default function DesktopCategoryManagerView({
           /* ======================================================== */
           <div className="h-full w-full grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-5 min-h-0 overflow-hidden">
             {/* Panel Izquierdo (5 cols): Banco Global de Atributos */}
-            <div className="md:col-span-5 flex flex-col h-full rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md p-4 shadow-2xl overflow-hidden min-h-0">
-              <div className="pb-3 border-b border-white/10 shrink-0">
+            <div className="md:col-span-5 flex flex-col h-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-sm overflow-hidden min-h-0">
+              <div className="pb-3 border-b border-[var(--border-color)] shrink-0">
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
@@ -1515,7 +1520,7 @@ export default function DesktopCategoryManagerView({
                     title="Crear un nuevo atributo maestro en el Banco Global"
                   >
                     <Plus size={14} strokeWidth={2.5} />
-                    <span>+ Atributo Global</span>
+                    <span>Atributo Global</span>
                   </button>
                 </div>
                 <p className="text-[11px] text-[var(--text-secondary)] mt-1">
@@ -1541,7 +1546,7 @@ export default function DesktopCategoryManagerView({
                     onChange={(e) => setNewGlobalAttributeLabel(e.target.value)}
                     placeholder="Nombre (ej. Talla, Voltaje, Capacidad...)"
                     autoFocus
-                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <input
                     type="text"
@@ -1550,7 +1555,7 @@ export default function DesktopCategoryManagerView({
                       setNewGlobalAttributeFirstOption(e.target.value)
                     }
                     placeholder="Primera opción / valor maestro (opcional)"
-                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <div className="flex items-center justify-end gap-2 pt-1">
                     <button
@@ -1560,7 +1565,7 @@ export default function DesktopCategoryManagerView({
                         setNewGlobalAttributeLabel("");
                         setNewGlobalAttributeFirstOption("");
                       }}
-                      className="px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+                      className={BTN_TERTIARY}
                     >
                       Cancelar
                     </button>
@@ -1568,7 +1573,7 @@ export default function DesktopCategoryManagerView({
                       type="submit"
                       data-testid="confirm-create-global-attr-btn"
                       disabled={!newGlobalAttributeLabel.trim()}
-                      className={PRIMARY_ACTION_BTN_CLASS}
+                      className={BTN_PRIMARY}
                     >
                       <Plus size={14} strokeWidth={2.5} />
                       <span>Crear en Banco Global</span>
@@ -1591,16 +1596,13 @@ export default function DesktopCategoryManagerView({
                       className={`group flex items-center justify-between rounded-xl border p-3 transition-all cursor-pointer ${
                         isSelected
                           ? "border-accent bg-accent/15 text-accent shadow-xs ring-1 ring-accent/30"
-                          : "border-white/10 bg-white/[0.02] hover:border-accent/40 text-[var(--text-primary)]"
+                          : "border-[var(--border-color)] bg-[var(--bg-primary)] hover:border-accent/40 text-[var(--text-primary)]"
                       }`}
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-xs truncate">
                             {attr.label}
-                          </span>
-                          <span className="text-[10px] font-mono text-zinc-500 bg-white/5 px-1.5 py-0.5 rounded">
-                            {attr.key}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--text-secondary)]">
@@ -1619,7 +1621,7 @@ export default function DesktopCategoryManagerView({
                         className={
                           isSelected
                             ? "text-accent fill-accent/20"
-                            : "text-zinc-500 opacity-40 group-hover:opacity-100 transition-opacity"
+                            : "text-[var(--text-secondary)] opacity-40 group-hover:opacity-100 transition-opacity"
                         }
                       />
                     </div>
@@ -1629,8 +1631,8 @@ export default function DesktopCategoryManagerView({
             </div>
 
             {/* Panel Derecho (7 cols): Presets Históricos del Atributo Maestro */}
-            <div className="md:col-span-7 flex flex-col h-full rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md p-4 shadow-2xl overflow-hidden min-h-0">
-              <div className="pb-3 border-b border-white/10 shrink-0">
+            <div className="md:col-span-7 flex flex-col h-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-sm overflow-hidden min-h-0">
+              <div className="pb-3 border-b border-[var(--border-color)] shrink-0">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
@@ -1662,15 +1664,15 @@ export default function DesktopCategoryManagerView({
                     value={newOptionInput}
                     onChange={(e) => setNewOptionInput(e.target.value)}
                     placeholder="Nuevo preset maestro para este atributo..."
-                    className="flex-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                    className="flex-1 min-w-0 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent"
                   />
                   <button
                     type="submit"
                     disabled={!newOptionInput.trim()}
-                    className={PRIMARY_ACTION_BTN_CLASS}
+                    className="shrink-0 whitespace-nowrap inline-flex items-center justify-center gap-1.5 rounded-xl border border-[var(--border-color)] bg-transparent hover:bg-black/5 dark:hover:bg-white/5 px-3.5 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all duration-150 cursor-pointer select-none disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Plus size={14} strokeWidth={2.5} />
-                    <span>+ Agregar Preset</span>
+                    <span>Agregar Preset</span>
                   </button>
                 </form>
               </div>
@@ -1682,7 +1684,7 @@ export default function DesktopCategoryManagerView({
                   return (
                     <div
                       key={`${opt}-${idx}`}
-                      className="flex items-center justify-between p-2.5 rounded-xl border border-white/10 bg-white/[0.02] hover:border-white/20 transition-all group"
+                      className="flex items-center justify-between p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] hover:border-accent/40 transition-all group"
                     >
                       {isEditing ? (
                         <div className="flex items-center gap-2 flex-1 mr-2">
@@ -1695,19 +1697,19 @@ export default function DesktopCategoryManagerView({
                               if (e.key === "Enter") handleSaveEdit(opt);
                               if (e.key === "Escape") setEditingOption(null);
                             }}
-                            className="flex-1 rounded-lg border border-accent bg-[var(--bg-elevated)] px-2.5 py-1 text-xs font-bold text-white outline-none"
+                            className="flex-1 rounded-lg border border-accent bg-[var(--bg-elevated)] px-2.5 py-1 text-xs font-bold text-[var(--text-primary)] outline-none"
                           />
                           <button
                             type="button"
                             onClick={() => handleSaveEdit(opt)}
-                            className="rounded-lg bg-accent px-2 py-1 text-xs font-bold text-white hover:bg-accent-hover cursor-pointer shrink-0"
+                            className={BTN_PRIMARY}
                           >
                             Guardar
                           </button>
                           <button
                             type="button"
                             onClick={() => setEditingOption(null)}
-                            className="rounded-lg border border-[var(--border-color)] px-2 py-1 text-xs text-[var(--text-secondary)] cursor-pointer shrink-0"
+                            className={BTN_TERTIARY}
                           >
                             Cancelar
                           </button>
@@ -1717,7 +1719,7 @@ export default function DesktopCategoryManagerView({
                           <span className="tabular-nums text-[10px] text-[var(--text-secondary)] font-mono shrink-0">
                             {idx + 1}.
                           </span>
-                          <span className="text-xs font-bold text-white truncate">
+                          <span className="text-xs font-bold text-[var(--text-primary)] truncate">
                             {opt}
                           </span>
                         </div>
@@ -1729,7 +1731,7 @@ export default function DesktopCategoryManagerView({
                             type="button"
                             onClick={() => moveOption(idx, "up")}
                             disabled={idx === 0}
-                            className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-20 cursor-pointer"
+                            className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-20 cursor-pointer"
                           >
                             <ArrowUp size={12} />
                           </button>
@@ -1737,7 +1739,7 @@ export default function DesktopCategoryManagerView({
                             type="button"
                             onClick={() => moveOption(idx, "down")}
                             disabled={idx === effectiveOptions.length - 1}
-                            className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-20 cursor-pointer"
+                            className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-20 cursor-pointer"
                           >
                             <ArrowDown size={12} />
                           </button>
@@ -1747,7 +1749,7 @@ export default function DesktopCategoryManagerView({
                               setEditingOption(opt);
                               setEditingValue(opt);
                             }}
-                            className="p-1 rounded-lg text-zinc-400 hover:text-accent hover:bg-accent/10 cursor-pointer"
+                            className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-accent hover:bg-accent/10 cursor-pointer"
                           >
                             <Pencil size={12} />
                           </button>
@@ -1755,7 +1757,7 @@ export default function DesktopCategoryManagerView({
                             type="button"
                             onClick={() => handleDeleteOption(opt)}
                             disabled={effectiveOptions.length <= 1}
-                            className="p-1 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-20 cursor-pointer"
+                            className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-red-400 hover:bg-red-500/10 disabled:opacity-20 cursor-pointer"
                           >
                             <Trash2 size={12} />
                           </button>
@@ -1767,7 +1769,7 @@ export default function DesktopCategoryManagerView({
               </div>
 
               {/* Pie con Categorías Vinculadas */}
-              <div className="mt-3 pt-3 border-t border-white/10 shrink-0 flex items-center justify-between text-xs text-[var(--text-secondary)]">
+              <div className="mt-3 pt-3 border-t border-[var(--border-color)] shrink-0 flex items-center justify-between text-xs text-[var(--text-secondary)]">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="font-bold">
                     Categorías que usan este atributo:
@@ -1777,7 +1779,7 @@ export default function DesktopCategoryManagerView({
                     .map((c) => (
                       <span
                         key={c.name}
-                        className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[11px] text-zinc-300 font-medium"
+                        className="px-2 py-0.5 rounded-md bg-[var(--bg-elevated)] border border-[var(--border-color)] text-[11px] text-[var(--text-secondary)] font-medium"
                       >
                         {c.name}
                       </span>
@@ -1785,7 +1787,7 @@ export default function DesktopCategoryManagerView({
                   {catalogConfig.categories.filter((c) =>
                     c.attributeKeys.includes(activeAttrKey)
                   ).length === 0 && (
-                    <span className="italic text-zinc-500">
+                    <span className="italic text-[var(--text-secondary)]">
                       No vinculado a ninguna categoría todavía.
                     </span>
                   )}

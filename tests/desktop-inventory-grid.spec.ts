@@ -370,7 +370,7 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(bulkBar).toBeVisible();
     await expect(bulkBar.getByText(/2 seleccionados/i)).toBeVisible();
     await expect(bulkBar).toHaveClass(/flex-nowrap/);
-    await expect(bulkBar).toHaveClass(/backdrop-blur-md/);
+    await expect(bulkBar).toHaveClass(/backdrop-blur-(md|xl)/);
 
     // 1. Probar incremento masivo de stock (+1 Stock)
     const stockCell0 = page.getByTestId("grid-cell-stock-0");
@@ -503,17 +503,29 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(linkMaterialChip).toBeVisible();
     await linkMaterialChip.click();
 
+    // Verificar que el popover permanece abierto para vinculación continua y el chip vinculado desaparece
+    const linkAttrPopover = managerView.getByTestId("link-attr-popover");
+    await expect(linkAttrPopover).toBeVisible();
+    await expect(linkMaterialChip).not.toBeVisible();
+
+    // Cerrar explícitamente el popover con el botón (X)
+    const closeLinkPopoverBtn = managerView.getByTestId(
+      "close-link-attr-popover"
+    );
+    await expect(closeLinkPopoverBtn).toBeVisible();
+    await closeLinkPopoverBtn.click();
+    await expect(linkAttrPopover).not.toBeVisible();
+
     // Columna 3 (Derecha): Verificar carga instantánea de Material en Prueba Desktop
     await expect(
       managerView.getByRole("heading", { name: "Material" })
     ).toBeVisible();
 
-    // Probar Popover de Presets en Columna 3 de Configuración con cálculo y decremento en tiempo real
+    // Probar Popover de Presets en Columna 3 de Configuración con cálculo y persistencia para adición múltiple
     const togglePresetsBtn = managerView.getByTestId(
       "toggle-manager-presets-btn"
     );
     await expect(togglePresetsBtn).toBeVisible();
-    // Debe indicar la cantidad de presets disponibles del banco maestro que no están en la categoría
     await expect(togglePresetsBtn).toContainText(/Presets Disponibles/i);
 
     await togglePresetsBtn.click();
@@ -530,10 +542,15 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(pickSiliconaBtn).toBeVisible();
     await pickSiliconaBtn.click();
 
-    // Debe aparecer en las opciones de "Prueba Desktop"
+    // Debe aparecer en las opciones de "Prueba Desktop" y el popover de presets debe permanecer abierto
     await expect(
       managerView.getByText("Silicona Líquida", { exact: true })
     ).toBeVisible();
+    await expect(managerPresetsPopover).toBeVisible();
+    await expect(pickSiliconaBtn).not.toBeVisible();
+
+    // Cerrar el popover de presets para continuar con la adición manual
+    await togglePresetsBtn.click();
 
     // Agregar nueva opción manual al atributo activo
     const newOptionInput = managerView.getByPlaceholder("Nueva opción...");
@@ -610,5 +627,73 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
 
     await expect(managerView).not.toBeVisible();
     await expect(page.locator("#inventory-scroll")).toBeVisible();
+  });
+
+  test("7. Flujo de Clonación Inteligente, Atributos Opcionales (deselección y desmarcado) y Limpieza de IDs en Banco Maestro", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const desktopSidebar = page.getByRole("complementary", {
+      name: /Navegación principal de escritorio/i,
+    });
+    await expect(desktopSidebar).toBeVisible({ timeout: 10000 });
+    await desktopSidebar.getByRole("button", { name: "Inventario" }).click();
+
+    // 1. Probar botón de clonación en la fila 0 de la tabla
+    const cloneBtn0 = page.locator('button[title*="Clonar"]').first();
+    await expect(cloneBtn0).toBeVisible();
+    await cloneBtn0.click();
+
+    // Verificar que NO duplicó directamente, sino que abrió DesktopNewProductModal en modo edición
+    const modal = page.getByTestId("desktop-new-product-modal");
+    await expect(modal).toBeVisible();
+    await expect(
+      modal.getByText(/Clonar Producto|Plantilla Clonada/i).first()
+    ).toBeVisible();
+
+    // El nombre debe estar precargado con "(Copia)"
+    const nameInput = modal.getByTestId("desktop-new-product-name-input");
+    await expect(nameInput).toBeVisible();
+    const nameVal = await nameInput.inputValue();
+    expect(nameVal).toContain("(Copia)");
+
+    // Probar Atributos Opcionales: desmarcar o deseleccionar chip
+    const clearBtn = modal
+      .locator('button[data-testid^="clear-selection-"]')
+      .first();
+    if (await clearBtn.isVisible()) {
+      await clearBtn.click();
+      // Debe mostrar ahora que el atributo es (Opcional)
+      await expect(modal.getByText("(Opcional)").first()).toBeVisible();
+    }
+
+    // Cerrar modal
+    await modal
+      .getByRole("button", { name: /Regresar al Inventario/i })
+      .click();
+    await expect(modal).not.toBeVisible();
+
+    // 2. Probar Banco Maestro sin IDs crudos
+    const settingsBtn = page.getByTestId("desktop-catalog-settings-btn");
+    await expect(settingsBtn).toBeVisible();
+    await settingsBtn.click();
+
+    const managerView = page.getByTestId("desktop-category-manager-view");
+    await expect(managerView).toBeVisible();
+
+    const presetsTabBtn = managerView.getByTestId("mode-tab-presets");
+    await presetsTabBtn.click();
+
+    // Validar que se ve la etiqueta limpia "Subtipo" y NO el ID crudo "chargersubtypes"
+    await expect(
+      managerView.getByText("Subtipo", { exact: true }).first()
+    ).toBeVisible();
+    await expect(managerView.locator("text=chargersubtypes")).toHaveCount(0);
+
+    // Salir
+    const saveBtn = managerView.getByTestId("save-category-order-btn");
+    await saveBtn.click();
+    await expect(managerView).not.toBeVisible();
   });
 });

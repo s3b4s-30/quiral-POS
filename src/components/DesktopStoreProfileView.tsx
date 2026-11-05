@@ -24,12 +24,19 @@ export default function DesktopStoreProfileView({
   onBack,
   onOpenSecurity,
 }: DesktopStoreProfileViewProps) {
-  const { userProfile, updateStoreProfile, isDemoUser, accentPalette, setAccentPalette } =
-    useInventory();
+  const {
+    userProfile,
+    updateStoreProfile,
+    isDemoUser,
+    accentPalette,
+    setAccentPalette,
+  } = useInventory();
 
   const [storeName, setStoreName] = useState(userProfile?.storeName || "");
   const [storePhone, setStorePhone] = useState(userProfile?.storePhone || "");
-  const [storeAddress, setStoreAddress] = useState(userProfile?.storeAddress || "");
+  const [storeAddress, setStoreAddress] = useState(
+    userProfile?.storeAddress || ""
+  );
   const [storeLogoUrl, setStoreLogoUrl] = useState<string | undefined>(
     userProfile?.storeLogoUrl
   );
@@ -48,7 +55,9 @@ export default function DesktopStoreProfileView({
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setError("Por favor selecciona un archivo de imagen válido (PNG, JPG, WEBP).");
+      setError(
+        "Por favor selecciona un archivo de imagen válido (PNG, JPG, WEBP)."
+      );
       return;
     }
 
@@ -105,10 +114,10 @@ export default function DesktopStoreProfileView({
   return (
     <div
       data-testid="desktop-store-profile-view"
-      className="w-full h-full flex flex-col overflow-hidden bg-[var(--bg-primary)] pt-[var(--quiral-header-offset,4rem)]"
+      className="w-full h-full flex flex-col overflow-hidden bg-[var(--bg-primary)]"
     >
       {/* Cabecera de la vista de pantalla completa en escritorio */}
-      <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-elevated)]/90 backdrop-blur-md px-6 py-4 flex items-center justify-between">
+      <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-elevated)] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -124,7 +133,8 @@ export default function DesktopStoreProfileView({
               Perfil y Configuración de la Tienda
             </h1>
             <p className="text-xs text-[var(--text-secondary)]">
-              Personaliza la identidad corporativa, datos de contacto y paleta cromática global
+              Personaliza la identidad corporativa, datos de contacto y paleta
+              cromática global
             </p>
           </div>
         </div>
@@ -161,7 +171,8 @@ export default function DesktopStoreProfileView({
 
           {isDemoUser && (
             <div className="md:col-span-12 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-700 dark:text-amber-300">
-              Estás en modo demostración. Los cambios de perfil se guardarán de forma local en este dispositivo.
+              Estás en modo demostración. Los cambios de perfil se guardarán de
+              forma local en este dispositivo.
             </div>
           )}
 
@@ -181,8 +192,13 @@ export default function DesktopStoreProfileView({
                   />
                 ) : (
                   <div className="flex flex-col items-center text-[var(--text-secondary)]">
-                    <Store size={44} className="text-accent transition-colors duration-200" />
-                    <span className="text-[11px] font-bold mt-1.5 uppercase tracking-wide">Logo</span>
+                    <Store
+                      size={44}
+                      className="text-accent transition-colors duration-200"
+                    />
+                    <span className="text-[11px] font-bold mt-1.5 uppercase tracking-wide">
+                      Logo
+                    </span>
                   </div>
                 )}
               </div>
@@ -227,7 +243,8 @@ export default function DesktopStoreProfileView({
             </div>
 
             <p className="mt-4 text-[11px] text-[var(--text-secondary)] leading-relaxed">
-              Formatos soportados: PNG, JPG o WEBP hasta 2MB. Aparecerá en el encabezado principal y tickets de venta.
+              Formatos soportados: PNG, JPG o WEBP hasta 2MB. Aparecerá en el
+              encabezado principal y tickets de venta.
             </p>
 
             {onOpenSecurity && (
@@ -250,7 +267,10 @@ export default function DesktopStoreProfileView({
                       </p>
                     </div>
                   </div>
-                  <KeyRound size={15} className="text-[var(--text-secondary)]" />
+                  <KeyRound
+                    size={15}
+                    className="text-[var(--text-secondary)]"
+                  />
                 </button>
               </div>
             )}
@@ -335,12 +355,14 @@ export default function DesktopStoreProfileView({
                       Tema de Acento y Paleta Cromática
                     </h3>
                     <p className="text-[11px] text-[var(--text-secondary)]">
-                      Aplica el color de acento de forma instantánea a botones, selecciones y badges
+                      Aplica el color de acento de forma instantánea a botones,
+                      selecciones y badges
                     </p>
                   </div>
                 </div>
                 <span className="rounded-full bg-accent-subtle px-3 py-1 text-xs font-extrabold text-accent">
-                  {ACCENT_PALETTES.find((p) => p.id === selectedPalette)?.name || "Azul Clásico"}
+                  {ACCENT_PALETTES.find((p) => p.id === selectedPalette)
+                    ?.name || "Azul Clásico"}
                 </span>
               </div>
 
@@ -374,7 +396,9 @@ export default function DesktopStoreProfileView({
                         className="flex h-9 w-9 items-center justify-center rounded-full shadow-sm transition-transform"
                         style={{ backgroundColor: palette.previewColor }}
                       >
-                        {isSelected && <Check size={16} className="text-white stroke-[3]" />}
+                        {isSelected && (
+                          <Check size={16} className="text-white stroke-[3]" />
+                        )}
                       </span>
                       <span className="text-xs font-bold text-[var(--text-primary)] truncate max-w-full">
                         {palette.shortName}

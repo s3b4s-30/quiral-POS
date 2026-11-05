@@ -1,6 +1,7 @@
 import {
   ArrowDown,
   ArrowUp,
+  Bookmark,
   Check,
   Minus,
   Pencil,
@@ -8,12 +9,14 @@ import {
   Tag,
   X,
 } from "lucide-react";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import ModalSheet from "../../../components/ModalSheet";
 import HorizontalScrollNav from "../../../components/HorizontalScrollNav";
 import { useInventory } from "../../../context/InventoryContext";
 import { ProductCategory } from "../../../types/domain";
 import {
+  getAttributePresets,
+  getEffectiveAttributeOptions,
   inferAttributeKeysForCategory,
   isSameCatalogText,
   normalizeCatalogText,
@@ -88,6 +91,29 @@ export default function AttributeConfigModal({
   const [optDragOverIndex, setOptDragOverIndex] = useState<number | null>(null);
 
   const activeAttr = catalogConfig.attributes[selectedKey] || attributeList[0];
+
+  const effectiveOptions = useMemo(() => {
+    const scoped = getEffectiveAttributeOptions(
+      catalogConfig,
+      selectedCategory,
+      activeAttr?.key
+    );
+    if (scoped.length > 0) return scoped;
+    return activeAttr?.options ?? [];
+  }, [catalogConfig, selectedCategory, activeAttr]);
+
+  const masterPresets = useMemo(() => {
+    return activeAttr?.key
+      ? getAttributePresets(catalogConfig, activeAttr.key)
+      : [];
+  }, [catalogConfig, activeAttr?.key]);
+
+  const availablePresets = useMemo(() => {
+    return masterPresets.filter(
+      (preset) =>
+        !effectiveOptions.some((opt) => isSameCatalogText(opt, preset))
+    );
+  }, [masterPresets, effectiveOptions]);
 
   const currentCategoryConfig = catalogConfig.categories.find((c) =>
     isSameCatalogText(c.name, selectedCategory)
@@ -174,7 +200,7 @@ export default function AttributeConfigModal({
   // --- Reordenamiento y gestión de valores/opciones dentro de un Atributo ---
   const moveOptionAt = (fromIdx: number, toIdx: number) => {
     if (!activeAttr) return;
-    const opts = activeAttr.options;
+    const opts = effectiveOptions;
     if (
       fromIdx === toIdx ||
       fromIdx < 0 ||
@@ -187,7 +213,7 @@ export default function AttributeConfigModal({
     const next = [...opts];
     const [moved] = next.splice(fromIdx, 1);
     next.splice(toIdx, 0, moved);
-    reorderAttributeOptions(activeAttr.key, next);
+    reorderAttributeOptions(activeAttr.key, next, selectedCategory);
   };
 
   const handleOptionTouchMove = (
@@ -235,11 +261,11 @@ export default function AttributeConfigModal({
     const clean = normalizeCatalogText(newOptionInput);
     if (!clean) return;
 
-    const alreadyExists = activeAttr.options.some((opt) =>
+    const alreadyExists = effectiveOptions.some((opt) =>
       isSameCatalogText(opt, clean)
     );
 
-    const saved = addAttributeOption(activeAttr.key, clean);
+    const saved = addAttributeOption(activeAttr.key, clean, selectedCategory);
     setNewOptionInput("");
 
     if (alreadyExists) {
@@ -265,7 +291,12 @@ export default function AttributeConfigModal({
       return;
     }
 
-    const ok = renameAttributeOption(activeAttr.key, oldOpt, clean);
+    const ok = renameAttributeOption(
+      activeAttr.key,
+      oldOpt,
+      clean,
+      selectedCategory
+    );
     if (ok) {
       showFeedback("success", `Renombrado a «${clean}».`);
       setEditingOption(null);
@@ -659,6 +690,42 @@ export default function AttributeConfigModal({
                   </button>
                 </form>
 
+                {/* Presets del Banco Maestro disponibles para vincular a esta categoría */}
+                {availablePresets.length > 0 && (
+                  <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-2.5 space-y-1.5 animate-in fade-in duration-150">
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-accent">
+                      <Bookmark size={12} className="shrink-0" />
+                      <span>
+                        Presets del Banco Maestro ({availablePresets.length}):
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto custom-scrollbar p-0.5">
+                      {availablePresets.map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => {
+                            addAttributeOption(
+                              activeAttr.key,
+                              preset,
+                              selectedCategory
+                            );
+                            showFeedback(
+                              "success",
+                              `Preset «${preset}» vinculado a ${selectedCategory}.`
+                            );
+                          }}
+                          className="inline-flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] hover:border-accent hover:bg-accent/15 hover:text-accent px-2.5 py-1 text-[11px] font-bold text-[var(--text-primary)] active:scale-95 transition-all cursor-pointer min-h-[30px]"
+                          title={`Vincular preset ${preset} a ${selectedCategory}`}
+                        >
+                          <Plus size={11} className="text-accent" />
+                          <span>{preset}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Lista interactiva con botón (-) a la izquierda y asa de 3 líneas a la derecha */}
                 <div
                   ref={optListRef}
@@ -678,7 +745,7 @@ export default function AttributeConfigModal({
                   }}
                   className="max-h-[38vh] overflow-y-auto space-y-1.5 pr-0.5"
                 >
-                  {activeAttr.options.map((opt, idx) => {
+                  {effectiveOptions.map((opt, idx) => {
                     const isEditing = editingOption === opt;
                     const isDragging =
                       optTouchIndex === idx ||
@@ -751,13 +818,17 @@ export default function AttributeConfigModal({
                             {/* Izquierda: Botón rojo (-) para eliminar opción */}
                             <button
                               type="button"
-                              disabled={activeAttr.options.length <= 1}
+                              disabled={effectiveOptions.length <= 1}
                               onClick={() =>
-                                deleteAttributeOption(activeAttr.key, opt)
+                                deleteAttributeOption(
+                                  activeAttr.key,
+                                  opt,
+                                  selectedCategory
+                                )
                               }
                               aria-label={`Eliminar opción ${opt}`}
                               title="Eliminar opción"
-                              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30] hover:text-white disabled:opacity-25 active:scale-90 transition-all"
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30] hover:text-white disabled:opacity-25 active:scale-90 transition-all"
                             >
                               <Minus size={13} strokeWidth={2.75} />
                             </button>
@@ -772,7 +843,7 @@ export default function AttributeConfigModal({
                                 onClick={() => startRename(opt)}
                                 aria-label={`Renombrar ${opt}`}
                                 title="Renombrar"
-                                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-zinc-800 hover:text-accent transition-colors duration-200"
+                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-zinc-800 hover:text-accent transition-colors duration-200"
                               >
                                 <Pencil size={12} />
                               </button>
@@ -785,16 +856,16 @@ export default function AttributeConfigModal({
                                 disabled={idx === 0}
                                 onClick={() => moveOptionAt(idx, idx - 1)}
                                 aria-label={`Subir opción ${opt}`}
-                                className="flex h-6 w-6 items-center justify-center rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-800/70 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25 active:scale-90"
+                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-800/70 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25 active:scale-90"
                               >
                                 <ArrowUp size={12} />
                               </button>
                               <button
                                 type="button"
-                                disabled={idx === activeAttr.options.length - 1}
+                                disabled={idx === effectiveOptions.length - 1}
                                 onClick={() => moveOptionAt(idx, idx + 1)}
                                 aria-label={`Bajar opción ${opt}`}
-                                className="flex h-6 w-6 items-center justify-center rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-800/70 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25 active:scale-90"
+                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-800/70 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25 active:scale-90"
                               >
                                 <ArrowDown size={12} />
                               </button>

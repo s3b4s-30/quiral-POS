@@ -176,10 +176,10 @@ export default function DesktopSuppliersView({
   return (
     <div
       data-testid="desktop-suppliers-view"
-      className="w-full h-full flex flex-col overflow-hidden bg-[var(--bg-primary)] pt-[var(--quiral-header-offset,4rem)] select-none antialiased-hd"
+      className="w-full h-full flex flex-col overflow-hidden bg-[var(--bg-primary)] select-none antialiased-hd"
     >
       {/* 1. Cabecera Fija de Navegación de Escritorio */}
-      <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-elevated)]/90 backdrop-blur-md px-6 py-4 flex items-center justify-between">
+      <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-elevated)] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             type="button"

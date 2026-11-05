@@ -12,7 +12,11 @@ import LottiePlayer, {
 import { useInventory } from "../../../context/InventoryContext";
 import { useScrollParentVirtualizer } from "../../../hooks/useScrollParentVirtualizer";
 import { PaymentMethod, Sale, SaleItem } from "../../../types/domain";
-import { formatCOP, parseCOPInput } from "../../../utils/formatters";
+import {
+  foldDiacritics,
+  formatCOP,
+  parseCOPInput,
+} from "../../../utils/formatters";
 import { HistoryTableRow } from "./HistoryTableRow";
 
 const PAYMENT_METHODS: PaymentMethod[] = [
@@ -67,13 +71,13 @@ export default function HistoryViewDesktop({
   }, [saleToDelete, editingSale]);
 
   const filteredSales = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return sales;
+    const qFolded = foldDiacritics(query);
+    if (!qFolded) return sales;
     return sales.filter((sale) => {
-      const matchCustomer = sale.customerName.toLowerCase().includes(q);
-      const matchNumber = String(sale.saleNumber).includes(q);
+      const matchCustomer = foldDiacritics(sale.customerName).includes(qFolded);
+      const matchNumber = String(sale.saleNumber).includes(qFolded);
       const matchItem = sale.items.some((it) =>
-        it.productName.toLowerCase().includes(q)
+        foldDiacritics(it.productName).includes(qFolded)
       );
       return matchCustomer || matchNumber || matchItem;
     });

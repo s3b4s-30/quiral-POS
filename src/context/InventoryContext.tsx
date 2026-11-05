@@ -934,9 +934,9 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     );
 
     const keys =
-      attributeKeys && attributeKeys.length > 0
+      attributeKeys !== undefined
         ? [...attributeKeys]
-        : (existing?.attributeKeys ?? inferAttributeKeysForCategory(cleanName));
+        : (existing?.attributeKeys ?? []);
 
     if (existing) {
       const updatedExisting: CategoryConfig = {
@@ -1061,7 +1061,6 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     categoryName: ProductCategory,
     attributeKeys: string[]
   ) => {
-    if (attributeKeys.length === 0) return;
     setCatalogConfig((prev) => {
       const cleanCat = normalizeCatalogText(categoryName);
       const nextCategories = prev.categories.map((c) =>
@@ -1118,23 +1117,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
       const cleanCat = normalizeCatalogText(categoryName);
 
-      // Enriquecer el banco maestro de Presets Históricos si la opción aún no está en él
-      const isAlreadyInPresets = currentAttr.options.some((opt) =>
-        isSameCatalogText(opt, cleanOpt)
-      );
-      const nextPresets = isAlreadyInPresets
-        ? currentAttr.options
-        : [...currentAttr.options, cleanOpt];
-
       const nextConfig: CatalogConfig = {
         ...catalogConfig,
-        attributes: {
-          ...catalogConfig.attributes,
-          [attributeKey]: {
-            ...currentAttr,
-            options: nextPresets,
-          },
-        },
         categoryAttributeValues: {
           ...catalogConfig.categoryAttributeValues,
           [cleanCat]: {
