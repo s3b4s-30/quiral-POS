@@ -978,7 +978,7 @@ export default function DesktopInventoryGrid({
           const bulkBar = (
             <div
               data-testid="desktop-bulk-actions-bar"
-              className="fixed bottom-6 left-1/2 z-[999] -translate-x-1/2 flex flex-row items-center justify-between gap-3 flex-nowrap w-max max-w-[95vw] mx-auto rounded-2xl bg-white/40 border border-white/60 text-gray-900 shadow-xl backdrop-blur-xl ring-1 ring-black/5 dark:bg-black/45 dark:border-white/15 dark:text-white dark:shadow-2xl dark:backdrop-blur-xl dark:ring-white/10 px-4 py-2.5 select-none animate-in fade-in slide-in-from-bottom-2 duration-150"
+              className="fixed bottom-6 left-1/2 z-[999] -translate-x-1/2 flex flex-row items-center justify-between gap-3 flex-nowrap w-max max-w-[95vw] mx-auto rounded-2xl bg-white/35 border border-white/70 text-gray-900 shadow-2xl backdrop-blur-xl backdrop-saturate-150 ring-1 ring-black/5 dark:bg-black/45 dark:border-white/15 dark:text-white dark:shadow-2xl dark:backdrop-blur-xl dark:ring-white/10 px-4 py-2.5 select-none animate-in fade-in slide-in-from-bottom-2 duration-150"
             >
               {/* Badge contador */}
               <span className="shrink-0 whitespace-nowrap rounded-xl bg-accent px-3 py-1.5 text-xs font-extrabold text-white tabular-nums shadow-xs">
@@ -1012,7 +1012,7 @@ export default function DesktopInventoryGrid({
                     setBulkCategory(e.target.value as ProductCategory)
                   }
                   aria-label="Seleccionar nueva categoría en lote"
-                  className="shrink-0 rounded-xl border border-gray-200/60 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white outline-none focus:border-accent max-w-[145px] truncate cursor-pointer transition-colors"
+                  className="shrink-0 rounded-xl border border-gray-200/60 dark:border-white/15 bg-white/35 dark:bg-white/10 backdrop-blur-md px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white outline-none focus:border-accent max-w-[145px] truncate cursor-pointer transition-colors"
                 >
                   {catalogConfig.categoryOrder.map((cat) => (
                     <option
@@ -1040,14 +1040,14 @@ export default function DesktopInventoryGrid({
                 <button
                   type="button"
                   onClick={() => handleBulkStockDelta(-1)}
-                  className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200/60 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
+                  className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200/60 dark:border-white/15 bg-white/35 dark:bg-white/10 backdrop-blur-md px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
                 >
                   -1 Stock
                 </button>
                 <button
                   type="button"
                   onClick={() => handleBulkStockDelta(1)}
-                  className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200/60 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
+                  className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200/60 dark:border-white/15 bg-white/35 dark:bg-white/10 backdrop-blur-md px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
                 >
                   +1 Stock
                 </button>
@@ -1071,7 +1071,7 @@ export default function DesktopInventoryGrid({
                   onClick={() => setSelectedIds(new Set())}
                   title="Limpiar selección"
                   aria-label="Limpiar selección"
-                  className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200/60 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white hover:border-accent active:scale-95 transition-all cursor-pointer"
+                  className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200/60 dark:border-white/15 bg-white/35 dark:bg-white/10 backdrop-blur-md text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white hover:border-accent active:scale-95 transition-all cursor-pointer"
                 >
                   <X size={15} />
                 </button>

@@ -190,10 +190,10 @@ export default function PosViewDesktop({
       {/* Columna Izquierda: Catálogo y Búsqueda Rápida (~65% - 70%) */}
       <section className="flex-1 flex flex-col h-full min-w-0 overflow-y-auto overflow-x-hidden bg-[var(--bg-primary)] custom-scrollbar relative">
         {/* Header Superior del Catálogo en Desktop (Liquid Glass Blur) */}
-        <div className="sticky top-0 z-20 p-4 pb-3 border-b border-gray-200/70 dark:border-white/10 bg-white/70 dark:bg-black/60 backdrop-blur-xl space-y-3 shadow-xs">
+        <div className="sticky top-0 z-20 p-4 pb-3 border-b border-gray-200/60 dark:border-white/10 bg-white/35 dark:bg-black/50 backdrop-blur-xl backdrop-saturate-150 space-y-3 shadow-xs">
           <div className="flex items-center gap-3">
             {/* Buscador Rápido con atajo de teclado */}
-            <div className="flex-1 flex min-h-11 items-center gap-2.5 rounded-2xl border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md px-3.5 shadow-xs focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all duration-150">
+            <div className="flex-1 flex min-h-11 items-center gap-2.5 rounded-2xl border border-gray-200/80 dark:border-white/15 bg-white/50 dark:bg-white/10 px-3.5 shadow-xs focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all duration-150">
               <Search
                 size={18}
                 className="shrink-0 text-[var(--text-secondary)]"
@@ -227,13 +227,13 @@ export default function PosViewDesktop({
               onClick={() => handleOpenCategoryModal(true)}
               aria-label="Organizar categorías"
               title="Organizar categorías"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md text-[var(--text-secondary)] hover:text-accent hover:border-accent active:scale-95 transition-all duration-150 shadow-xs"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-gray-200/80 dark:border-white/15 bg-white/50 dark:bg-white/10 text-[var(--text-secondary)] hover:text-accent hover:border-accent active:scale-95 transition-all duration-150 shadow-xs"
             >
               <SlidersHorizontal size={16} />
             </button>
 
             {/* Selector de Vista en POS: Tabla de Ventas (Predeterminada) o Tarjetas (3 cols) */}
-            <div className="flex items-center rounded-2xl border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md p-1 shrink-0 select-none">
+            <div className="flex items-center rounded-2xl border border-gray-200/80 dark:border-white/15 bg-white/50 dark:bg-white/10 p-1 shrink-0 select-none">
               <button
                 type="button"
                 data-testid="pos-view-table-btn"
@@ -284,7 +284,7 @@ export default function PosViewDesktop({
                   className={`whitespace-nowrap rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-150 select-none cursor-pointer ${
                     isActive
                       ? "bg-accent text-white shadow-xs"
-                      : "border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md text-[var(--text-primary)] hover:border-accent/40"
+                      : "border border-gray-200/80 dark:border-white/15 bg-white/50 dark:bg-white/10 text-[var(--text-primary)] hover:border-accent/40"
                   }`}
                 >
                   {item}
@@ -309,7 +309,7 @@ export default function PosViewDesktop({
                 className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 cursor-pointer ${
                   selectedAttributeTag === ""
                     ? "bg-accent-subtle text-accent border border-accent/30"
-                    : "border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    : "border border-gray-200/80 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 }`}
               >
                 Todos en {category}
@@ -329,7 +329,7 @@ export default function PosViewDesktop({
                     className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 cursor-pointer ${
                       isTagActive
                         ? "bg-accent text-white shadow-xs"
-                        : "border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                        : "border border-gray-200/80 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     }`}
                   >
                     {tag}

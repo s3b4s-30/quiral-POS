@@ -509,7 +509,7 @@ export default function InventoryView({
         <div
           className={`sticky top-0 z-20 ${
             isDesktopViewport
-              ? "-mx-6 lg:-mx-8 px-6 lg:px-8 bg-white/50 backdrop-blur-xl border-b border-gray-200/60 dark:bg-black/60 dark:border-white/10 shadow-xs"
+              ? "-mx-6 lg:-mx-8 px-6 lg:px-8 bg-white/35 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200/60 dark:bg-black/50 dark:border-white/10 shadow-xs"
               : "-mx-4 px-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)]"
           } pt-1 pb-2.5 mb-3 transition-colors duration-75`}
         >
@@ -518,7 +518,7 @@ export default function InventoryView({
               <div
                 className={`flex min-h-12 items-center gap-2.5 rounded-2xl border px-3.5 shadow-sm transition-colors duration-200 focus-within:border-accent ${
                   isDesktopViewport
-                    ? "border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md"
+                    ? "border-gray-200/80 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md"
                     : "border-[var(--border-color)] bg-[var(--bg-elevated)]"
                 }`}
               >
@@ -564,7 +564,7 @@ export default function InventoryView({
                 hasActiveAdvancedFilters
                   ? "border-accent bg-accent-subtle text-accent shadow-sm"
                   : isDesktopViewport
-                    ? "border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 backdrop-blur-md"
+                    ? "border-gray-200/80 dark:border-white/15 bg-white/40 dark:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 backdrop-blur-md"
                     : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
               }`}
             >
@@ -594,7 +594,7 @@ export default function InventoryView({
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all duration-150 ${
                   quickCountMode
                     ? "border-accent bg-accent text-white shadow-sm"
-                    : "border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 text-[var(--text-primary)] hover:border-accent/40 backdrop-blur-md"
+                    : "border-gray-200/80 dark:border-white/15 bg-white/40 dark:bg-white/10 text-[var(--text-primary)] hover:border-accent/40 backdrop-blur-md"
                 }`}
               >
                 <Zap
@@ -619,7 +619,7 @@ export default function InventoryView({
                 data-testid="desktop-catalog-settings-btn"
                 onClick={() => handleOpenCategoryModal(true)}
                 title="Configuración y Ajustes de Catálogo (Categorías, Atributos y Opciones)"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all duration-150 shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200/80 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all duration-150 shadow-xs cursor-pointer"
               >
                 <SlidersHorizontal size={13} className="text-accent" />
                 <span>Ajustes de Catálogo</span>
@@ -645,7 +645,7 @@ export default function InventoryView({
               {/* Selector de cantidad de registros a visualizar (10, 20, 30, 50, 100, Todos) */}
               <div
                 data-testid="desktop-page-size-bar"
-                className="flex items-center gap-1 rounded-xl border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md p-1"
+                className="flex items-center gap-1 rounded-xl border border-gray-200/80 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md p-1"
               >
                 {DESKTOP_PAGE_SIZES.map((item) => {
                   const active = pageSize === item.value;
@@ -666,7 +666,7 @@ export default function InventoryView({
                 })}
               </div>
 
-              <div className="flex items-center rounded-xl border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md p-1">
+              <div className="flex items-center rounded-xl border border-gray-200/80 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md p-1">
                 <button
                   type="button"
                   data-testid="desktop-view-table-btn"
@@ -751,7 +751,7 @@ export default function InventoryView({
                     isActive
                       ? "bg-accent text-white shadow-sm"
                       : isDesktopViewport
-                        ? "border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md text-[var(--text-primary)] hover:border-accent/40 hover:bg-black/5 dark:hover:bg-white/10"
+                        ? "border border-gray-200/80 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md text-[var(--text-primary)] hover:border-accent/40 hover:bg-black/5 dark:hover:bg-white/10"
                         : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10"
                   } ${isZeroStock && !isActive ? "opacity-60" : ""}`}
                 >
@@ -768,7 +768,7 @@ export default function InventoryView({
               title="Organizar categorías (o mantén presionada una categoría)"
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-dashed transition-colors duration-200 active:scale-95 ${
                 isDesktopViewport
-                  ? "border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md text-[var(--text-secondary)] hover:text-accent hover:border-accent/40 shadow-xs"
+                  ? "border-gray-200/80 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md text-[var(--text-secondary)] hover:text-accent hover:border-accent/40 shadow-xs"
                   : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-accent hover:border-accent"
               }`}
             >
@@ -794,7 +794,7 @@ export default function InventoryView({
                     selectedAttributeTag === ""
                       ? "bg-accent-subtle text-accent border border-accent/30"
                       : isDesktopViewport
-                        ? "border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                        ? "border border-gray-200/80 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                         : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]"
                   }`}
                 >
@@ -816,7 +816,7 @@ export default function InventoryView({
                         isTagActive
                           ? "bg-accent text-white shadow-sm"
                           : isDesktopViewport
-                            ? "border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                            ? "border border-gray-200/80 dark:border-white/15 bg-white/40 dark:bg-white/10 backdrop-blur-md text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                             : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                       }`}
                     >
