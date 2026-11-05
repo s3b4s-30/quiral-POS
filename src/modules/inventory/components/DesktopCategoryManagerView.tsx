@@ -972,8 +972,10 @@ export default function DesktopCategoryManagerView({
                     </div>
                     <button
                       type="button"
+                      data-testid="close-link-attr-popover"
                       onClick={() => setIsLinkingAttrOpen(false)}
                       className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 cursor-pointer"
+                      title="Cerrar vinculación de atributos"
                     >
                       <X size={12} />
                     </button>
@@ -986,7 +988,6 @@ export default function DesktopCategoryManagerView({
                         data-testid={`link-attr-chip-${attr.key}`}
                         onClick={() => {
                           addCategoryAttr(attr.key);
-                          setIsLinkingAttrOpen(false);
                         }}
                         className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 hover:border-accent hover:bg-accent/20 hover:text-white px-2.5 py-1 text-[11px] font-bold text-white/80 transition-all cursor-pointer active:scale-95"
                       >

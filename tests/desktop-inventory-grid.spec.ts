@@ -503,17 +503,29 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(linkMaterialChip).toBeVisible();
     await linkMaterialChip.click();
 
+    // Verificar que el popover permanece abierto para vinculación continua y el chip vinculado desaparece
+    const linkAttrPopover = managerView.getByTestId("link-attr-popover");
+    await expect(linkAttrPopover).toBeVisible();
+    await expect(linkMaterialChip).not.toBeVisible();
+
+    // Cerrar explícitamente el popover con el botón (X)
+    const closeLinkPopoverBtn = managerView.getByTestId(
+      "close-link-attr-popover"
+    );
+    await expect(closeLinkPopoverBtn).toBeVisible();
+    await closeLinkPopoverBtn.click();
+    await expect(linkAttrPopover).not.toBeVisible();
+
     // Columna 3 (Derecha): Verificar carga instantánea de Material en Prueba Desktop
     await expect(
       managerView.getByRole("heading", { name: "Material" })
     ).toBeVisible();
 
-    // Probar Popover de Presets en Columna 3 de Configuración con cálculo y decremento en tiempo real
+    // Probar Popover de Presets en Columna 3 de Configuración con cálculo y persistencia para adición múltiple
     const togglePresetsBtn = managerView.getByTestId(
       "toggle-manager-presets-btn"
     );
     await expect(togglePresetsBtn).toBeVisible();
-    // Debe indicar la cantidad de presets disponibles del banco maestro que no están en la categoría
     await expect(togglePresetsBtn).toContainText(/Presets Disponibles/i);
 
     await togglePresetsBtn.click();
@@ -530,10 +542,15 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(pickSiliconaBtn).toBeVisible();
     await pickSiliconaBtn.click();
 
-    // Debe aparecer en las opciones de "Prueba Desktop"
+    // Debe aparecer en las opciones de "Prueba Desktop" y el popover de presets debe permanecer abierto
     await expect(
       managerView.getByText("Silicona Líquida", { exact: true })
     ).toBeVisible();
+    await expect(managerPresetsPopover).toBeVisible();
+    await expect(pickSiliconaBtn).not.toBeVisible();
+
+    // Cerrar el popover de presets para continuar con la adición manual
+    await togglePresetsBtn.click();
 
     // Agregar nueva opción manual al atributo activo
     const newOptionInput = managerView.getByPlaceholder("Nueva opción...");
