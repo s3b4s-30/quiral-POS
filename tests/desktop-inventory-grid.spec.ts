@@ -288,7 +288,34 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     // Verificar cálculo en tarjeta de márgenes (Utilidad: 89,000 - 45,000 = 44,000)
     await expect(modal.getByText(/44\.000/)).toBeVisible();
 
-    // 5. Cerrar modal con tecla Escape
+    // 5. Probar Banco Global Dinámico y Auto-Reductible en Nuevo Producto
+    const unlinkedBlock = modal.getByTestId("unlinked-global-attributes-block");
+    await expect(unlinkedBlock).toBeVisible();
+
+    // El atributo "Color / Acabado" debe estar disponible en el bloque global no vinculado
+    const linkColorBtn = modal.getByTestId("link-global-attr-colors");
+    await expect(linkColorBtn).toBeVisible();
+    await linkColorBtn.click();
+
+    // Al hacer clic, se añade a los atributos activos y desaparece del bloque global disponible (Reducción Progresiva)
+    await expect(linkColorBtn).not.toBeVisible();
+    await expect(
+      modal.getByText("Color / Acabado", { exact: true })
+    ).toBeVisible();
+
+    // Probar eliminación/ocultamiento de opción aislada por categoría (icono x)
+    const removeOptionBtn = modal.getByRole("button", {
+      name: "Quitar opción Transparente",
+      exact: true,
+    });
+    if (await removeOptionBtn.isVisible()) {
+      await removeOptionBtn.click();
+      await expect(
+        modal.getByText("Transparente", { exact: true })
+      ).not.toBeVisible();
+    }
+
+    // 6. Cerrar modal con tecla Escape
     await page.keyboard.press("Escape");
     await expect(modal).not.toBeVisible();
   });
@@ -467,7 +494,51 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       managerView.getByText("Opción Alfa", { exact: true })
     ).toBeVisible();
 
-    // 5. Guardar y regresar al inventario
+    // 5. Probar Creación Directa en Banco Global (Sin vincular forzosamente a Prueba Desktop)
+    const createGlobalAttrBtn = managerView.getByTestId(
+      "create-global-attribute-btn"
+    );
+    await expect(createGlobalAttrBtn).toBeVisible();
+    await createGlobalAttrBtn.click();
+
+    const globalForm = managerView.getByTestId("global-attribute-create-form");
+    await expect(globalForm).toBeVisible();
+
+    const globalNameInput = managerView.getByTestId(
+      "global-attribute-name-input"
+    );
+    await globalNameInput.fill("Garantía Extendida");
+
+    const submitGlobalAttrBtn = managerView.getByTestId(
+      "confirm-create-global-attr-btn"
+    );
+    await submitGlobalAttrBtn.click();
+
+    // Debe quedar seleccionado de inmediato en Columna 3 como Banco Global Maestro
+    await expect(
+      managerView.getByRole("heading", { name: "Garantía Extendida" })
+    ).toBeVisible();
+    await expect(managerView.getByText("Banco Global Maestro")).toBeVisible();
+
+    // 6. Probar Aislamiento de Valores por Categoría (Scoping sin Contaminación)
+    // Seleccionar "Cargadores y Cables" en Columna 1
+    const cargadoresCatBtn = managerView.getByRole("button", {
+      name: /Cargadores y Cables\s+\d+\s+prods/i,
+    });
+    await cargadoresCatBtn.click();
+
+    // Seleccionar el atributo "Marca" en Columna 2
+    const marcaAttrBtn = managerView
+      .getByRole("button", { name: /Marca/i })
+      .first();
+    await marcaAttrBtn.click();
+
+    // Verificar que "iPhone" está presente en "Cargadores y Cables"
+    await expect(
+      managerView.getByText("iPhone", { exact: true })
+    ).toBeVisible();
+
+    // 7. Guardar y regresar al inventario
     const saveBtn = managerView.getByTestId("save-category-order-btn");
     await expect(saveBtn).toBeVisible();
     await saveBtn.click();

@@ -30,6 +30,8 @@ export interface CatalogConfig {
   categories: CategoryConfig[];
   /** Banco maestro de atributos libres y editables */
   attributes: Record<string, AttributeDefinition>;
+  /** Opciones personalizadas de atributos con scope por categoría: [categoryName][attributeKey] = string[] */
+  categoryAttributeValues?: Record<string, Record<string, string[]>>;
 }
 
 export interface Supplier {

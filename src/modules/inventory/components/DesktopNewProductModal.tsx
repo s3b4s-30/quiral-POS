@@ -23,6 +23,7 @@ import React, {
 import { useInventory } from "../../../context/InventoryContext";
 import { ProductCategory, Supplier } from "../../../types/domain";
 import {
+  getEffectiveAttributeOptions,
   inferAttributeKeysForCategory,
   isSameCatalogText,
   normalizeCatalogText,
@@ -55,6 +56,7 @@ export default function DesktopNewProductModal({
     createCustomAttribute,
     updateCategoryAttributes,
     addAttributeOption,
+    deleteAttributeOption,
     showCosts,
   } = useInventory();
 
@@ -88,6 +90,14 @@ export default function DesktopNewProductModal({
       inferAttributeKeysForCategory(category)
     );
   }, [activeCategoryConfig, category]);
+
+  // Atributos del Banco Global maestro que aún no han sido vinculados a esta categoría
+  const unlinkedGlobalAttributes = useMemo(() => {
+    if (!category) return [];
+    return Object.values(catalogConfig.attributes).filter(
+      (attr) => !activeAttributeKeys.includes(attr.key)
+    );
+  }, [category, catalogConfig.attributes, activeAttributeKeys]);
 
   // Estado de selecciones dinámicas de atributos: { [attrKey]: string }
   const [attributeSelections, setAttributeSelections] = useState<
@@ -175,19 +185,32 @@ export default function DesktopNewProductModal({
     }
   }, [suppliers, selectedSupplierId]);
 
-  // Manejador para agregar opción inline a un atributo
+  // Manejador para agregar opción inline a un atributo (Scope aislado por categoría)
   const handleConfirmInlineOption = (attrKey: string) => {
     const clean = normalizeCatalogText(newOptionValue);
     if (!clean) {
       setAddingOptionKey(null);
       return;
     }
-    const saved = addAttributeOption(attrKey, clean);
+    const saved = addAttributeOption(attrKey, clean, category || undefined);
     if (saved) {
       setAttributeSelections((prev) => ({ ...prev, [attrKey]: saved }));
     }
     setNewOptionValue("");
     setAddingOptionKey(null);
+  };
+
+  // Manejador para eliminar/ocultar opción en la categoría activa sin contaminar el banco global
+  const handleDeleteCategoryOption = (attrKey: string, opt: string) => {
+    if (!category) return;
+    deleteAttributeOption(attrKey, opt, category);
+    if (attributeSelections[attrKey] === opt) {
+      setAttributeSelections((prev) => {
+        const next = { ...prev };
+        delete next[attrKey];
+        return next;
+      });
+    }
   };
 
   // Manejador para crear nueva categoría in-situ
@@ -540,7 +563,11 @@ export default function DesktopNewProductModal({
                 {activeAttributeKeys.map((attrKey, idx) => {
                   const attrConfig = catalogConfig.attributes[attrKey];
                   const label = attrConfig?.label || attrKey;
-                  const options = attrConfig?.options || [];
+                  const options = getEffectiveAttributeOptions(
+                    catalogConfig,
+                    category,
+                    attrKey
+                  );
                   const currentSelected = attributeSelections[attrKey] || "";
                   const isAddingThis = addingOptionKey === attrKey;
 
@@ -633,29 +660,96 @@ export default function DesktopNewProductModal({
                         {options.map((opt) => {
                           const isOptSelected = currentSelected === opt;
                           return (
-                            <button
+                            <span
                               key={opt}
-                              type="button"
-                              onClick={() => {
-                                setAttributeSelections((prev) => ({
-                                  ...prev,
-                                  [attrKey]: opt,
-                                }));
-                              }}
-                              className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all duration-150 select-none cursor-pointer ${
+                              className={`inline-flex items-center rounded-lg text-[11px] transition-all duration-150 select-none ${
                                 isOptSelected
                                   ? "bg-accent text-white font-bold shadow-2xs border border-accent"
                                   : "border border-white/10 bg-white/5 text-[var(--text-secondary)] hover:text-white hover:border-white/20"
                               }`}
                             >
-                              {opt}
-                            </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAttributeSelections((prev) => ({
+                                    ...prev,
+                                    [attrKey]: opt,
+                                  }));
+                                }}
+                                className="px-2.5 py-1 cursor-pointer"
+                              >
+                                {opt}
+                              </button>
+                              <button
+                                type="button"
+                                title={`Quitar "${opt}" de «${category}»`}
+                                aria-label={`Quitar opción ${opt}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteCategoryOption(attrKey, opt);
+                                }}
+                                className="pr-1.5 pl-0.5 py-1 text-white/50 hover:text-red-400 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+                              >
+                                <X size={11} strokeWidth={2.5} />
+                              </button>
+                            </span>
                           );
                         })}
                       </div>
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Bloque Dinámico Auto-Reductible: Atributos Disponibles en el Banco Global */}
+            {category && unlinkedGlobalAttributes.length > 0 && (
+              <div
+                data-testid="unlinked-global-attributes-block"
+                className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-3.5 space-y-2.5 transition-all duration-200"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-1.5">
+                    <Plus size={12} className="text-accent" />
+                    <span>
+                      Atributos disponibles en el Banco Global (
+                      {unlinkedGlobalAttributes.length}):
+                    </span>
+                  </span>
+                  <span className="text-[10px] text-[var(--text-secondary)]">
+                    Clic para incorporar al producto
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {unlinkedGlobalAttributes.map((attr) => (
+                    <button
+                      key={attr.key}
+                      type="button"
+                      data-testid={`link-global-attr-${attr.key}`}
+                      onClick={() => {
+                        updateCategoryAttributes(category, [
+                          ...activeAttributeKeys,
+                          attr.key,
+                        ]);
+                        const defaultOpts = getEffectiveAttributeOptions(
+                          catalogConfig,
+                          category,
+                          attr.key
+                        );
+                        if (defaultOpts[0]) {
+                          setAttributeSelections((prev) => ({
+                            ...prev,
+                            [attr.key]: defaultOpts[0],
+                          }));
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 rounded-xl border border-dashed border-white/20 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)] hover:border-accent hover:text-white hover:bg-accent/10 active:scale-95 transition-all cursor-pointer select-none"
+                    >
+                      <Plus size={11} className="text-accent" />
+                      <span>{attr.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>

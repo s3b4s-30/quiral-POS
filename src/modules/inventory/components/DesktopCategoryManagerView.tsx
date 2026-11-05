@@ -18,6 +18,7 @@ import { ProductCategory } from "../../../types/domain";
 import {
   FACTORY_BASE_CATEGORIES,
   FALLBACK_ORPHAN_CATEGORY,
+  getEffectiveAttributeOptions,
   inferAttributeKeysForCategory,
   isSameCatalogText,
   normalizeCatalogText,
@@ -52,6 +53,7 @@ export default function DesktopCategoryManagerView({
     renameAttributeOption,
     deleteAttributeOption,
     reorderAttributeOptions,
+    resetCategoryAttributeOptionsToGlobal,
     createCustomAttribute,
     resetCatalogConfigToDefault,
   } = useInventory();
@@ -79,10 +81,21 @@ export default function DesktopCategoryManagerView({
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
 
-  // Creación de nuevo atributo personalizado en Columna 2
+  // Creación de nuevo atributo personalizado en Columna 2 (Superior)
   const [isCreatingAttribute, setIsCreatingAttribute] = useState(false);
   const [newAttributeLabel, setNewAttributeLabel] = useState("");
   const [newAttributeFirstOption, setNewAttributeFirstOption] = useState("");
+  const [linkToActiveCategory, setLinkToActiveCategory] = useState(true);
+
+  // Creación directa en el Banco Global en Columna 2 (Inferior)
+  const [isCreatingGlobalAttribute, setIsCreatingGlobalAttribute] =
+    useState(false);
+  const [newGlobalAttributeLabel, setNewGlobalAttributeLabel] = useState("");
+  const [newGlobalAttributeFirstOption, setNewGlobalAttributeFirstOption] =
+    useState("");
+
+  // Alternancia explícita de visualización en Columna 3
+  const [forceGlobalScope, setForceGlobalScope] = useState(false);
 
   // Opciones de atributos en Columna 3
   const [newOptionInput, setNewOptionInput] = useState("");
@@ -331,7 +344,41 @@ export default function DesktopCategoryManagerView({
     showFeedback("success", "Atributo vinculado a la categoría.");
   };
 
-  // Crear y vincular un nuevo atributo personalizado en el banco maestro
+  // Cálculo de ámbito (scope) y opciones efectivas de Columna 3
+  const isAttrLinkedToSelectedCat = categoryAttrKeys.includes(activeAttrKey);
+  const activeScopeCategory =
+    !forceGlobalScope && isAttrLinkedToSelectedCat
+      ? selectedCategory
+      : undefined;
+
+  const effectiveOptions = useMemo(() => {
+    if (!activeAttrKey) return [];
+    if (activeScopeCategory) {
+      return getEffectiveAttributeOptions(
+        catalogConfig,
+        activeScopeCategory,
+        activeAttrKey
+      );
+    }
+    return catalogConfig.attributes[activeAttrKey]?.options ?? [];
+  }, [catalogConfig, activeScopeCategory, activeAttrKey]);
+
+  const isCustomizedForCategory = useMemo(() => {
+    if (!isAttrLinkedToSelectedCat || !catalogConfig.categoryAttributeValues)
+      return false;
+    const cleanCat = normalizeCatalogText(selectedCategory);
+    return (
+      catalogConfig.categoryAttributeValues[cleanCat]?.[activeAttrKey] !==
+      undefined
+    );
+  }, [
+    catalogConfig.categoryAttributeValues,
+    selectedCategory,
+    isAttrLinkedToSelectedCat,
+    activeAttrKey,
+  ]);
+
+  // Crear atributo desde Columna 2 Superior (con toggle de vinculación opcional)
   const handleCreateCustomAttr = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanLabel = normalizeCatalogText(newAttributeLabel);
@@ -350,14 +397,54 @@ export default function DesktopCategoryManagerView({
       return;
     }
 
-    // Vincular automáticamente a la categoría actual
-    const next = [...categoryAttrKeys, newKey];
-    updateCategoryAttributes(selectedCategory, next);
+    if (linkToActiveCategory) {
+      const next = [...categoryAttrKeys, newKey];
+      updateCategoryAttributes(selectedCategory, next);
+      showFeedback(
+        "success",
+        `Atributo "${cleanLabel}" creado y vinculado a «${selectedCategory}».`
+      );
+    } else {
+      showFeedback(
+        "success",
+        `Atributo "${cleanLabel}" creado en el Banco Global.`
+      );
+    }
+
     setActiveAttrKey(newKey);
     setIsCreatingAttribute(false);
     setNewAttributeLabel("");
     setNewAttributeFirstOption("");
-    showFeedback("success", `Atributo "${cleanLabel}" creado y vinculado.`);
+    setLinkToActiveCategory(true);
+  };
+
+  // Crear directamente en el Banco Global sin vincular a la categoría activa
+  const handleCreateGlobalAttribute = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanLabel = normalizeCatalogText(newGlobalAttributeLabel);
+    if (!cleanLabel) return;
+
+    const initialOpts = newGlobalAttributeFirstOption.trim()
+      ? [normalizeCatalogText(newGlobalAttributeFirstOption)]
+      : undefined;
+
+    const newKey = createCustomAttribute(cleanLabel, initialOpts);
+    if (!newKey) {
+      showFeedback(
+        "warning",
+        `Ya existe un atributo con el nombre "${cleanLabel}".`
+      );
+      return;
+    }
+
+    setActiveAttrKey(newKey);
+    setIsCreatingGlobalAttribute(false);
+    setNewGlobalAttributeLabel("");
+    setNewGlobalAttributeFirstOption("");
+    showFeedback(
+      "success",
+      `Atributo maestro "${cleanLabel}" añadido al Banco Global.`
+    );
   };
 
   // Opciones del atributo en Columna 3: agregar opción rápida
@@ -366,7 +453,7 @@ export default function DesktopCategoryManagerView({
     const trimmed = newOptionInput.trim();
     if (!trimmed || !activeAttr) return;
 
-    if (activeAttr.options.some((o) => isSameCatalogText(o, trimmed))) {
+    if (effectiveOptions.some((o) => isSameCatalogText(o, trimmed))) {
       showFeedback(
         "warning",
         `La opción "${trimmed}" ya existe en este atributo.`
@@ -374,11 +461,13 @@ export default function DesktopCategoryManagerView({
       return;
     }
 
-    addAttributeOption(activeAttr.key, trimmed);
+    addAttributeOption(activeAttr.key, trimmed, activeScopeCategory);
     setNewOptionInput("");
     showFeedback(
       "success",
-      `Opción "${trimmed}" agregada a «${activeAttr.label}».`
+      activeScopeCategory
+        ? `Opción "${trimmed}" agregada a «${activeAttr.label}» en ${activeScopeCategory}.`
+        : `Opción "${trimmed}" agregada al Banco Global maestro.`
     );
   };
 
@@ -386,12 +475,12 @@ export default function DesktopCategoryManagerView({
   const moveOption = (index: number, direction: "up" | "down") => {
     if (!activeAttr) return;
     const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= activeAttr.options.length) return;
+    if (targetIndex < 0 || targetIndex >= effectiveOptions.length) return;
 
-    const next = [...activeAttr.options];
+    const next = [...effectiveOptions];
     const [moved] = next.splice(index, 1);
     next.splice(targetIndex, 0, moved);
-    reorderAttributeOptions(activeAttr.key, next);
+    reorderAttributeOptions(activeAttr.key, next, activeScopeCategory);
   };
 
   // Opciones del atributo en Columna 3: guardar edición
@@ -403,12 +492,17 @@ export default function DesktopCategoryManagerView({
     }
     if (
       !isSameCatalogText(oldOption, trimmed) &&
-      activeAttr.options.some((o) => isSameCatalogText(o, trimmed))
+      effectiveOptions.some((o) => isSameCatalogText(o, trimmed))
     ) {
       showFeedback("warning", `Ya existe una opción llamada "${trimmed}".`);
       return;
     }
-    renameAttributeOption(activeAttr.key, oldOption, trimmed);
+    renameAttributeOption(
+      activeAttr.key,
+      oldOption,
+      trimmed,
+      activeScopeCategory
+    );
     setEditingOption(null);
     setEditingValue("");
     showFeedback("success", "Opción actualizada.");
@@ -417,15 +511,20 @@ export default function DesktopCategoryManagerView({
   // Opciones del atributo en Columna 3: eliminar opción
   const handleDeleteOption = (option: string) => {
     if (!activeAttr) return;
-    if (activeAttr.options.length <= 1) {
+    if (!activeScopeCategory && activeAttr.options.length <= 1) {
       showFeedback(
         "warning",
-        "El atributo debe conservar al menos una opción."
+        "El Banco Global debe conservar al menos una opción maestra."
       );
       return;
     }
-    deleteAttributeOption(activeAttr.key, option);
-    showFeedback("success", `Opción "${option}" eliminada.`);
+    deleteAttributeOption(activeAttr.key, option, activeScopeCategory);
+    showFeedback(
+      "success",
+      activeScopeCategory
+        ? `Opción "${option}" removida de «${selectedCategory}».`
+        : `Opción "${option}" eliminada del Banco Global.`
+    );
   };
 
   return (
@@ -776,26 +875,47 @@ export default function DesktopCategoryManagerView({
                   placeholder="Primera opción / valor (opcional)"
                   className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-primary)] outline-none focus:border-accent"
                 />
-                <div className="flex items-center justify-end gap-2 pt-1">
+                <div className="flex items-center justify-between pt-1">
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsCreatingAttribute(false);
-                      setNewAttributeLabel("");
-                      setNewAttributeFirstOption("");
-                    }}
-                    className="px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    onClick={() => setLinkToActiveCategory((prev) => !prev)}
+                    className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-bold transition-all cursor-pointer ${
+                      linkToActiveCategory
+                        ? "border-accent bg-accent/20 text-accent"
+                        : "border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]"
+                    }`}
                   >
-                    Cancelar
+                    <span>
+                      {linkToActiveCategory
+                        ? `✓ Vincular a «${selectedCategory}»`
+                        : "Solo en Banco Global"}
+                    </span>
                   </button>
-                  <button
-                    type="submit"
-                    disabled={!newAttributeLabel.trim()}
-                    className={PRIMARY_ACTION_BTN_CLASS}
-                  >
-                    <Plus size={14} strokeWidth={2.5} />
-                    <span>Crear y Vincular</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCreatingAttribute(false);
+                        setNewAttributeLabel("");
+                        setNewAttributeFirstOption("");
+                      }}
+                      className="px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!newAttributeLabel.trim()}
+                      className={PRIMARY_ACTION_BTN_CLASS}
+                    >
+                      <Plus size={14} strokeWidth={2.5} />
+                      <span>
+                        {linkToActiveCategory
+                          ? "Crear y Vincular"
+                          : "Crear en Banco"}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </form>
             )}
@@ -884,13 +1004,78 @@ export default function DesktopCategoryManagerView({
             {/* Sección Inferior: Banco Global de Atributos (Acceso Universal CERO SCROLL HORIZONTAL) */}
             <div className="mt-3 pt-3 border-t border-[var(--border-color)] shrink-0">
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
-                  Banco Global de Atributos ({allAttributesList.length})
-                </h4>
-                <span className="text-[10px] text-[var(--text-secondary)] font-medium">
-                  Clic para editar en Columna 3
-                </span>
+                <div>
+                  <h4 className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+                    Banco Global de Atributos ({allAttributesList.length})
+                  </h4>
+                  <p className="text-[10px] text-[var(--text-secondary)] font-medium">
+                    Clic para inspeccionar o editar plantilla
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  data-testid="create-global-attribute-btn"
+                  onClick={() => setIsCreatingGlobalAttribute((prev) => !prev)}
+                  className="inline-flex items-center gap-1 rounded-xl bg-accent hover:bg-accent-hover px-2.5 py-1 text-[11px] font-bold text-white shadow-2xs hover:shadow-accent-glow active:scale-95 transition-all cursor-pointer select-none tabular-nums"
+                  title="Crear atributo maestro directamente en el Banco Global"
+                >
+                  <Plus size={12} strokeWidth={2.5} />
+                  <span>+ Atributo Global</span>
+                </button>
               </div>
+
+              {/* Formulario Inline para Crear Atributo Directo en Banco Global */}
+              {isCreatingGlobalAttribute && (
+                <form
+                  onSubmit={handleCreateGlobalAttribute}
+                  data-testid="global-attribute-create-form"
+                  className="mb-2.5 p-3 rounded-2xl border border-accent/30 bg-accent-subtle space-y-2 animate-in fade-in duration-150 shrink-0"
+                >
+                  <div className="text-[11px] font-bold text-accent uppercase tracking-wider">
+                    Nuevo Atributo Maestro (Banco Global):
+                  </div>
+                  <input
+                    type="text"
+                    data-testid="global-attribute-name-input"
+                    value={newGlobalAttributeLabel}
+                    onChange={(e) => setNewGlobalAttributeLabel(e.target.value)}
+                    placeholder="Nombre (ej. Talla, Voltaje, Capacidad...)"
+                    autoFocus
+                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent"
+                  />
+                  <input
+                    type="text"
+                    value={newGlobalAttributeFirstOption}
+                    onChange={(e) =>
+                      setNewGlobalAttributeFirstOption(e.target.value)
+                    }
+                    placeholder="Primera opción / valor (opcional)"
+                    className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-primary)] outline-none focus:border-accent"
+                  />
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCreatingGlobalAttribute(false);
+                        setNewGlobalAttributeLabel("");
+                        setNewGlobalAttributeFirstOption("");
+                      }}
+                      className="px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      data-testid="confirm-create-global-attr-btn"
+                      disabled={!newGlobalAttributeLabel.trim()}
+                      className={PRIMARY_ACTION_BTN_CLASS}
+                    >
+                      <Plus size={14} strokeWidth={2.5} />
+                      <span>Crear en Banco Global</span>
+                    </button>
+                  </div>
+                </form>
+              )}
 
               {/* Grid Vertical / Adaptativo */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-40 overflow-y-auto custom-scrollbar p-0.5">
@@ -957,23 +1142,69 @@ export default function DesktopCategoryManagerView({
                     <h4 className="text-sm lg:text-base font-black text-[var(--text-primary)] truncate">
                       {activeAttr?.label || activeAttrKey}
                     </h4>
-                    {categoryAttrKeys.includes(activeAttrKey) ? (
-                      <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0">
-                        En «{selectedCategory}»
-                      </span>
+                    {isAttrLinkedToSelectedCat ? (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setForceGlobalScope(false)}
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors cursor-pointer ${
+                            !forceGlobalScope
+                              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                              : "bg-white/5 text-[var(--text-secondary)] hover:text-white"
+                          }`}
+                        >
+                          En «{selectedCategory}»{" "}
+                          {isCustomizedForCategory && "• Aislado"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setForceGlobalScope(true)}
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors cursor-pointer ${
+                            forceGlobalScope
+                              ? "bg-accent/20 text-accent border border-accent/30"
+                              : "bg-white/5 text-[var(--text-secondary)] hover:text-white"
+                          }`}
+                        >
+                          Banco Maestro
+                        </button>
+                        {isCustomizedForCategory && !forceGlobalScope && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              resetCategoryAttributeOptionsToGlobal(
+                                selectedCategory,
+                                activeAttrKey
+                              );
+                              showFeedback(
+                                "success",
+                                `Valores de «${activeAttr?.label}» restablecidos a la plantilla global.`
+                              );
+                            }}
+                            title="Restablecer opciones a las del Banco Global"
+                            className="text-[10px] font-bold text-amber-500 hover:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                          >
+                            Restablecer a Global
+                          </button>
+                        )}
+                      </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => addCategoryAttr(activeAttrKey)}
-                        className="text-[10px] font-bold text-accent bg-accent/10 hover:bg-accent hover:text-white px-2 py-0.5 rounded-full transition-colors cursor-pointer shrink-0"
-                      >
-                        + Vincular a «{selectedCategory}»
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-accent bg-accent/10 px-2 py-0.5 rounded-full shrink-0">
+                          Banco Global Maestro
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => addCategoryAttr(activeAttrKey)}
+                          className="text-[10px] font-bold text-accent bg-accent/10 hover:bg-accent hover:text-white px-2 py-0.5 rounded-full transition-colors cursor-pointer shrink-0"
+                        >
+                          + Vincular a «{selectedCategory}»
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
                 <span className="text-[11px] text-[var(--text-secondary)] font-bold tabular-nums">
-                  {activeAttr?.options.length ?? 0} opciones
+                  {effectiveOptions.length} opciones
                 </span>
               </div>
 
@@ -1002,7 +1233,7 @@ export default function DesktopCategoryManagerView({
 
             {/* Listado Vertical Scrollable de Opciones */}
             <div className="flex-1 overflow-y-auto mt-3 space-y-2 pr-1 custom-scrollbar min-h-0">
-              {activeAttr?.options.map((option, index) => {
+              {effectiveOptions.map((option, index) => {
                 const isEditing = editingOption === option;
                 return (
                   <div
