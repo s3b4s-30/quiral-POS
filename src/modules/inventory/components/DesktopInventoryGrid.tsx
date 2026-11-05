@@ -16,6 +16,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { useInventory } from "../../../context/InventoryContext";
 import { useScrollParentVirtualizer } from "../../../hooks/useScrollParentVirtualizer";
 import { Product, ProductCategory, Supplier } from "../../../types/domain";
@@ -972,107 +973,116 @@ export default function DesktopInventoryGrid({
       </div>
 
       {/* Barra Flotante de Acciones en Lote (Glassmorfismo Puro & Layout Inflexible en 1 Fila) */}
-      {selectedIds.size > 0 && (
-        <div
-          data-testid="desktop-bulk-actions-bar"
-          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 flex flex-row items-center justify-between gap-3 flex-nowrap w-max max-w-[95vw] mx-auto rounded-2xl bg-white/90 border border-gray-200/80 text-gray-900 shadow-2xl backdrop-blur-md dark:bg-black/80 dark:border-white/15 dark:text-white dark:shadow-2xl px-4 py-2.5 select-none animate-in fade-in slide-in-from-bottom-2 duration-150"
-        >
-          {/* Badge contador */}
-          <span className="shrink-0 whitespace-nowrap rounded-xl bg-accent px-3 py-1.5 text-xs font-extrabold text-white tabular-nums shadow-xs">
-            {selectedIds.size} seleccionados
-          </span>
-
-          <div className="h-4 w-px bg-gray-300 dark:bg-white/15 shrink-0" />
-
-          {/* Adición Masiva al Carrito de POS */}
-          <button
-            type="button"
-            data-testid="desktop-bulk-add-to-cart-btn"
-            onClick={handleBulkAddToCart}
-            className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-accent-glow active:scale-95 transition-all duration-150 cursor-pointer tabular-nums"
-          >
-            <ShoppingCart size={13} strokeWidth={2.5} />
-            <span>
-              {bulkCartSuccess ? "¡Añadidos al carrito!" : "Añadir al carrito"}
-            </span>
-          </button>
-
-          <div className="h-4 w-px bg-gray-300 dark:bg-white/15 shrink-0" />
-
-          {/* Cambiar categoría en lote con Menú Desplegable Glassmorphic */}
-          <div className="shrink-0 flex items-center gap-2 whitespace-nowrap">
-            <select
-              value={bulkCategory}
-              onChange={(e) =>
-                setBulkCategory(e.target.value as ProductCategory)
-              }
-              aria-label="Seleccionar nueva categoría en lote"
-              className="shrink-0 rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-black/60 px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white outline-none focus:border-accent max-w-[145px] truncate cursor-pointer transition-colors"
+      {selectedIds.size > 0 &&
+        (() => {
+          const bulkBar = (
+            <div
+              data-testid="desktop-bulk-actions-bar"
+              className="fixed bottom-6 left-1/2 z-[999] -translate-x-1/2 flex flex-row items-center justify-between gap-3 flex-nowrap w-max max-w-[95vw] mx-auto rounded-2xl bg-white/85 border border-gray-200/90 text-gray-900 shadow-2xl backdrop-blur-md dark:bg-black/75 dark:border-white/15 dark:text-white dark:shadow-2xl px-4 py-2.5 select-none animate-in fade-in slide-in-from-bottom-2 duration-150"
             >
-              {catalogConfig.categoryOrder.map((cat) => (
-                <option
-                  key={cat}
-                  value={cat}
-                  className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-white"
+              {/* Badge contador */}
+              <span className="shrink-0 whitespace-nowrap rounded-xl bg-accent px-3 py-1.5 text-xs font-extrabold text-white tabular-nums shadow-xs">
+                {selectedIds.size} seleccionados
+              </span>
+
+              <div className="h-4 w-px bg-gray-300 dark:bg-white/15 shrink-0" />
+
+              {/* Adición Masiva al Carrito de POS */}
+              <button
+                type="button"
+                data-testid="desktop-bulk-add-to-cart-btn"
+                onClick={handleBulkAddToCart}
+                className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-accent-glow active:scale-95 transition-all duration-150 cursor-pointer tabular-nums"
+              >
+                <ShoppingCart size={13} strokeWidth={2.5} />
+                <span>
+                  {bulkCartSuccess
+                    ? "¡Añadidos al carrito!"
+                    : "Añadir al carrito"}
+                </span>
+              </button>
+
+              <div className="h-4 w-px bg-gray-300 dark:bg-white/15 shrink-0" />
+
+              {/* Cambiar categoría en lote con Menú Desplegable Glassmorphic */}
+              <div className="shrink-0 flex items-center gap-2 whitespace-nowrap">
+                <select
+                  value={bulkCategory}
+                  onChange={(e) =>
+                    setBulkCategory(e.target.value as ProductCategory)
+                  }
+                  aria-label="Seleccionar nueva categoría en lote"
+                  className="shrink-0 rounded-xl border border-gray-200/90 dark:border-white/15 bg-white/90 dark:bg-black/60 px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white outline-none focus:border-accent max-w-[145px] truncate cursor-pointer transition-colors"
                 >
-                  {cat}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={handleBulkCategoryChange}
-              className="shrink-0 whitespace-nowrap rounded-xl border border-accent/40 bg-accent/15 px-3 py-1.5 text-xs font-bold text-accent hover:bg-accent hover:text-white transition-all duration-150 cursor-pointer active:scale-95"
-            >
-              Mover categoría
-            </button>
-          </div>
+                  {catalogConfig.categoryOrder.map((cat) => (
+                    <option
+                      key={cat}
+                      value={cat}
+                      className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-white"
+                    >
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={handleBulkCategoryChange}
+                  className="shrink-0 whitespace-nowrap rounded-xl border border-accent/40 bg-accent/15 px-3 py-1.5 text-xs font-bold text-accent hover:bg-accent hover:text-white transition-all duration-150 cursor-pointer active:scale-95"
+                >
+                  Mover categoría
+                </button>
+              </div>
 
-          <div className="h-4 w-px bg-gray-300 dark:bg-white/15 shrink-0" />
+              <div className="h-4 w-px bg-gray-300 dark:bg-white/15 shrink-0" />
 
-          {/* Ajustar stock en lote */}
-          <div className="shrink-0 flex items-center gap-1.5 whitespace-nowrap">
-            <button
-              type="button"
-              onClick={() => handleBulkStockDelta(-1)}
-              className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-white/5 px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
-            >
-              -1 Stock
-            </button>
-            <button
-              type="button"
-              onClick={() => handleBulkStockDelta(1)}
-              className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-white/5 px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
-            >
-              +1 Stock
-            </button>
-          </div>
+              {/* Ajustar stock en lote */}
+              <div className="shrink-0 flex items-center gap-1.5 whitespace-nowrap">
+                <button
+                  type="button"
+                  onClick={() => handleBulkStockDelta(-1)}
+                  className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200/90 dark:border-white/15 bg-white/80 dark:bg-white/5 px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
+                >
+                  -1 Stock
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBulkStockDelta(1)}
+                  className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200/90 dark:border-white/15 bg-white/80 dark:bg-white/5 px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white hover:border-accent hover:text-accent transition-colors duration-150 cursor-pointer active:scale-95 tabular-nums"
+                >
+                  +1 Stock
+                </button>
+              </div>
 
-          <div className="h-4 w-px bg-gray-300 dark:bg-white/15 shrink-0" />
+              <div className="h-4 w-px bg-gray-300 dark:bg-white/15 shrink-0" />
 
-          {/* Eliminar seleccionados y limpiar */}
-          <div className="shrink-0 flex items-center gap-2 whitespace-nowrap">
-            <button
-              type="button"
-              onClick={handleBulkDelete}
-              className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded-xl border border-red-500/30 bg-red-500/15 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-500 hover:text-white transition-all duration-150 cursor-pointer active:scale-95"
-            >
-              <Trash2 size={13} />
-              <span>Eliminar</span>
-            </button>
+              {/* Eliminar seleccionados y limpiar */}
+              <div className="shrink-0 flex items-center gap-2 whitespace-nowrap">
+                <button
+                  type="button"
+                  onClick={handleBulkDelete}
+                  className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded-xl border border-red-500/30 bg-red-500/15 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-500 hover:text-white transition-all duration-150 cursor-pointer active:scale-95"
+                >
+                  <Trash2 size={13} />
+                  <span>Eliminar</span>
+                </button>
 
-            <button
-              type="button"
-              onClick={() => setSelectedIds(new Set())}
-              title="Limpiar selección"
-              aria-label="Limpiar selección"
-              className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 dark:border-white/15 bg-white dark:bg-white/5 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white hover:border-accent active:scale-95 transition-all cursor-pointer"
-            >
-              <X size={15} />
-            </button>
-          </div>
-        </div>
-      )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds(new Set())}
+                  title="Limpiar selección"
+                  aria-label="Limpiar selección"
+                  className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200/90 dark:border-white/15 bg-white/80 dark:bg-white/5 text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white hover:border-accent active:scale-95 transition-all cursor-pointer"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+            </div>
+          );
+
+          return typeof document !== "undefined"
+            ? createPortal(bulkBar, document.body)
+            : bulkBar;
+        })()}
     </>
   );
 }
