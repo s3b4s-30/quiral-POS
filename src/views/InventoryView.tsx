@@ -505,17 +505,23 @@ export default function InventoryView({
             : "mx-auto max-w-xl md:max-w-6xl lg:max-w-7xl px-4"
         }
       >
-        {/* 1. Buscador Instantáneo, Embudo Multifiltro y Categorías Modulares Fijas */}
+        {/* 1. Buscador Instantáneo, Embudo Multifiltro y Categorías Modulares Fijas (Liquid Glass Blur en Desktop) */}
         <div
           className={`sticky top-0 z-20 ${
             isDesktopViewport
-              ? "-mx-6 lg:-mx-8 px-6 lg:px-8 bg-[var(--bg-primary)] border-b border-[var(--border-color)] shadow-xs"
+              ? "-mx-6 lg:-mx-8 px-6 lg:px-8 bg-white/70 dark:bg-black/60 backdrop-blur-xl border-b border-gray-200/70 dark:border-white/10 shadow-xs"
               : "-mx-4 px-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)]"
           } pt-1 pb-2.5 mb-3 transition-colors duration-75`}
         >
           <div className="flex items-center gap-2 mb-2.5">
             <div className="relative flex-1">
-              <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm transition-colors duration-200 focus-within:border-accent">
+              <div
+                className={`flex min-h-12 items-center gap-2.5 rounded-2xl border px-3.5 shadow-sm transition-colors duration-200 focus-within:border-accent ${
+                  isDesktopViewport
+                    ? "border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md"
+                    : "border-[var(--border-color)] bg-[var(--bg-elevated)]"
+                }`}
+              >
                 <Search
                   size={18}
                   className="text-[var(--text-secondary)] shrink-0"
@@ -557,7 +563,9 @@ export default function InventoryView({
               className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border transition-all duration-200 active:scale-95 ${
                 hasActiveAdvancedFilters
                   ? "border-accent bg-accent-subtle text-accent shadow-sm"
-                  : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
+                  : isDesktopViewport
+                    ? "border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 backdrop-blur-md"
+                    : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
               }`}
             >
               <Filter size={18} />
@@ -570,7 +578,7 @@ export default function InventoryView({
           {/* Barra de Herramientas de Alta Productividad (Exclusiva Escritorio >= 768px) */}
           <div
             data-testid="desktop-workstation-toolbar"
-            className="hidden md:flex flex-wrap items-center justify-between gap-2 mb-2.5 pb-2 border-b border-[var(--border-color)] select-none"
+            className="hidden md:flex flex-wrap items-center justify-between gap-2 mb-2.5 pb-2 border-b border-gray-200/70 dark:border-white/10 select-none"
           >
             {/* Izquierda: Controles de Conteo Rápido, Categorías, Atributos y Nuevo Producto */}
             <div className="flex flex-wrap items-center gap-2">
@@ -586,7 +594,7 @@ export default function InventoryView({
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all duration-150 ${
                   quickCountMode
                     ? "border-accent bg-accent text-white shadow-sm"
-                    : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:border-accent/40"
+                    : "border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 text-[var(--text-primary)] hover:border-accent/40 backdrop-blur-md"
                 }`}
               >
                 <Zap
@@ -611,7 +619,7 @@ export default function InventoryView({
                 data-testid="desktop-catalog-settings-btn"
                 onClick={() => handleOpenCategoryModal(true)}
                 title="Configuración y Ajustes de Catálogo (Categorías, Atributos y Opciones)"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all duration-150 shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all duration-150 shadow-xs cursor-pointer"
               >
                 <SlidersHorizontal size={13} className="text-accent" />
                 <span>Ajustes de Catálogo</span>
@@ -637,7 +645,7 @@ export default function InventoryView({
               {/* Selector de cantidad de registros a visualizar (10, 20, 30, 50, 100, Todos) */}
               <div
                 data-testid="desktop-page-size-bar"
-                className="flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1"
+                className="flex items-center gap-1 rounded-xl border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md p-1"
               >
                 {DESKTOP_PAGE_SIZES.map((item) => {
                   const active = pageSize === item.value;
@@ -658,7 +666,7 @@ export default function InventoryView({
                 })}
               </div>
 
-              <div className="flex items-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-1">
+              <div className="flex items-center rounded-xl border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md p-1">
                 <button
                   type="button"
                   data-testid="desktop-view-table-btn"
@@ -743,7 +751,7 @@ export default function InventoryView({
                     isActive
                       ? "bg-accent text-white shadow-sm"
                       : isDesktopViewport
-                        ? "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:border-accent/40 hover:bg-black/5 dark:hover:bg-white/5"
+                        ? "border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md text-[var(--text-primary)] hover:border-accent/40 hover:bg-black/5 dark:hover:bg-white/10"
                         : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10"
                   } ${isZeroStock && !isActive ? "opacity-60" : ""}`}
                 >
@@ -758,7 +766,11 @@ export default function InventoryView({
               onClick={() => handleOpenCategoryModal(true)}
               aria-label="Organizar categorías"
               title="Organizar categorías (o mantén presionada una categoría)"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-accent hover:border-accent active:scale-95 transition-colors duration-200"
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-dashed transition-colors duration-200 active:scale-95 ${
+                isDesktopViewport
+                  ? "border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md text-[var(--text-secondary)] hover:text-accent hover:border-accent/40 shadow-xs"
+                  : "border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-accent hover:border-accent"
+              }`}
             >
               <SlidersHorizontal size={14} />
             </button>
@@ -781,7 +793,9 @@ export default function InventoryView({
                   className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 ${
                     selectedAttributeTag === ""
                       ? "bg-accent-subtle text-accent border border-accent/30"
-                      : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]"
+                      : isDesktopViewport
+                        ? "border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                        : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]"
                   }`}
                 >
                   Todos en {selectedCategory}
@@ -801,7 +815,9 @@ export default function InventoryView({
                       className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 ${
                         isTagActive
                           ? "bg-accent text-white shadow-sm"
-                          : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                          : isDesktopViewport
+                            ? "border border-gray-200/80 dark:border-white/15 bg-white/75 dark:bg-white/5 backdrop-blur-md text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                            : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                       }`}
                     >
                       {tag}
