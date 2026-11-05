@@ -141,3 +141,16 @@ flowchart TD
   - **Enrutador Maestro en `awesome-design-skills`:** Los 67 estilos se preservan íntegros dentro de `skills/<estilo>/` para consulta selectiva sin saturar el contexto de la IA.
   - **Liberación de más de 15.000 Tokens:** Reducción drástica del consumo de personalizaciones al rango seguro (< 45%), reactivando las skills de Supabase, Impeccable y Design Taste.
   - **Enriquecimiento del Núcleo:** Actualización de `quiral-pos-engine` (PostgreSQL RLS, `complete_sale` con `FOR UPDATE`, TanStack Query + Dexie) y `ui-ux-modern-taste` (principios Anti-Slop de ingeniería frontend).
+
+---
+
+### Fase de Optimización Integral: Rendimiento, Ergonomía Táctil Móvil y Búsquedas Diacríticas
+
+- **Objetivo:** Ejecutar la evolución integral del sistema según el mandato de ingeniería senior: optimizar la velocidad y precisión de búsqueda en mostrador, trasladar los presets y aislamiento de catálogo de escritorio a móvil, ampliar los tap targets táctiles y limpiar código huérfano.
+- **Hitos Implementados:**
+  - **Normalización Diacrítica Universal (`foldDiacritics`):** Función centralizada en `src/utils/formatters.ts` que normaliza y elimina acentos/tildes en tiempo real. Integrada en los filtros de `InventoryView.tsx`, `PosViewDesktop.tsx`, `PosViewMobile.tsx`, `HistoryViewDesktop.tsx` y `HistoryViewMobile.tsx`. Permite a los cajeros y administradores escribir sin preocuparse por tildes (ej. "camara", "bateria", "liquida" encuentran "Cámara", "Batería", "Silicona Líquida").
+  - **Transvase Ergonómico Desktop ➔ Mobile (Presets y Scoping):** Adaptación del sistema de Presets Maestros a la vista móvil `AttributeConfigModal.tsx`, mostrando chips dinámicos con icono `Bookmark` que permiten asociar opciones en un toque sin tener que escribirlas manualmente.
+  - **Aislamiento de Atributos por Categoría en Móvil:** `AttributeConfigModal.tsx` y `NewProductModal.tsx` ahora operan con aislamiento estricto por categoría (`selectedCategory`), preservando fallback inmediato al banco maestro si la categoría es recién creada.
+  - **Ampliación de Tap Targets Táctiles (Apple HIG):** Los controles de edición, reordenamiento y eliminación en `AttributeConfigModal.tsx` se ampliaron a 32-44px con micro-interacciones activas (`active:scale-90`) para evitar pulsaciones fallidas en pantallas táctiles de mostrador.
+  - **Limpieza de Código Huérfano:** Eliminación de importaciones residuales (`DesktopAttributeConfigView` en `InventoryView.tsx`) e integración de nombres de proveedores en el índice de búsqueda precalculado.
+  - **Certificación de Calidad 100% Exit 0:** 56/56 pruebas unitarias pasando en Vitest, 0 errores en TypeScript estricto, bundle de producción optimizado en Vite y 70/70 pruebas E2E aprobadas en Playwright (Chromium y Mobile Safari).

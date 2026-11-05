@@ -26,7 +26,6 @@ import {
   DEFAULT_ADVANCED_FILTERS,
   AttributeConfigModal,
   CategoryManagerModal,
-  DesktopAttributeConfigView,
   DesktopCategoryManagerView,
   DesktopInventoryGrid,
   DesktopNewProductModal,
@@ -38,7 +37,7 @@ import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../components/LottiePlayer";
 import { useInventory } from "../context/InventoryContext";
 import { Product, ProductCategory } from "../types/domain";
 import { isSameCatalogText } from "../utils/catalogConfig";
-import { formatCOP, parseCOPInput } from "../utils/formatters";
+import { foldDiacritics, formatCOP, parseCOPInput } from "../utils/formatters";
 import { useIsDesktop } from "../hooks/useIsDesktop";
 
 interface InventoryViewProps {
@@ -61,6 +60,7 @@ export default function InventoryView({
 }: InventoryViewProps) {
   const {
     products,
+    suppliers,
     getSupplier,
     showCosts,
     setShowCosts,
@@ -281,16 +281,20 @@ export default function InventoryView({
     }
   }, [sortedCategories, selectedCategory]);
 
-  // Índice precalculado en memoria para búsquedas instantáneas por nombre, categoría y atributos
+  // Índice precalculado en memoria para búsquedas instantáneas por nombre, categoría y atributos (con normalización diacrítica)
   const productSearchIndex = useMemo(() => {
     const indexMap = new Map<string, string>();
     for (const p of products) {
-      const searchableBlob =
-        `${p.name} ${p.category} ${p.subtitle || ""}`.toLowerCase();
+      const supplierNames = p.batches
+        .map((b) => suppliers.find((s) => s.id === b.supplierId)?.name || "")
+        .join(" ");
+      const searchableBlob = foldDiacritics(
+        `${p.name} ${p.category} ${p.subtitle || ""} ${supplierNames}`
+      );
       indexMap.set(p.id, searchableBlob);
     }
     return indexMap;
-  }, [products]);
+  }, [products, suppliers]);
 
   // Etiquetas dinámicas de atributos/subtipos disponibles cuando se filtra una categoría específica
   const availableAttributeTags = useMemo(() => {
@@ -333,10 +337,10 @@ export default function InventoryView({
     const minW = parseInt(advancedFilters.minWarranty, 10) || 0;
     const qTerms = deferredQuery
       .trim()
-      .toLowerCase()
       .split(/\s+/)
+      .map((t) => foldDiacritics(t))
       .filter(Boolean);
-    const attrTagLower = selectedAttributeTag.trim().toLowerCase();
+    const attrTagFolded = foldDiacritics(selectedAttributeTag);
 
     return products.filter((p) => {
       // 1. Filtro de categoría
@@ -346,10 +350,10 @@ export default function InventoryView({
       if (!matchesCategory) return false;
 
       // 2. Filtro rápido por etiqueta de atributo / subtipo de la categoría activa
-      if (attrTagLower) {
-        const sub = (p.subtitle || "").toLowerCase();
-        const nm = p.name.toLowerCase();
-        if (!sub.includes(attrTagLower) && !nm.includes(attrTagLower)) {
+      if (attrTagFolded) {
+        const sub = foldDiacritics(p.subtitle);
+        const nm = foldDiacritics(p.name);
+        if (!sub.includes(attrTagFolded) && !nm.includes(attrTagFolded)) {
           return false;
         }
       }

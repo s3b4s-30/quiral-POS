@@ -17,6 +17,7 @@ import ModalSheet from "../../../components/ModalSheet";
 import { useInventory } from "../../../context/InventoryContext";
 import { ProductCategory } from "../../../types/domain";
 import {
+  getEffectiveAttributeOptions,
   inferAttributeKeysForCategory,
   isSameCatalogText,
   normalizeCatalogText,
@@ -99,8 +100,12 @@ export default function NewProductModal({
   ];
 
   // Estados para las categorías principales y atributos sincronizados
-  const [chargerSubtype, setChargerSubtype] = useState(chargerSubtypes[0] || "Cubo");
-  const [chargerBrand, setChargerBrand] = useState(chargerBrands[0] || "iPhone");
+  const [chargerSubtype, setChargerSubtype] = useState(
+    chargerSubtypes[0] || "Cubo"
+  );
+  const [chargerBrand, setChargerBrand] = useState(
+    chargerBrands[0] || "iPhone"
+  );
   const [chargerPower, setChargerPower] = useState(chargerPowers[0] || "20W");
   const [cableFinish, setCableFinish] = useState(cableFinishes[0] || "Normal");
 
@@ -119,9 +124,9 @@ export default function NewProductModal({
   );
 
   // Estado dinámico para atributos de cualquier categoría modular
-  const [dynamicSelections, setDynamicSelections] = useState<Record<string, string>>(
-    {}
-  );
+  const [dynamicSelections, setDynamicSelections] = useState<
+    Record<string, string>
+  >({});
 
   // Estado para adición en vivo (+) de un nuevo valor en un atributo
   const [addingAttrKey, setAddingAttrKey] = useState<string | null>(null);
@@ -173,14 +178,23 @@ export default function NewProductModal({
     isSameCatalogText(c.name, category)
   );
   const activeAttributeKeys =
-    activeCategoryConfig?.attributeKeys ?? inferAttributeKeysForCategory(category);
+    activeCategoryConfig?.attributeKeys ??
+    inferAttributeKeysForCategory(category);
 
   // Inicializar selecciones por defecto cuando cambian los atributos de una categoría modular
   useEffect(() => {
     setDynamicSelections((prev) => {
       const next = { ...prev };
       for (const key of activeAttributeKeys) {
-        const opts = catalogConfig.attributes[key]?.options ?? [];
+        const effective = getEffectiveAttributeOptions(
+          catalogConfig,
+          category,
+          key
+        );
+        const opts =
+          effective.length > 0
+            ? effective
+            : (catalogConfig.attributes[key]?.options ?? []);
         if (!next[key] || !opts.includes(next[key])) {
           next[key] = opts[0] || "";
         }
@@ -205,20 +219,31 @@ export default function NewProductModal({
       if (attrKey === "audioModels") return audioModel;
       if (attrKey === "connections") return audioConnection;
     }
-    const opts = catalogConfig.attributes[attrKey]?.options ?? [];
+    const effective = getEffectiveAttributeOptions(
+      catalogConfig,
+      category,
+      attrKey
+    );
+    const opts =
+      effective.length > 0
+        ? effective
+        : (catalogConfig.attributes[attrKey]?.options ?? []);
     return dynamicSelections[attrKey] || opts[0] || "";
   };
 
   // Helper para actualizar el valor seleccionado de cualquier clave de atributo
   const setSelectedValueForAttribute = (attrKey: string, val: string) => {
     if (attrKey === "chargerSubtypes") setChargerSubtype(val);
-    if (attrKey === "brands" && category === "Cargadores y Cables") setChargerBrand(val);
-    if (attrKey === "powers" && category === "Cargadores y Cables") setChargerPower(val);
+    if (attrKey === "brands" && category === "Cargadores y Cables")
+      setChargerBrand(val);
+    if (attrKey === "powers" && category === "Cargadores y Cables")
+      setChargerPower(val);
     if (attrKey === "cableFinishes" && category === "Cargadores y Cables")
       setCableFinish(val);
     if (attrKey === "caseMaterials" && category === "Forros / Fundas")
       setCaseMaterial(val);
-    if (attrKey === "caseModels" && category === "Forros / Fundas") setCaseModel(val);
+    if (attrKey === "caseModels" && category === "Forros / Fundas")
+      setCaseModel(val);
     if (
       attrKey === "audioModels" &&
       (category === "Audio" || category === "Audio / AirPods")
@@ -385,7 +410,7 @@ export default function NewProductModal({
       setAddingAttrKey(null);
       return;
     }
-    const saved = addAttributeOption(attrKey, clean);
+    const saved = addAttributeOption(attrKey, clean, category);
     if (saved) {
       setSelectedValueForAttribute(attrKey, saved);
     }
@@ -699,6 +724,13 @@ export default function NewProductModal({
 
     const selectedVal = getSelectedValueForAttribute(attrKey);
     const headingText = getDisplayHeadingForAttribute(attrKey, attrDef.label);
+    const effectiveOpts = getEffectiveAttributeOptions(
+      catalogConfig,
+      category,
+      attrKey
+    );
+    const displayOpts =
+      effectiveOpts.length > 0 ? effectiveOpts : (attrDef.options ?? []);
 
     return (
       <div key={attrKey} data-attribute-key={attrKey}>
@@ -706,7 +738,7 @@ export default function NewProductModal({
           {headingText}
         </p>
         <div className="flex flex-wrap items-center gap-1.5">
-          {attrDef.options.map((opt) => (
+          {displayOpts.map((opt) => (
             <button
               key={opt}
               type="button"
@@ -757,7 +789,11 @@ export default function NewProductModal({
           )
         }
       >
-        <form id="new-product-form" onSubmit={handleSubmit} className="space-y-5">
+        <form
+          id="new-product-form"
+          onSubmit={handleSubmit}
+          className="space-y-5"
+        >
           {error && (
             <p className="rounded-xl bg-[#ff3b30]/15 p-3 text-xs font-semibold text-[#ff3b30]">
               {error}
@@ -853,7 +889,11 @@ export default function NewProductModal({
                         onClick={() => toggleNewCategoryAttrKey(attr.key)}
                         className="inline-flex items-center gap-1 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] dark:text-zinc-200 hover:border-accent active:scale-95 transition-all duration-200"
                       >
-                        <Plus size={12} strokeWidth={2.5} className="text-accent shrink-0" />
+                        <Plus
+                          size={12}
+                          strokeWidth={2.5}
+                          className="text-accent shrink-0"
+                        />
                         <span>{attr.label}</span>
                       </button>
                     ))}
@@ -879,7 +919,8 @@ export default function NewProductModal({
 
                 {newCategoryAttrKeys.length === 0 ? (
                   <p className="rounded-xl border border-dashed border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)]/60 dark:bg-zinc-950/50 px-3 py-3 text-center text-xs text-[var(--text-secondary)] dark:text-zinc-400">
-                    Selecciona atributos arriba para previsualizar cómo se verá el formulario de esta categoría.
+                    Selecciona atributos arriba para previsualizar cómo se verá
+                    el formulario de esta categoría.
                   </p>
                 ) : (
                   <div className="space-y-2.5 rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-950 p-3">
@@ -922,7 +963,8 @@ export default function NewProductModal({
               <div className="space-y-2">
                 <div className="flex items-center justify-between px-0.5">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-zinc-400">
-                    Orden de atributos seleccionados ({newCategoryAttrKeys.length})
+                    Orden de atributos seleccionados (
+                    {newCategoryAttrKeys.length})
                   </p>
                   {newCategoryAttrKeys.length > 1 && (
                     <span className="text-[10px] font-medium text-[var(--text-secondary)] dark:text-zinc-400">
@@ -942,7 +984,11 @@ export default function NewProductModal({
                     onTouchMove={(e) => {
                       const touch = e.touches[0];
                       if (touch) {
-                        handleAttrTouchMovePoint(touch.clientX, touch.clientY, e);
+                        handleAttrTouchMovePoint(
+                          touch.clientX,
+                          touch.clientY,
+                          e
+                        );
                       }
                     }}
                     onTouchEnd={handleAttrTouchEndOrCancel}
@@ -997,7 +1043,11 @@ export default function NewProductModal({
                             aria-label={`Quitar ${attr.label} de nueva categoría`}
                             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30] hover:text-white active:scale-90 transition-all"
                           >
-                            <Minus size={14} strokeWidth={2.75} className="shrink-0" />
+                            <Minus
+                              size={14}
+                              strokeWidth={2.75}
+                              className="shrink-0"
+                            />
                           </button>
 
                           {/* Nombre del atributo con su posición */}
@@ -1010,7 +1060,9 @@ export default function NewProductModal({
                             <button
                               type="button"
                               disabled={idx === 0}
-                              onClick={() => moveNewCategoryAttrKey(idx, idx - 1)}
+                              onClick={() =>
+                                moveNewCategoryAttrKey(idx, idx - 1)
+                              }
                               aria-label={`Subir ${attr.label}`}
                               className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-800/70 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25 active:scale-90 transition-transform"
                             >
@@ -1019,7 +1071,9 @@ export default function NewProductModal({
                             <button
                               type="button"
                               disabled={idx === newCategoryAttrKeys.length - 1}
-                              onClick={() => moveNewCategoryAttrKey(idx, idx + 1)}
+                              onClick={() =>
+                                moveNewCategoryAttrKey(idx, idx + 1)
+                              }
                               aria-label={`Bajar ${attr.label}`}
                               className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-primary)]/50 dark:bg-zinc-800/70 text-[var(--text-primary)] dark:text-zinc-200 disabled:opacity-25 active:scale-90 transition-transform"
                             >
@@ -1031,7 +1085,10 @@ export default function NewProductModal({
                                 e.stopPropagation();
                                 const touch = e.touches[0];
                                 if (touch) {
-                                  handleAttrHandleTouchStart(idx, touch.clientY);
+                                  handleAttrHandleTouchStart(
+                                    idx,
+                                    touch.clientY
+                                  );
                                 }
                               }}
                               style={{ touchAction: "none" }}
@@ -1102,7 +1159,10 @@ export default function NewProductModal({
                   <button
                     type="button"
                     onClick={() =>
-                      setAttrModalConfig({ open: true, tab: "attribute-options" })
+                      setAttrModalConfig({
+                        open: true,
+                        tab: "attribute-options",
+                      })
                     }
                     aria-label="Abrir banco maestro de atributos"
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-accent hover:underline transition-colors duration-200"
@@ -1113,7 +1173,9 @@ export default function NewProductModal({
                 </div>
 
                 {/* Renderizado estricto según el orden de activeAttributeKeys */}
-                {activeAttributeKeys.map((attrKey) => renderAttributeBlock(attrKey))}
+                {activeAttributeKeys.map((attrKey) =>
+                  renderAttributeBlock(attrKey)
+                )}
               </div>
 
               {/* Nombre comercial del producto + Interruptor limpio de detalles */}
@@ -1175,7 +1237,9 @@ export default function NewProductModal({
                   >
                     <span
                       className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-150 ${
-                        includeAttributesInName ? "translate-x-5" : "translate-x-0.5"
+                        includeAttributesInName
+                          ? "translate-x-5"
+                          : "translate-x-0.5"
                       }`}
                     />
                   </button>
@@ -1292,8 +1356,8 @@ export default function NewProductModal({
 
                 {suppliers.length === 0 ? (
                   <p className="rounded-xl border border-[#ff9500]/40 bg-[#ff9500]/10 p-3 text-xs text-[#ff9500]">
-                    No hay proveedores registrados. Crea al menos uno para guardar este
-                    producto.
+                    No hay proveedores registrados. Crea al menos uno para
+                    guardar este producto.
                   </p>
                 ) : (
                   <select

@@ -23,7 +23,7 @@ import PosProductCard from "../../../components/PosProductCard";
 import { useInventory } from "../../../context/InventoryContext";
 import { ProductCategory } from "../../../types/domain";
 import { isSameCatalogText } from "../../../utils/catalogConfig";
-import { formatCOP } from "../../../utils/formatters";
+import { foldDiacritics, formatCOP } from "../../../utils/formatters";
 
 export interface PosViewDesktopProps {
   onCheckoutStateChange?: (open: boolean) => void;
@@ -137,8 +137,8 @@ export default function PosViewDesktop({
   );
 
   const filteredProducts = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    const attrTagLower = selectedAttributeTag.trim().toLowerCase();
+    const qFolded = foldDiacritics(query);
+    const attrTagFolded = foldDiacritics(selectedAttributeTag);
     return products.filter((product) => {
       // 1. Categoría principal
       if (
@@ -149,21 +149,26 @@ export default function PosViewDesktop({
       }
 
       // 2. Subfiltro dinámico de atributos/subtipos
-      if (selectedAttributeTag) {
-        const sub = (product.subtitle || "").toLowerCase();
-        const nm = product.name.toLowerCase();
-        if (!sub.includes(attrTagLower) && !nm.includes(attrTagLower)) {
+      if (attrTagFolded) {
+        const sub = foldDiacritics(product.subtitle);
+        const nm = foldDiacritics(product.name);
+        if (!sub.includes(attrTagFolded) && !nm.includes(attrTagFolded)) {
           return false;
         }
       }
 
-      // 3. Búsqueda de texto
-      if (
-        normalizedQuery &&
-        !product.name.toLowerCase().includes(normalizedQuery) &&
-        !product.subtitle?.toLowerCase().includes(normalizedQuery)
-      ) {
-        return false;
+      // 3. Búsqueda de texto multi-campo e insensible a acentos
+      if (qFolded) {
+        const nameFolded = foldDiacritics(product.name);
+        const subFolded = foldDiacritics(product.subtitle);
+        const catFolded = foldDiacritics(product.category);
+        if (
+          !nameFolded.includes(qFolded) &&
+          !subFolded.includes(qFolded) &&
+          !catFolded.includes(qFolded)
+        ) {
+          return false;
+        }
       }
 
       return true;

@@ -3,17 +3,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CartSummaryBar from "../../../components/CartSummaryBar";
 import CategoryManagerModal from "../../../components/CategoryManagerModal";
 import CheckoutSheet from "../../../components/CheckoutSheet";
-import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../../../components/LottiePlayer";
+import LottiePlayer, {
+  EMPTY_BOX_ANIMATION,
+} from "../../../components/LottiePlayer";
 import PosProductCard from "../../../components/PosProductCard";
 import { useInventory } from "../../../context/InventoryContext";
 import { ProductCategory } from "../../../types/domain";
 import { isSameCatalogText } from "../../../utils/catalogConfig";
+import { foldDiacritics } from "../../../utils/formatters";
 
 export interface PosViewMobileProps {
   onCheckoutStateChange: (open: boolean) => void;
 }
 
-export default function PosViewMobile({ onCheckoutStateChange }: PosViewMobileProps) {
+export default function PosViewMobile({
+  onCheckoutStateChange,
+}: PosViewMobileProps) {
   const {
     products,
     suppliers,
@@ -68,7 +73,9 @@ export default function PosViewMobile({ onCheckoutStateChange }: PosViewMobilePr
     for (const product of products) {
       if (
         product.category &&
-        !ordered.some((existing) => isSameCatalogText(existing, product.category))
+        !ordered.some((existing) =>
+          isSameCatalogText(existing, product.category)
+        )
       ) {
         ordered.push(product.category);
       }
@@ -96,13 +103,15 @@ export default function PosViewMobile({ onCheckoutStateChange }: PosViewMobilePr
   );
 
   const filteredProducts = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
+    const qFolded = foldDiacritics(query);
     return products.filter(
       (product) =>
-        (category === "Todos" || isSameCatalogText(product.category, category)) &&
-        (!normalizedQuery ||
-          product.name.toLowerCase().includes(normalizedQuery) ||
-          product.subtitle?.toLowerCase().includes(normalizedQuery))
+        (category === "Todos" ||
+          isSameCatalogText(product.category, category)) &&
+        (!qFolded ||
+          foldDiacritics(product.name).includes(qFolded) ||
+          foldDiacritics(product.subtitle).includes(qFolded) ||
+          foldDiacritics(product.category).includes(qFolded))
     );
   }, [products, query, category]);
 
@@ -143,7 +152,10 @@ export default function PosViewMobile({ onCheckoutStateChange }: PosViewMobilePr
           <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
             <div className="relative">
               <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm focus-within:border-accent transition-colors duration-200">
-                <Search size={18} className="shrink-0 text-[var(--text-secondary)]" />
+                <Search
+                  size={18}
+                  className="shrink-0 text-[var(--text-secondary)]"
+                />
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
@@ -248,7 +260,8 @@ export default function PosViewMobile({ onCheckoutStateChange }: PosViewMobilePr
                   Sin productos disponibles
                 </h4>
                 <p className="mt-1 text-xs sm:text-sm font-medium text-[var(--text-secondary)] max-w-sm mx-auto">
-                  No se encontraron productos para vender que coincidan con la búsqueda o el filtro seleccionado.
+                  No se encontraron productos para vender que coincidan con la
+                  búsqueda o el filtro seleccionado.
                 </p>
                 <button
                   type="button"
@@ -277,11 +290,17 @@ export default function PosViewMobile({ onCheckoutStateChange }: PosViewMobilePr
       </div>
 
       {/* Barra flotante sobre la barra inferior con resumen (Solo móvil) */}
-      {(!isCheckoutOpen || isCheckoutClosing) && !isCategoryModalOpen && cartUnits > 0 && (
-        <div className="md:hidden">
-          <CartSummaryBar units={cartUnits} total={cartTotal} onCheckout={openCheckout} />
-        </div>
-      )}
+      {(!isCheckoutOpen || isCheckoutClosing) &&
+        !isCategoryModalOpen &&
+        cartUnits > 0 && (
+          <div className="md:hidden">
+            <CartSummaryBar
+              units={cartUnits}
+              total={cartTotal}
+              onCheckout={openCheckout}
+            />
+          </div>
+        )}
 
       {/* Modal CheckoutSheet de cobro limpio (Solo móvil) */}
       {isCheckoutOpen && (

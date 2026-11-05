@@ -1,6 +1,9 @@
 export function formatCOP(value: number | string | undefined | null): string {
   if (value === undefined || value === null) return "$0";
-  const num = typeof value === "number" ? value : parseFloat(String(value).replace(/[^0-9.-]/g, ""));
+  const num =
+    typeof value === "number"
+      ? value
+      : parseFloat(String(value).replace(/[^0-9.-]/g, ""));
   if (!Number.isFinite(num)) return "$0";
   return "$" + Math.round(num).toLocaleString("es-CO");
 }
@@ -71,7 +74,7 @@ export interface WarrantyStatus {
 export function getWarrantyStatus(
   saleDateISO: string,
   warrantyDays: number = 15,
-  warrantyClaimed: boolean = false,
+  warrantyClaimed: boolean = false
 ): WarrantyStatus {
   const saleDate = new Date(saleDateISO);
   const now = new Date();
@@ -79,7 +82,9 @@ export function getWarrantyStatus(
   const elapsedDays = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
   const remainingDays = Math.max(0, warrantyDays - elapsedDays);
   const progressPct =
-    warrantyDays > 0 ? Math.min(100, Math.round((remainingDays / warrantyDays) * 100)) : 0;
+    warrantyDays > 0
+      ? Math.min(100, Math.round((remainingDays / warrantyDays) * 100))
+      : 0;
 
   if (warrantyClaimed) {
     return {
@@ -108,4 +113,17 @@ export function getWarrantyStatus(
     elapsedDays,
     progressPct,
   };
+}
+
+/**
+ * Normaliza y elimina marcas diacríticas (tildes, acentos, diéresis) y convierte a minúsculas
+ * para búsquedas e indexaciones ultra-rápidas e insensibles a acentos en el mostrador.
+ */
+export function foldDiacritics(text: string | null | undefined): string {
+  if (!text) return "";
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }

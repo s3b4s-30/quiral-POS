@@ -1,12 +1,25 @@
 import { AlertTriangle, Check, Pencil, Search, Trash2, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
-import LottiePlayer, { EMPTY_BOX_ANIMATION } from "../../../components/LottiePlayer";
+import LottiePlayer, {
+  EMPTY_BOX_ANIMATION,
+} from "../../../components/LottiePlayer";
 import ModalSheet from "../../../components/ModalSheet";
 import { useInventory } from "../../../context/InventoryContext";
 import { PaymentMethod, Sale, SaleItem } from "../../../types/domain";
-import { formatCOP, formatShortDate, getWarrantyStatus, parseCOPInput } from "../../../utils/formatters";
+import {
+  foldDiacritics,
+  formatCOP,
+  formatShortDate,
+  getWarrantyStatus,
+  parseCOPInput,
+} from "../../../utils/formatters";
 
-const PAYMENT_METHODS: PaymentMethod[] = ["Efectivo", "Nequi", "Bancolombia", "Tarjeta"];
+const PAYMENT_METHODS: PaymentMethod[] = [
+  "Efectivo",
+  "Nequi",
+  "Bancolombia",
+  "Tarjeta",
+];
 
 export interface HistoryViewMobileProps {
   onGoToPOS?: () => void;
@@ -17,31 +30,34 @@ export default function HistoryViewMobile({
   onGoToPOS: _onGoToPOS,
   onModalStateChange,
 }: HistoryViewMobileProps) {
-  const { sales, toggleItemWarranty, updateSale, deleteSale, loading } = useInventory();
+  const { sales, toggleItemWarranty, updateSale, deleteSale, loading } =
+    useInventory();
   const [openSaleId, setOpenSaleId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
   // Estado para Eliminar Venta (con Modal de Confirmación obligatorio)
   const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
-  const [restoreStockOnDelete, setRestoreStockOnDelete] = useState<boolean>(true);
+  const [restoreStockOnDelete, setRestoreStockOnDelete] =
+    useState<boolean>(true);
 
   // Estado para Modificar Venta (con paso de Confirmación obligatorio)
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [editCustomerName, setEditCustomerName] = useState("");
-  const [editPaymentMethod, setEditPaymentMethod] = useState<PaymentMethod>("Efectivo");
+  const [editPaymentMethod, setEditPaymentMethod] =
+    useState<PaymentMethod>("Efectivo");
   const [editItems, setEditItems] = useState<SaleItem[]>([]);
   const [editTotalInput, setEditTotalInput] = useState("");
   const [editNote, setEditNote] = useState("");
   const [confirmSaveEdit, setConfirmSaveEdit] = useState(false);
 
   const filteredSales = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return sales;
+    const qFolded = foldDiacritics(query);
+    if (!qFolded) return sales;
     return sales.filter((sale) => {
-      const matchCustomer = sale.customerName.toLowerCase().includes(q);
-      const matchNumber = String(sale.saleNumber).includes(q);
+      const matchCustomer = foldDiacritics(sale.customerName).includes(qFolded);
+      const matchNumber = String(sale.saleNumber).includes(qFolded);
       const matchItem = sale.items.some((it) =>
-        it.productName.toLowerCase().includes(q)
+        foldDiacritics(it.productName).includes(qFolded)
       );
       return matchCustomer || matchNumber || matchItem;
     });
@@ -92,7 +108,10 @@ export default function HistoryViewMobile({
       const next = prev.map((it) =>
         it.id === itemId ? { ...it, qty: Math.max(1, it.qty + delta) } : it
       );
-      const newSubtotal = next.reduce((acc, it) => acc + it.qty * it.unitPrice, 0);
+      const newSubtotal = next.reduce(
+        (acc, it) => acc + it.qty * it.unitPrice,
+        0
+      );
       setEditTotalInput(String(newSubtotal));
       return next;
     });
@@ -101,9 +120,14 @@ export default function HistoryViewMobile({
   const updateEditItemPrice = (itemId: string, newPrice: number) => {
     setEditItems((prev) => {
       const next = prev.map((it) =>
-        it.id === itemId ? { ...it, unitPrice: Math.max(0, Math.round(newPrice)) } : it
+        it.id === itemId
+          ? { ...it, unitPrice: Math.max(0, Math.round(newPrice)) }
+          : it
       );
-      const newSubtotal = next.reduce((acc, it) => acc + it.qty * it.unitPrice, 0);
+      const newSubtotal = next.reduce(
+        (acc, it) => acc + it.qty * it.unitPrice,
+        0
+      );
       setEditTotalInput(String(newSubtotal));
       return next;
     });
@@ -113,7 +137,10 @@ export default function HistoryViewMobile({
     if (editItems.length <= 1) return;
     setEditItems((prev) => {
       const next = prev.filter((it) => it.id !== itemId);
-      const newSubtotal = next.reduce((acc, it) => acc + it.qty * it.unitPrice, 0);
+      const newSubtotal = next.reduce(
+        (acc, it) => acc + it.qty * it.unitPrice,
+        0
+      );
       setEditTotalInput(String(newSubtotal));
       return next;
     });
@@ -144,13 +171,19 @@ export default function HistoryViewMobile({
   };
 
   return (
-    <div id="history-scroll" className="quiral-scroll-container transition-colors duration-75">
+    <div
+      id="history-scroll"
+      className="quiral-scroll-container transition-colors duration-75"
+    >
       <div className="w-full max-w-xl md:max-w-4xl lg:max-w-5xl mx-auto px-4">
         {/* Header sticky con fondo sólido opaco nativo (Apple HIG) */}
         <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2.5 mb-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)] transition-colors duration-75">
           <div className="relative">
             <div className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] px-3.5 shadow-sm transition-colors duration-200 focus-within:border-accent">
-              <Search size={18} className="text-[var(--text-secondary)] shrink-0" />
+              <Search
+                size={18}
+                className="text-[var(--text-secondary)] shrink-0"
+              />
               <input
                 type="text"
                 value={query}
@@ -232,9 +265,9 @@ export default function HistoryViewMobile({
                         #{sale.saleNumber} · {sale.customerName}
                       </h3>
                       <p className="mt-0.5 truncate text-xs text-[var(--text-secondary)]">
-                        {formatShortDate(sale.createdAt)}{" "}
-                        · {sale.paymentMethod}
-                        {sale.items.length > 0 && ` · ${sale.items.reduce((s, it) => s + it.qty, 0)} uds`}
+                        {formatShortDate(sale.createdAt)} · {sale.paymentMethod}
+                        {sale.items.length > 0 &&
+                          ` · ${sale.items.reduce((s, it) => s + it.qty, 0)} uds`}
                       </p>
                       {sale.note && (
                         <p className="mt-1 line-clamp-1 text-[11px] italic text-[var(--text-secondary)]">
@@ -308,8 +341,8 @@ export default function HistoryViewMobile({
                                   w.status === "claimed"
                                     ? "bg-[#ff3b30]/15 text-[#ff3b30]"
                                     : w.status === "expired"
-                                    ? "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)]"
-                                    : "bg-[#30d158]/15 text-[#30d158]"
+                                      ? "bg-black/5 dark:bg-white/10 text-[var(--text-secondary)]"
+                                      : "bg-[#30d158]/15 text-[#30d158]"
                                 }`}
                               >
                                 {w.label}
@@ -328,7 +361,9 @@ export default function HistoryViewMobile({
                                       : "bg-[#ff3b30]/15 text-[#ff3b30] hover:bg-[#ff3b30]/25"
                                   }`}
                                 >
-                                  {item.warrantyClaimed ? "Revertir reclamo" : "Marcar reclamo"}
+                                  {item.warrantyClaimed
+                                    ? "Revertir reclamo"
+                                    : "Marcar reclamo"}
                                 </button>
                               )}
                             </div>
@@ -374,11 +409,17 @@ export default function HistoryViewMobile({
             <div className="flex items-start gap-3 rounded-2xl border border-[#ff3b30]/30 bg-[#ff3b30]/10 p-3.5 text-[#ff3b30]">
               <AlertTriangle size={22} className="shrink-0 mt-0.5" />
               <div className="text-xs leading-relaxed">
-                <p className="font-bold text-sm">Acción destructiva permanente</p>
+                <p className="font-bold text-sm">
+                  Acción destructiva permanente
+                </p>
                 <p className="mt-0.5 opacity-90">
                   Estás a punto de eliminar el registro de la venta{" "}
-                  <strong>#{saleToDelete.saleNumber}</strong> ({saleToDelete.customerName}) por{" "}
-                  <strong className="tabular-nums">{formatCOP(saleToDelete.totalAmount)}</strong>.
+                  <strong>#{saleToDelete.saleNumber}</strong> (
+                  {saleToDelete.customerName}) por{" "}
+                  <strong className="tabular-nums">
+                    {formatCOP(saleToDelete.totalAmount)}
+                  </strong>
+                  .
                 </p>
               </div>
             </div>
@@ -389,7 +430,8 @@ export default function HistoryViewMobile({
                   Restituir unidades al inventario
                 </p>
                 <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                  Devuelve automáticamente el stock descontado en esta venta a sus lotes originales.
+                  Devuelve automáticamente el stock descontado en esta venta a
+                  sus lotes originales.
                 </p>
               </div>
               <input
@@ -438,7 +480,10 @@ export default function HistoryViewMobile({
                 onClick={() => setConfirmSaveEdit(true)}
                 className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-accent text-base font-bold text-white shadow-lg active:scale-[0.98] transition-all duration-200"
               >
-                Revisar y guardar · <span className="tabular-nums">{formatCOP(effectiveEditTotal)}</span>
+                Revisar y guardar ·{" "}
+                <span className="tabular-nums">
+                  {formatCOP(effectiveEditTotal)}
+                </span>
               </button>
             )
           }
@@ -447,10 +492,12 @@ export default function HistoryViewMobile({
             <div className="space-y-4 py-2 animate-in fade-in duration-150">
               <div className="rounded-2xl border border-accent/30 bg-accent-subtle p-4 space-y-2">
                 <p className="text-sm font-bold text-accent">
-                  ¿Confirmas la actualización de la venta #{editingSale.saleNumber}?
+                  ¿Confirmas la actualización de la venta #
+                  {editingSale.saleNumber}?
                 </p>
                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                  Los totales financieros y las diferencias de stock en inventario se ajustarán de forma inmediata.
+                  Los totales financieros y las diferencias de stock en
+                  inventario se ajustarán de forma inmediata.
                 </p>
               </div>
 
@@ -462,17 +509,25 @@ export default function HistoryViewMobile({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[var(--text-secondary)]">Método de pago:</span>
-                  <span className="font-bold text-[var(--text-primary)]">{editPaymentMethod}</span>
+                  <span className="text-[var(--text-secondary)]">
+                    Método de pago:
+                  </span>
+                  <span className="font-bold text-[var(--text-primary)]">
+                    {editPaymentMethod}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[var(--text-secondary)]">Unidades totales:</span>
+                  <span className="text-[var(--text-secondary)]">
+                    Unidades totales:
+                  </span>
                   <span className="tabular-nums font-bold text-[var(--text-primary)]">
                     {editItems.reduce((acc, it) => acc + it.qty, 0)} uds
                   </span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-[var(--border-color)] text-sm">
-                  <span className="font-semibold text-[var(--text-secondary)]">Nuevo Total:</span>
+                  <span className="font-semibold text-[var(--text-secondary)]">
+                    Nuevo Total:
+                  </span>
                   <span className="tabular-nums font-extrabold text-[var(--text-primary)]">
                     {formatCOP(effectiveEditTotal)}
                   </span>
@@ -540,7 +595,10 @@ export default function HistoryViewMobile({
                           inputMode="numeric"
                           value={formatCOP(item.unitPrice)}
                           onChange={(e) =>
-                            updateEditItemPrice(item.id, parseCOPInput(e.target.value))
+                            updateEditItemPrice(
+                              item.id,
+                              parseCOPInput(e.target.value)
+                            )
                           }
                           className="tabular-nums mt-0.5 w-full rounded-xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-accent transition-colors duration-200"
                         />
@@ -595,7 +653,9 @@ export default function HistoryViewMobile({
                     type="text"
                     inputMode="numeric"
                     value={formatCOP(effectiveEditTotal)}
-                    onChange={(e) => setEditTotalInput(String(parseCOPInput(e.target.value)))}
+                    onChange={(e) =>
+                      setEditTotalInput(String(parseCOPInput(e.target.value)))
+                    }
                     className="tabular-nums mt-1.5 w-full rounded-2xl border border-[var(--border-color)] dark:border-zinc-800 bg-[var(--bg-elevated)] dark:bg-zinc-900 px-4 py-2.5 text-base font-extrabold text-[var(--text-primary)] dark:text-zinc-100 outline-none focus:border-accent transition-colors duration-200"
                   />
                 </div>
