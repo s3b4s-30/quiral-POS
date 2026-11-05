@@ -16,6 +16,9 @@
 6. [ADR-006: Estándar Determinista de Calidad 100% Exit 0](#adr-006-estándar-determinista-de-calidad-100-exit-0)
 7. [ADR-007: Base de Conocimiento Centralizada en `notebook/` Versionada en Git](#adr-007-base-de-conocimiento-centralizada-en-notebook-versionada-en-git)
 8. [ADR-008: Blindaje HTTP de Producción y Hardening de RPC en Supabase](#adr-008-blindaje-http-de-producción-y-hardening-de-rpc-en-supabase)
+9. [ADR-011: Blindaje contra Regresiones de Catálogo y Ergonomía Desktop](#adr-011-blindaje-contra-regresiones-de-catálogo-y-ergonomía-desktop-atributos-opcionales-aislamiento-de-presets-y-no-modales)
+10. [ADR-012: Creación Limpia de Categorías, Inputs en Cascada y Aislamiento de Glassmorfismo](#adr-012-creación-limpia-de-categorías-zero-attributes-inputs-en-cascada-dinámica-y-aislamiento-de-glassmorfismo)
+11. [ADR-013: Centralización de Tokens de Botones (`uiButtons.ts`) y Erradicación de `!important` en Utilidades de Texto](#adr-013-centralización-de-tokens-de-botones-uibuttonsts-y-erradicación-de-important-en-utilidades-de-texto)
 
 ---
 
@@ -208,3 +211,23 @@
 - **Consecuencias:**
   - _Positivas:_ Flexibilidad taxonómica total para el comerciante, agilidad en la definición de presets in-situ, navegación nítida y contraste óptimo en ambos temas sin sobrecarga de GPU por desenfoques innecesarios.
   - _Negativas:_ Ninguna. Cobertura E2E y unitaria al 100% Exit 0.
+
+---
+
+## ADR-013: Centralización de Tokens de Botones (`uiButtons.ts`) y Erradicación de `!important` en Utilidades de Texto
+
+- **Estado:** Aceptado (Inviolable).
+- **Fecha:** 2026-11-05
+- **Contexto:**
+  1. En `src/styles/themePalettes.css:165`, la clase `.text-accent` tenía configurado `color: var(--accent-text) !important;`. Esta regla con `!important` destruía la cascada de especificidad de CSS, anulando completamente las utilidades de hover de Tailwind CSS (como `hover:text-white`). Al pasar el ratón sobre botones secundarios con fondo de acento al hover, el texto quedaba fijado en color acento, generando un fallo crítico de contraste (texto morado sobre fondo morado, totalmente invisible).
+  2. Existía dispersión de estilos de botones con clases inventadas o duplicadas (`PRIMARY_ACTION_BTN_CLASS` definida de forma local e independiente en varias vistas), lo que impedía un control homogéneo de geometrías, micro-interacciones (`active:scale-95`) y efectos de iluminación (`hover:shadow-accent-glow`) entre paletas de acento (Azul, Verde, Púrpura, Naranja, Rosa).
+- **Decisión:**
+  1. **Erradicación de `!important` en Utilidades de Color:** Prohibir terminantemente el uso de `!important` en `.text-accent` en `src/styles/themePalettes.css`. El color se asigna limpiamente como `color: var(--accent-text);`, permitiendo que pseudo-clases como `:hover` y `:active` sobreescriban el color según lo especificado por las clases utilitarias de Tailwind.
+  2. **Fuente Centralizada de Botones (`src/constants/uiButtons.ts`):** Crear el archivo central de tokens de botones para el Design System:
+     - `BTN_PRIMARY`: Botón de acción principal (Crear, Guardar, Confirmar) con fondo sólido `bg-accent hover:bg-accent-hover text-white shadow-xs hover:shadow-accent-glow active:scale-95`.
+     - `BTN_SECONDARY`: Botón de acción secundaria (`+ Nueva Categoría`, `+ Nuevo Atributo`, Presets) con `border border-accent/30 bg-accent/15 hover:bg-accent hover:border-accent text-accent hover:text-white font-bold`.
+     - `BTN_TERTIARY`: Botón neutro de cancelación o reseteo (`Cancelar`, `Restablecer Fábrica`) con `border border-[var(--border-color)] bg-[var(--bg-primary)] hover:bg-[var(--bg-elevated)] hover:border-accent/40 text-[var(--text-secondary)] hover:text-[var(--text-primary)]`.
+  3. **Migración Obligatoria:** Reemplazar todas las constantes locales y clases dispersas en `DesktopNewProductModal.tsx` y `DesktopCategoryManagerView.tsx` por importaciones directas de `src/constants/uiButtons.ts`.
+- **Consecuencias:**
+  - _Positivas:_ Eliminación del bug de invisibilidad en hover, unificación visual absoluta en toda la estación de escritorio, consistencia en las 5 paletas dinámicas de acento y soporte limpio para Modo Claro y Modo Oscuro.
+  - _Negativas:_ Ninguna. Cobertura completa garantizada por pruebas E2E y unitarias.

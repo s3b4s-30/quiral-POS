@@ -34,6 +34,11 @@ import {
   normalizeCatalogText,
 } from "../../../utils/catalogConfig";
 import { formatCOP, parseCOPInput } from "../../../utils/formatters";
+import {
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TERTIARY,
+} from "../../../constants/uiButtons";
 
 export interface DesktopNewProductModalProps {
   onClose: () => void;
@@ -41,10 +46,6 @@ export interface DesktopNewProductModalProps {
   initialProduct?: Product | null;
   onOpenSuppliers?: () => void;
 }
-
-// Estándar de diseño para botones de acción principal, creación y guardado (Design System UI)
-const PRIMARY_ACTION_BTN_CLASS =
-  "inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-accent-glow active:scale-95 transition-all duration-150 cursor-pointer select-none disabled:opacity-50 disabled:pointer-events-none shrink-0 tabular-nums";
 
 /**
  * Extrae de forma segura los atributos existentes desde un producto de origen
@@ -533,7 +534,7 @@ export default function DesktopNewProductModal({
                 <button
                   type="button"
                   onClick={() => setIsAddingCategory(true)}
-                  className="inline-flex items-center gap-1 rounded-xl bg-accent/15 border border-accent/30 px-2.5 py-1 text-[11px] font-bold text-accent hover:bg-accent hover:text-white transition-all cursor-pointer"
+                  className={BTN_SECONDARY}
                 >
                   <Plus size={12} strokeWidth={2.5} />
                   <span>Nueva Categoría</span>
@@ -542,7 +543,7 @@ export default function DesktopNewProductModal({
                 <button
                   type="button"
                   onClick={() => setIsAddingCategory(false)}
-                  className="text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+                  className={BTN_TERTIARY}
                 >
                   Cancelar
                 </button>
@@ -566,7 +567,7 @@ export default function DesktopNewProductModal({
                 <button
                   type="submit"
                   disabled={!newCatNameInput.trim()}
-                  className={PRIMARY_ACTION_BTN_CLASS}
+                  className={BTN_PRIMARY}
                 >
                   Crear
                 </button>
@@ -611,7 +612,7 @@ export default function DesktopNewProductModal({
                 <button
                   type="button"
                   onClick={() => setIsCreatingAttribute(true)}
-                  className="inline-flex items-center gap-1 rounded-xl bg-accent/15 border border-accent/30 px-2.5 py-1 text-[11px] font-bold text-accent hover:bg-accent hover:text-white transition-all cursor-pointer"
+                  className={BTN_SECONDARY}
                 >
                   <Plus size={12} strokeWidth={2.5} />
                   <span>Nuevo Atributo</span>
@@ -693,14 +694,14 @@ export default function DesktopNewProductModal({
                       setNewAttrLabel("");
                       setNewAttrOptions([""]);
                     }}
-                    className="px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+                    className={BTN_TERTIARY}
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={!newAttrLabel.trim()}
-                    className={PRIMARY_ACTION_BTN_CLASS}
+                    className={BTN_PRIMARY}
                   >
                     <Plus size={13} strokeWidth={2.5} />
                     <span>Crear y Vincular</span>
@@ -1010,7 +1011,7 @@ export default function DesktopNewProductModal({
                             type="button"
                             onClick={() => handleConfirmInlineOption(attrKey)}
                             disabled={!newOptionValue.trim()}
-                            className={PRIMARY_ACTION_BTN_CLASS}
+                            className={BTN_PRIMARY}
                           >
                             Guardar
                           </button>
@@ -1429,7 +1430,7 @@ export default function DesktopNewProductModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3.5 py-2 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all cursor-pointer"
+                  className={BTN_TERTIARY}
                 >
                   Cancelar (Esc)
                 </button>
@@ -1438,7 +1439,7 @@ export default function DesktopNewProductModal({
                   type="button"
                   data-testid="desktop-new-product-submit-btn"
                   onClick={submitProduct}
-                  className={`${PRIMARY_ACTION_BTN_CLASS} px-5 py-2.5 text-xs`}
+                  className={`${BTN_PRIMARY} px-5 py-2.5 text-xs`}
                 >
                   <Plus size={15} strokeWidth={2.5} />
                   <span>

@@ -27,6 +27,11 @@ import {
   isSameCatalogText,
   normalizeCatalogText,
 } from "../../../utils/catalogConfig";
+import {
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TERTIARY,
+} from "../../../constants/uiButtons";
 
 export interface DesktopCategoryManagerViewProps {
   onBack: () => void;
@@ -38,9 +43,6 @@ export interface DesktopCategoryManagerViewProps {
  * Cero Scroll Horizontal (100% vertical y adaptativo), Platform Split (>= 768px),
  * Paleta Dual OLED (#000000) y consistencia total con el Banco Maestro de Catálogo.
  */
-// Estándar de diseño para botones de acción principal, creación y guardado (Design System UI)
-const PRIMARY_ACTION_BTN_CLASS =
-  "inline-flex items-center gap-1.5 rounded-xl bg-accent hover:bg-accent-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-accent-glow active:scale-95 transition-all duration-150 cursor-pointer select-none disabled:opacity-50 disabled:pointer-events-none shrink-0 tabular-nums";
 
 export default function DesktopCategoryManagerView({
   onBack,
@@ -643,7 +645,7 @@ export default function DesktopCategoryManagerView({
             type="button"
             onClick={handleResetDefaults}
             title="Restablecer categorías y orden de fábrica"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all cursor-pointer"
+            className={BTN_TERTIARY}
           >
             <RotateCcw size={14} />
             <span>Restablecer Fábrica</span>
@@ -653,7 +655,7 @@ export default function DesktopCategoryManagerView({
             data-testid="save-category-order-btn"
             aria-label="Guardar orden de categorías"
             onClick={handleSaveAndClose}
-            className={PRIMARY_ACTION_BTN_CLASS}
+            className={BTN_PRIMARY}
           >
             <Check size={14} strokeWidth={2.5} />
             <span>Guardar y Confirmar</span>
@@ -751,8 +753,10 @@ export default function DesktopCategoryManagerView({
                 </div>
                 <button
                   type="button"
+                  data-testid="create-category-btn"
                   onClick={() => setIsCreatingCategory((prev) => !prev)}
-                  className={PRIMARY_ACTION_BTN_CLASS}
+                  className={BTN_SECONDARY}
+                  title="Crear una nueva categoría de catálogo"
                 >
                   <Plus size={14} strokeWidth={2.5} />
                   <span>Nueva Categoría</span>
@@ -780,14 +784,14 @@ export default function DesktopCategoryManagerView({
                         setIsCreatingCategory(false);
                         setNewCategoryName("");
                       }}
-                      className="px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      className={BTN_TERTIARY}
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
                       disabled={!newCategoryName.trim()}
-                      className={PRIMARY_ACTION_BTN_CLASS}
+                      className={BTN_PRIMARY}
                     >
                       <Plus size={14} strokeWidth={2.5} />
                       <span>Crear Categoría</span>
@@ -942,7 +946,7 @@ export default function DesktopCategoryManagerView({
                         setIsCreatingAttribute((prev) => !prev);
                         setIsLinkingAttrOpen(false);
                       }}
-                      className={PRIMARY_ACTION_BTN_CLASS}
+                      className={BTN_SECONDARY}
                       title="Crear un nuevo atributo personalizado"
                     >
                       <Plus size={14} strokeWidth={2.5} />
@@ -1047,14 +1051,14 @@ export default function DesktopCategoryManagerView({
                           setNewAttributeLabel("");
                           setNewAttributeFirstOption("");
                         }}
-                        className="px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                        className={BTN_TERTIARY}
                       >
                         Cancelar
                       </button>
                       <button
                         type="submit"
                         disabled={!newAttributeLabel.trim()}
-                        className={PRIMARY_ACTION_BTN_CLASS}
+                        className={BTN_PRIMARY}
                       >
                         <Plus size={14} strokeWidth={2.5} />
                         <span>
@@ -1247,7 +1251,7 @@ export default function DesktopCategoryManagerView({
                   <button
                     type="submit"
                     disabled={!newOptionInput.trim()}
-                    className={PRIMARY_ACTION_BTN_CLASS}
+                    className={BTN_PRIMARY}
                   >
                     <Plus size={14} strokeWidth={2.5} />
                     <span>Agregar</span>
@@ -1511,7 +1515,7 @@ export default function DesktopCategoryManagerView({
                     onClick={() =>
                       setIsCreatingGlobalAttribute((prev) => !prev)
                     }
-                    className={PRIMARY_ACTION_BTN_CLASS}
+                    className={BTN_SECONDARY}
                     title="Crear un nuevo atributo maestro en el Banco Global"
                   >
                     <Plus size={14} strokeWidth={2.5} />
@@ -1560,7 +1564,7 @@ export default function DesktopCategoryManagerView({
                         setNewGlobalAttributeLabel("");
                         setNewGlobalAttributeFirstOption("");
                       }}
-                      className="px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+                      className={BTN_TERTIARY}
                     >
                       Cancelar
                     </button>
@@ -1568,7 +1572,7 @@ export default function DesktopCategoryManagerView({
                       type="submit"
                       data-testid="confirm-create-global-attr-btn"
                       disabled={!newGlobalAttributeLabel.trim()}
-                      className={PRIMARY_ACTION_BTN_CLASS}
+                      className={BTN_PRIMARY}
                     >
                       <Plus size={14} strokeWidth={2.5} />
                       <span>Crear en Banco Global</span>
@@ -1664,7 +1668,7 @@ export default function DesktopCategoryManagerView({
                   <button
                     type="submit"
                     disabled={!newOptionInput.trim()}
-                    className={PRIMARY_ACTION_BTN_CLASS}
+                    className={BTN_PRIMARY}
                   >
                     <Plus size={14} strokeWidth={2.5} />
                     <span>+ Agregar Preset</span>
@@ -1697,14 +1701,14 @@ export default function DesktopCategoryManagerView({
                           <button
                             type="button"
                             onClick={() => handleSaveEdit(opt)}
-                            className={PRIMARY_ACTION_BTN_CLASS}
+                            className={BTN_PRIMARY}
                           >
                             Guardar
                           </button>
                           <button
                             type="button"
                             onClick={() => setEditingOption(null)}
-                            className="rounded-lg border border-[var(--border-color)] px-2 py-1 text-xs text-[var(--text-secondary)] cursor-pointer shrink-0"
+                            className={BTN_TERTIARY}
                           >
                             Cancelar
                           </button>

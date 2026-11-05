@@ -163,7 +163,7 @@
 }
 
 .text-accent {
-  color: var(--accent-text) !important;
+  color: var(--accent-text);
 }
 
 .border-accent {
