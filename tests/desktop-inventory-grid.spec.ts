@@ -219,11 +219,39 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(newProductBtn).toBeVisible();
     await newProductBtn.click();
 
-    // 3. Validar renderizado del diálogo modal centrado de escritorio Split-Layout
+    // 3. Validar renderizado del diálogo modal centrado de escritorio Split-Layout con Glassmorfismo
     const modal = page.getByTestId("desktop-new-product-modal");
     await expect(modal).toBeVisible();
     await expect(
       modal.getByRole("heading", { name: /Nuevo Producto/i })
+    ).toBeVisible();
+
+    // Verificar CERO scroll horizontal en el modal de Nuevo Producto (Prohibido overflow-x-auto)
+    const hasHorizontalOverflow = await modal.evaluate((el) => {
+      const scrollEls = el.querySelectorAll(".overflow-x-auto");
+      return scrollEls.length > 0;
+    });
+    expect(hasHorizontalOverflow).toBe(false);
+
+    // Verificar estado inicial: Categoría en blanco con prompt elegante
+    await expect(
+      modal.getByText(/Selecciona una categoría de catálogo/i)
+    ).toBeVisible();
+
+    // Seleccionar categoría "Forros / Fundas" en el flex-wrap de categorías
+    const fundasBtn = modal.getByRole("button", {
+      name: "Forros / Fundas",
+      exact: true,
+    });
+    await expect(fundasBtn).toBeVisible();
+    await fundasBtn.click();
+
+    // Despliegue progresivo: el prompt desaparece y se muestran los atributos de Forros / Fundas
+    await expect(
+      modal.getByText(/Selecciona una categoría de catálogo/i)
+    ).not.toBeVisible();
+    await expect(
+      modal.getByText(/Atributos Dinámicos de Forros \/ Fundas/i)
     ).toBeVisible();
 
     // 4. Llenar campos principales y verificar cálculos financieros en tiempo real
@@ -238,6 +266,24 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
 
     const stockInput = page.getByTestId("desktop-new-product-stock-input");
     await stockInput.fill("10");
+
+    // Probar ajuste ergonómico de stock mediante la rueda del mouse (onWheel)
+    await stockInput.hover();
+    try {
+      await page.mouse.wheel(0, -100);
+    } catch {
+      await stockInput.dispatchEvent("wheel", { deltaY: -100 });
+    }
+    // Verificar que el stock incrementó por rueda del mouse
+    await expect(stockInput).toHaveValue("11");
+
+    // Probar campo de Garantía Numérica Editable (Días)
+    const warrantyInput = page.getByTestId(
+      "desktop-new-product-warranty-input"
+    );
+    await expect(warrantyInput).toBeVisible();
+    await warrantyInput.fill("30");
+    await expect(warrantyInput).toHaveValue("30");
 
     // Verificar cálculo en tarjeta de márgenes (Utilidad: 89,000 - 45,000 = 44,000)
     await expect(modal.getByText(/44\.000/)).toBeVisible();

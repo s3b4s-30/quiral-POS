@@ -561,8 +561,8 @@ export default function DesktopCategoryManagerView({
           {/* ======================================================== */}
           {/* COLUMNA 1 (IZQUIERDA): Listado de Categorías             */}
           {/* ======================================================== */}
-          <div className="flex flex-col h-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-xs overflow-hidden min-h-0">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)] shrink-0">
+          <div className="flex flex-col h-full rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md p-4 shadow-2xl overflow-hidden min-h-0">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
                   1. Categorías ({draftOrder.length})
@@ -725,9 +725,9 @@ export default function DesktopCategoryManagerView({
           {/* ======================================================== */}
           {/* COLUMNA 2 (CENTRO): Atributos de la Categoría Activa     */}
           {/* ======================================================== */}
-          <div className="flex flex-col h-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-xs overflow-hidden min-h-0">
+          <div className="flex flex-col h-full rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md p-4 shadow-2xl overflow-hidden min-h-0">
             {/* Cabecera de Columna 2 */}
-            <div className="pb-3 border-b border-[var(--border-color)] shrink-0">
+            <div className="pb-3 border-b border-white/10 shrink-0">
               <div className="flex items-center justify-between">
                 <div className="min-w-0">
                   <h3 className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
@@ -945,9 +945,9 @@ export default function DesktopCategoryManagerView({
           {/* ======================================================== */}
           {/* COLUMNA 3 (DERECHA): Valores del Atributo Seleccionado   */}
           {/* ======================================================== */}
-          <div className="flex flex-col h-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-4 shadow-xs overflow-hidden min-h-0">
+          <div className="flex flex-col h-full rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md p-4 shadow-2xl overflow-hidden min-h-0">
             {/* Cabecera de Columna 3 */}
-            <div className="pb-3 border-b border-[var(--border-color)] shrink-0">
+            <div className="pb-3 border-b border-white/10 shrink-0">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
