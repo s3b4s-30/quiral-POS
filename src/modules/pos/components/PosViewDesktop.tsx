@@ -284,7 +284,7 @@ export default function PosViewDesktop({
                   className={`whitespace-nowrap rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-150 select-none cursor-pointer ${
                     isActive
                       ? "bg-accent text-white shadow-xs"
-                      : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
+                      : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:border-accent/40"
                   }`}
                 >
                   {item}
@@ -417,7 +417,7 @@ export default function PosViewDesktop({
               className="overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] shadow-xs"
             >
               <table className="w-full text-left text-xs border-collapse">
-                <thead className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]/80 text-[var(--text-secondary)] font-extrabold uppercase tracking-wider select-none">
+                <thead className="border-b border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] font-extrabold uppercase tracking-wider select-none">
                   <tr>
                     <th className="py-2.5 px-4">Artículo / Referencia</th>
                     <th className="py-2.5 px-3">Categoría</th>
@@ -488,7 +488,7 @@ export default function PosViewDesktop({
 
                         {/* Categoría */}
                         <td className="py-3 px-3 whitespace-nowrap">
-                          <span className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)]">
+                          <span className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-primary)]">
                             {product.category}
                           </span>
                         </td>
@@ -497,7 +497,9 @@ export default function PosViewDesktop({
                         <td className="py-3 px-3 text-center whitespace-nowrap">
                           <span
                             className={`tabular-nums font-black text-xs sm:text-sm ${
-                              stock > 0 ? "text-[#30d158]" : "text-[#ff3b30]"
+                              stock > 0
+                                ? "text-emerald-600 dark:text-[#30d158]"
+                                : "text-red-600 dark:text-[#ff3b30]"
                             }`}
                           >
                             {stock} uds

@@ -463,7 +463,7 @@ export default function DesktopNewProductModal({
       role="region"
       aria-label="Nuevo Producto — Estación de Trabajo Desktop"
       data-testid="desktop-new-product-modal"
-      className="w-full h-full flex flex-col overflow-hidden bg-[var(--bg-primary)] pt-[var(--quiral-header-offset,4rem)] antialiased-hd"
+      className="w-full h-full flex flex-col overflow-hidden bg-[var(--bg-primary)] antialiased-hd"
     >
       {/* 1. Cabecera Fija de la Estación de Trabajo */}
       <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-primary)] px-6 py-4 flex items-center justify-between select-none shadow-xs">
@@ -542,7 +542,7 @@ export default function DesktopNewProductModal({
                 <button
                   type="button"
                   onClick={() => setIsAddingCategory(false)}
-                  className="text-[11px] font-bold text-[var(--text-secondary)] hover:text-white cursor-pointer"
+                  className="text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -561,7 +561,7 @@ export default function DesktopNewProductModal({
                   value={newCatNameInput}
                   onChange={(e) => setNewCatNameInput(e.target.value)}
                   placeholder="Nombre de la nueva categoría..."
-                  className="flex-1 rounded-xl border border-accent bg-black/40 px-3 py-1.5 text-xs font-bold text-white outline-none"
+                  className="flex-1 rounded-xl border border-accent bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] outline-none"
                 />
                 <button
                   type="submit"
@@ -587,7 +587,7 @@ export default function DesktopNewProductModal({
                     className={`whitespace-nowrap rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-150 select-none cursor-pointer ${
                       isSelected
                         ? "bg-accent text-white shadow-accent-glow border border-accent"
-                        : "border border-white/10 bg-white/5 text-[var(--text-secondary)] hover:text-white hover:border-white/20 hover:bg-white/10"
+                        : "border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
                     }`}
                   >
                     {cat}
@@ -598,7 +598,7 @@ export default function DesktopNewProductModal({
           </div>
 
           {/* SECCIÓN B: Banco de Atributos Dinámicos de la Categoría */}
-          <div className="space-y-4 pt-4 border-t border-white/10">
+          <div className="space-y-4 pt-4 border-t border-[var(--border-color)]">
             <div className="flex items-center justify-between">
               <label className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
                 <Sliders size={13} className="text-accent" />
@@ -711,12 +711,12 @@ export default function DesktopNewProductModal({
 
             {!category ? (
               /* Estado Inicial en Blanco: Despliegue Progresivo */
-              <div className="flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-white/10 bg-white/[0.02] text-center space-y-2">
+              <div className="flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-[var(--border-color)] bg-[var(--bg-primary)] text-center space-y-2">
                 <Tag
                   size={24}
                   className="text-[var(--text-secondary)] opacity-40 mb-1"
                 />
-                <p className="text-xs font-bold text-white">
+                <p className="text-xs font-bold text-[var(--text-primary)]">
                   Selecciona una categoría de catálogo
                 </p>
                 <p className="text-[11px] text-[var(--text-secondary)] max-w-xs">
@@ -725,7 +725,7 @@ export default function DesktopNewProductModal({
                 </p>
               </div>
             ) : activeAttributeKeys.length === 0 ? (
-              <div className="p-4 rounded-2xl border border-dashed border-white/10 text-center text-xs text-[var(--text-secondary)]">
+              <div className="p-4 rounded-2xl border border-dashed border-[var(--border-color)] text-center text-xs text-[var(--text-secondary)]">
                 Esta categoría no tiene atributos dinámicos configurados. Puedes
                 crear uno con el botón superior.
               </div>
@@ -746,13 +746,13 @@ export default function DesktopNewProductModal({
                     <div
                       key={attrKey}
                       data-testid={`active-attribute-card-${attrKey}`}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 space-y-2.5"
+                      className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-3.5 space-y-2.5"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
                           <span
                             className={`h-1.5 w-1.5 rounded-full ${
-                              currentSelected ? "bg-accent" : "bg-white/30"
+                              currentSelected ? "bg-accent" : "bg-zinc-400"
                             }`}
                           />
                           <span>{label}</span>
@@ -779,7 +779,7 @@ export default function DesktopNewProductModal({
                               }
                               title={`Desmarcar selección de ${label}`}
                               data-testid={`clear-selection-${attrKey}`}
-                              className="text-[10px] text-[var(--text-secondary)] hover:text-white hover:underline cursor-pointer px-1 mr-1"
+                              className="text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:underline cursor-pointer px-1 mr-1"
                             >
                               Desmarcar
                             </button>
@@ -790,7 +790,7 @@ export default function DesktopNewProductModal({
                             onClick={() => handleMoveAttribute(idx, -1)}
                             disabled={idx === 0}
                             title="Subir prioridad del atributo"
-                            className="p-1 rounded-lg border border-white/10 text-[var(--text-secondary)] hover:text-white hover:border-white/20 disabled:opacity-20 cursor-pointer"
+                            className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 disabled:opacity-20 cursor-pointer"
                           >
                             <ArrowUp size={12} />
                           </button>
@@ -799,7 +799,7 @@ export default function DesktopNewProductModal({
                             onClick={() => handleMoveAttribute(idx, 1)}
                             disabled={idx === activeAttributeKeys.length - 1}
                             title="Bajar prioridad del atributo"
-                            className="p-1 rounded-lg border border-white/10 text-[var(--text-secondary)] hover:text-white hover:border-white/20 disabled:opacity-20 cursor-pointer"
+                            className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 disabled:opacity-20 cursor-pointer"
                           >
                             <ArrowDown size={12} />
                           </button>
@@ -811,7 +811,7 @@ export default function DesktopNewProductModal({
                             title={`Desvincular "${label}" de «${category}»`}
                             aria-label={`Desvincular atributo ${label}`}
                             data-testid={`unlink-attr-${attrKey}`}
-                            className="p-1 rounded-lg border border-white/10 text-[var(--text-secondary)] hover:text-red-400 hover:border-red-400/30 hover:bg-red-500/10 cursor-pointer transition-all"
+                            className="p-1 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-400 hover:border-red-400/30 hover:bg-red-500/10 cursor-pointer transition-all"
                           >
                             <X size={12} strokeWidth={2.5} />
                           </button>
@@ -840,7 +840,7 @@ export default function DesktopNewProductModal({
                                 className={`ml-1 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all cursor-pointer select-none ${
                                   isPresetsOpen
                                     ? "border-accent bg-accent text-white shadow-2xs"
-                                    : "border-white/10 bg-white/5 text-accent hover:bg-white/10 hover:border-accent/40"
+                                    : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-accent hover:border-accent/40"
                                 }`}
                                 title="Ver Presets Históricos disponibles para este atributo"
                               >
@@ -871,7 +871,7 @@ export default function DesktopNewProductModal({
                             <button
                               type="button"
                               onClick={() => setAddingOptionKey(null)}
-                              className="ml-1 text-[10px] font-bold text-[var(--text-secondary)] hover:text-white cursor-pointer"
+                              className="ml-1 text-[10px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
                             >
                               Cerrar
                             </button>
@@ -961,7 +961,7 @@ export default function DesktopNewProductModal({
                                           [attrKey]: preset,
                                         }));
                                       }}
-                                      className="inline-flex items-center gap-1 rounded-lg border border-dashed border-white/20 bg-white/5 hover:border-accent hover:bg-accent/20 hover:text-white px-2.5 py-1 text-[11px] font-semibold text-white/80 transition-all cursor-pointer select-none active:scale-95"
+                                      className="inline-flex items-center gap-1 rounded-lg border border-dashed border-[var(--border-color)] bg-[var(--bg-primary)] hover:border-accent hover:bg-accent/15 hover:text-accent px-2.5 py-1 text-[11px] font-semibold text-[var(--text-primary)] transition-all cursor-pointer select-none active:scale-95"
                                     >
                                       <Plus size={11} className="text-accent" />
                                       <span>{preset}</span>
@@ -976,7 +976,7 @@ export default function DesktopNewProductModal({
                       {/* Estado Vacío de Opciones en esta Categoría */}
                       {options.length === 0 &&
                         openPresetsAttrKey !== attrKey && (
-                          <div className="py-2 px-3 rounded-xl border border-dashed border-white/10 bg-white/[0.015] flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
+                          <div className="py-2 px-3 rounded-xl border border-dashed border-[var(--border-color)] bg-[var(--bg-elevated)] flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
                             <span>Sin valores asignados a esta categoría.</span>
                             <button
                               type="button"
@@ -1004,7 +1004,7 @@ export default function DesktopNewProductModal({
                               }
                             }}
                             placeholder={`Nuevo valor para ${label}...`}
-                            className="flex-1 rounded-xl border border-accent bg-black/40 px-2.5 py-1 text-xs font-semibold text-white outline-none"
+                            className="flex-1 rounded-xl border border-accent bg-[var(--bg-elevated)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] outline-none"
                           />
                           <button
                             type="button"
@@ -1028,7 +1028,7 @@ export default function DesktopNewProductModal({
                               className={`inline-flex items-center rounded-lg text-[11px] transition-all duration-150 select-none ${
                                 isOptSelected
                                   ? "bg-accent text-white font-bold shadow-2xs border border-accent"
-                                  : "border border-white/10 bg-white/5 text-[var(--text-secondary)] hover:text-white hover:border-white/20"
+                                  : "border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
                               }`}
                             >
                               <button
@@ -1051,7 +1051,7 @@ export default function DesktopNewProductModal({
                                   e.stopPropagation();
                                   handleDeleteCategoryOption(attrKey, opt);
                                 }}
-                                className="pr-1.5 pl-0.5 py-1 text-white/50 hover:text-red-400 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+                                className="pr-1.5 pl-0.5 py-1 text-[var(--text-secondary)] hover:text-red-400 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
                               >
                                 <X size={11} strokeWidth={2.5} />
                               </button>
@@ -1106,7 +1106,7 @@ export default function DesktopNewProductModal({
                           }));
                         }
                       }}
-                      className="inline-flex items-center gap-1 rounded-xl border border-dashed border-white/20 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)] hover:border-accent hover:text-white hover:bg-accent/10 active:scale-95 transition-all cursor-pointer select-none"
+                      className="inline-flex items-center gap-1 rounded-xl border border-dashed border-[var(--border-color)] bg-[var(--bg-elevated)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)] hover:border-accent hover:text-accent hover:bg-accent/10 active:scale-95 transition-all cursor-pointer select-none"
                     >
                       <Plus size={11} className="text-accent" />
                       <span>{attr.label}</span>
@@ -1140,7 +1140,7 @@ export default function DesktopNewProductModal({
                   className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
                     autoGenerateName
                       ? "border-accent/40 bg-accent-subtle text-accent"
-                      : "border-white/10 bg-white/5 text-[var(--text-secondary)]"
+                      : "border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]"
                   }`}
                 >
                   <Zap
@@ -1160,7 +1160,7 @@ export default function DesktopNewProductModal({
                   if (autoGenerateName) setAutoGenerateName(false);
                 }}
                 placeholder="Ej. Cubo iPhone 20W USB-C..."
-                className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-accent transition-colors"
+                className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-2.5 text-sm font-bold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
               />
             </div>
 
@@ -1191,8 +1191,8 @@ export default function DesktopNewProductModal({
                       onClick={() => setSelectedSupplierId(sup.id)}
                       className={`flex items-center gap-2 rounded-xl border p-2 text-left text-xs transition-all cursor-pointer ${
                         isSelected
-                          ? "border-accent bg-accent/15 text-white font-bold shadow-2xs"
-                          : "border-white/10 bg-white/5 text-[var(--text-secondary)] hover:text-white hover:border-white/20"
+                          ? "border-accent bg-accent/15 text-accent font-bold shadow-2xs"
+                          : "border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
                       }`}
                     >
                       <span
@@ -1216,13 +1216,13 @@ export default function DesktopNewProductModal({
                 <label className="text-[11px] font-black uppercase tracking-wider text-[var(--text-secondary)]">
                   Stock Inicial
                 </label>
-                <div className="flex items-center rounded-2xl border border-white/10 bg-black/40 p-1">
+                <div className="flex items-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-1">
                   <button
                     type="button"
                     onClick={() =>
                       setStockInput(String(Math.max(0, parsedStock - 1)))
                     }
-                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/5 text-[var(--text-secondary)] hover:text-white active:scale-95 transition-all cursor-pointer"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] active:scale-95 transition-all cursor-pointer"
                   >
                     <Minus size={14} />
                   </button>
@@ -1241,12 +1241,12 @@ export default function DesktopNewProductModal({
                         String(Math.max(0, (parseInt(prev, 10) || 0) + delta))
                       );
                     }}
-                    className="tabular-nums min-w-0 flex-1 bg-transparent text-center text-sm font-black text-white outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="tabular-nums min-w-0 flex-1 bg-transparent text-center text-sm font-black text-[var(--text-primary)] outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <button
                     type="button"
                     onClick={() => setStockInput(String(parsedStock + 1))}
-                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/5 text-[var(--text-secondary)] hover:text-white active:scale-95 transition-all cursor-pointer"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] active:scale-95 transition-all cursor-pointer"
                   >
                     <Plus size={14} />
                   </button>
@@ -1274,7 +1274,7 @@ export default function DesktopNewProductModal({
                       setWarrantyDays((prev) => Math.max(0, prev + delta));
                     }}
                     placeholder="15"
-                    className="tabular-nums w-full rounded-2xl border border-white/10 bg-black/40 px-3 py-2 text-xs font-bold text-white outline-none focus:border-accent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="tabular-nums w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-2 text-xs font-bold text-[var(--text-primary)] outline-none focus:border-accent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[var(--text-secondary)] select-none">
                     días
@@ -1290,7 +1290,7 @@ export default function DesktopNewProductModal({
                       className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
                         warrantyDays === d
                           ? "bg-accent text-white"
-                          : "border border-white/10 bg-white/5 text-[var(--text-secondary)] hover:text-white"
+                          : "border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
                       }`}
                     >
                       {d}d
@@ -1319,7 +1319,7 @@ export default function DesktopNewProductModal({
                       value={costInput}
                       onChange={(e) => setCostInput(e.target.value)}
                       placeholder="0"
-                      className="tabular-nums w-full rounded-xl border border-white/10 bg-black/40 pl-7 pr-3 py-2 text-xs font-black text-white outline-none focus:border-accent"
+                      className="tabular-nums w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-7 pr-3 py-2 text-xs font-black text-[var(--text-primary)] outline-none focus:border-accent"
                     />
                   </div>
                 </div>
@@ -1340,21 +1340,23 @@ export default function DesktopNewProductModal({
                       value={priceInput}
                       onChange={(e) => setPriceInput(e.target.value)}
                       placeholder="0"
-                      className="tabular-nums w-full rounded-xl border border-white/10 bg-black/40 pl-7 pr-3 py-2 text-xs font-black text-white outline-none focus:border-accent"
+                      className="tabular-nums w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] pl-7 pr-3 py-2 text-xs font-black text-[var(--text-primary)] outline-none focus:border-accent"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Tarjeta de Métricas de Margen en Tiempo Real */}
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
-                <div className="p-2 rounded-xl bg-white/5">
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--border-color)]">
+                <div className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)]">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                     Utilidad Unitaria
                   </p>
                   <p
                     className={`tabular-nums text-xs font-black mt-0.5 truncate ${
-                      unitProfit >= 0 ? "text-[#30d158]" : "text-[#ff453a]"
+                      unitProfit >= 0
+                        ? "text-emerald-600 dark:text-[#30d158]"
+                        : "text-red-600 dark:text-[#ff453a]"
                     }`}
                   >
                     {unitProfit >= 0
@@ -1363,29 +1365,31 @@ export default function DesktopNewProductModal({
                   </p>
                 </div>
 
-                <div className="p-2 rounded-xl bg-white/5">
+                <div className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)]">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                     Margen (%)
                   </p>
                   <p
                     className={`tabular-nums text-xs font-black mt-0.5 truncate ${
-                      marginPct >= 0 ? "text-[#30d158]" : "text-[#ff453a]"
+                      marginPct >= 0
+                        ? "text-emerald-600 dark:text-[#30d158]"
+                        : "text-red-600 dark:text-[#ff453a]"
                     }`}
                   >
                     {marginPct >= 0 ? `+${marginPct}%` : `${marginPct}%`}
                   </p>
                 </div>
 
-                <div className="p-2 rounded-xl bg-white/5">
+                <div className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)]">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                     Inversión Lote
                   </p>
-                  <p className="tabular-nums text-xs font-black text-amber-500 mt-0.5 truncate">
+                  <p className="tabular-nums text-xs font-black text-amber-600 dark:text-amber-500 mt-0.5 truncate">
                     {formatCOP(totalBatchCost)}
                   </p>
                 </div>
 
-                <div className="p-2 rounded-xl bg-white/5">
+                <div className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)]">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                     Ingreso Lote
                   </p>
@@ -1396,7 +1400,7 @@ export default function DesktopNewProductModal({
               </div>
 
               {isCostHigherThanPrice && (
-                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-amber-500/10 text-amber-500 text-[10px] font-bold">
+                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-500 text-[10px] font-bold">
                   <AlertTriangle size={12} className="shrink-0" />
                   <span>El costo ingresado supera el precio de venta.</span>
                 </div>
@@ -1405,7 +1409,7 @@ export default function DesktopNewProductModal({
           </div>
 
           {/* 3. Panel Inferior Fijo de Acciones */}
-          <div className="pt-4 border-t border-white/10 space-y-3">
+          <div className="pt-4 border-t border-[var(--border-color)] space-y-3">
             {errorMessage && (
               <div className="flex items-center gap-2 p-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-xs font-bold text-red-400 animate-in fade-in duration-150">
                 <AlertTriangle size={14} className="shrink-0" />
@@ -1415,7 +1419,7 @@ export default function DesktopNewProductModal({
 
             <div className="flex items-center justify-between gap-3">
               <span className="text-[11px] text-[var(--text-secondary)] font-medium">
-                <kbd className="rounded border border-white/10 bg-black/40 px-1.5 py-0.5 text-[10px] font-bold">
+                <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-primary)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--text-secondary)]">
                   Ctrl+Enter
                 </kbd>{" "}
                 guardar
@@ -1425,7 +1429,7 @@ export default function DesktopNewProductModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-bold text-[var(--text-secondary)] hover:text-white hover:border-white/20 active:scale-95 transition-all cursor-pointer"
+                  className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3.5 py-2 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all cursor-pointer"
                 >
                   Cancelar (Esc)
                 </button>

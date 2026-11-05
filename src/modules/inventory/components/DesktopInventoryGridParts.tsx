@@ -77,10 +77,10 @@ const CELL_LABELS: Record<EditableColKey, string> = {
 
 function stockBadgeClasses(totalStock: number): string {
   if (totalStock > 5)
-    return "bg-[#30d158]/15 text-[#30d158] border-[#30d158]/30";
+    return "bg-emerald-500/15 text-emerald-600 dark:text-[#30d158] border-emerald-500/30";
   if (totalStock > 0)
-    return "bg-[#ff9500]/15 text-[#ff9500] border-[#ff9500]/30";
-  return "bg-[#ff3b30]/15 text-[#ff3b30] border-[#ff3b30]/30";
+    return "bg-amber-500/15 text-amber-600 dark:text-[#ff9500] border-amber-500/30";
+  return "bg-red-500/15 text-red-600 dark:text-[#ff3b30] border-red-500/30";
 }
 
 export const EditableGridCell = memo(
@@ -400,7 +400,9 @@ export const InventoryGridRow = memo(
             <div className="flex flex-col items-end leading-tight">
               <span
                 className={`tabular-nums font-bold ${
-                  profit >= 0 ? "text-[#30d158]" : "text-[#ff3b30]"
+                  profit >= 0
+                    ? "text-emerald-600 dark:text-[#30d158]"
+                    : "text-red-600 dark:text-[#ff3b30]"
                 }`}
               >
                 {profit >= 0 ? "+" : ""}

@@ -990,7 +990,7 @@ export default function DesktopCategoryManagerView({
                       >
                         <Plus size={11} className="text-accent" />
                         <span>{attr.label}</span>
-                        <span className="text-[10px] text-zinc-400">
+                        <span className="text-[10px] text-[var(--text-secondary)]">
                           ({attr.options.length})
                         </span>
                       </button>
@@ -1072,7 +1072,10 @@ export default function DesktopCategoryManagerView({
               <div className="flex-1 overflow-y-auto mt-3 space-y-2 pr-1 custom-scrollbar min-h-0">
                 {categoryAttrKeys.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-[var(--border-color)] bg-[var(--bg-primary)] text-center space-y-2">
-                    <Bookmark size={22} className="text-zinc-500 opacity-60" />
+                    <Bookmark
+                      size={22}
+                      className="text-[var(--text-secondary)] opacity-60"
+                    />
                     <p className="text-xs font-bold text-[var(--text-primary)]">
                       Sin atributos vinculados
                     </p>
@@ -1613,7 +1616,7 @@ export default function DesktopCategoryManagerView({
                         className={
                           isSelected
                             ? "text-accent fill-accent/20"
-                            : "text-zinc-500 opacity-40 group-hover:opacity-100 transition-opacity"
+                            : "text-[var(--text-secondary)] opacity-40 group-hover:opacity-100 transition-opacity"
                         }
                       />
                     </div>
@@ -1711,7 +1714,7 @@ export default function DesktopCategoryManagerView({
                           <span className="tabular-nums text-[10px] text-[var(--text-secondary)] font-mono shrink-0">
                             {idx + 1}.
                           </span>
-                          <span className="text-xs font-bold text-white truncate">
+                          <span className="text-xs font-bold text-[var(--text-primary)] truncate">
                             {opt}
                           </span>
                         </div>
@@ -1723,7 +1726,7 @@ export default function DesktopCategoryManagerView({
                             type="button"
                             onClick={() => moveOption(idx, "up")}
                             disabled={idx === 0}
-                            className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-20 cursor-pointer"
+                            className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-20 cursor-pointer"
                           >
                             <ArrowUp size={12} />
                           </button>
@@ -1731,7 +1734,7 @@ export default function DesktopCategoryManagerView({
                             type="button"
                             onClick={() => moveOption(idx, "down")}
                             disabled={idx === effectiveOptions.length - 1}
-                            className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-20 cursor-pointer"
+                            className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-20 cursor-pointer"
                           >
                             <ArrowDown size={12} />
                           </button>
@@ -1741,7 +1744,7 @@ export default function DesktopCategoryManagerView({
                               setEditingOption(opt);
                               setEditingValue(opt);
                             }}
-                            className="p-1 rounded-lg text-zinc-400 hover:text-accent hover:bg-accent/10 cursor-pointer"
+                            className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-accent hover:bg-accent/10 cursor-pointer"
                           >
                             <Pencil size={12} />
                           </button>
@@ -1749,7 +1752,7 @@ export default function DesktopCategoryManagerView({
                             type="button"
                             onClick={() => handleDeleteOption(opt)}
                             disabled={effectiveOptions.length <= 1}
-                            className="p-1 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-20 cursor-pointer"
+                            className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-red-400 hover:bg-red-500/10 disabled:opacity-20 cursor-pointer"
                           >
                             <Trash2 size={12} />
                           </button>
@@ -1779,7 +1782,7 @@ export default function DesktopCategoryManagerView({
                   {catalogConfig.categories.filter((c) =>
                     c.attributeKeys.includes(activeAttrKey)
                   ).length === 0 && (
-                    <span className="italic text-zinc-500">
+                    <span className="italic text-[var(--text-secondary)]">
                       No vinculado a ninguna categoría todavía.
                     </span>
                   )}

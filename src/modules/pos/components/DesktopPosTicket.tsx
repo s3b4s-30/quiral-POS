@@ -418,7 +418,7 @@ export default function DesktopPosTicket({
                   className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl text-[11px] font-bold transition-all duration-150 active:scale-95 ${
                     isActive
                       ? "bg-accent text-white shadow-sm shadow-accent/25"
-                      : "border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40"
+                      : "border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] hover:border-accent/40"
                   }`}
                 >
                   <Icon size={14} className="mb-0.5" />
@@ -484,9 +484,9 @@ export default function DesktopPosTicket({
           data-testid="complete-sale-desktop-btn"
           disabled={cart.length === 0}
           onClick={handleCompleteSale}
-          className={`w-full py-3 px-4 rounded-xl font-black text-sm tracking-wide text-white transition-all duration-150 flex items-center justify-center gap-2 active:scale-[0.98] ${
+          className={`w-full py-3 px-4 rounded-xl font-black text-sm tracking-wide transition-all duration-150 flex items-center justify-center gap-2 active:scale-[0.98] ${
             cart.length > 0
-              ? "bg-accent hover:bg-accent-hover shadow-accent-glow cursor-pointer"
+              ? "bg-accent hover:bg-accent-hover text-white shadow-accent-glow cursor-pointer"
               : "bg-black/10 dark:bg-white/10 text-[var(--text-secondary)] opacity-50 cursor-not-allowed"
           }`}
         >

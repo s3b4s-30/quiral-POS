@@ -758,7 +758,7 @@ export default function InventoryView({
               onClick={() => handleOpenCategoryModal(true)}
               aria-label="Organizar categorías"
               title="Organizar categorías (o mantén presionada una categoría)"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--border-color)] dark:border-zinc-700 bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-accent hover:border-accent active:scale-95 transition-colors duration-200"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-accent hover:border-accent active:scale-95 transition-colors duration-200"
             >
               <SlidersHorizontal size={14} />
             </button>
@@ -841,7 +841,7 @@ export default function InventoryView({
                 {loading ? (
                   <div className="mx-auto h-4 w-16 rounded bg-black/5 dark:bg-white/10 animate-pulse mt-1" />
                 ) : (
-                  <p className="text-xs min-[400px]:text-sm sm:text-base font-bold tabular-nums tracking-tight text-[#ff9500] mt-0.5 truncate">
+                  <p className="text-xs min-[400px]:text-sm sm:text-base font-bold tabular-nums tracking-tight text-amber-600 dark:text-[#ff9500] mt-0.5 truncate">
                     {formatCOP(inventoryStats.totalCost)}
                   </p>
                 )}
@@ -853,7 +853,7 @@ export default function InventoryView({
                 {loading ? (
                   <div className="mx-auto h-4 w-16 rounded bg-black/5 dark:bg-white/10 animate-pulse mt-1" />
                 ) : (
-                  <p className="text-xs min-[400px]:text-sm sm:text-base font-bold tabular-nums tracking-tight text-[#30d158] mt-0.5 truncate">
+                  <p className="text-xs min-[400px]:text-sm sm:text-base font-bold tabular-nums tracking-tight text-emerald-600 dark:text-[#30d158] mt-0.5 truncate">
                     +{formatCOP(inventoryStats.potentialProfit)}
                   </p>
                 )}

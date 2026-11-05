@@ -692,7 +692,7 @@ export default function AttributeConfigModal({
 
                 {/* Presets del Banco Maestro disponibles para vincular a esta categoría */}
                 {availablePresets.length > 0 && (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-2.5 space-y-1.5 animate-in fade-in duration-150">
+                  <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-2.5 space-y-1.5 animate-in fade-in duration-150">
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-accent">
                       <Bookmark size={12} className="shrink-0" />
                       <span>
@@ -715,7 +715,7 @@ export default function AttributeConfigModal({
                               `Preset «${preset}» vinculado a ${selectedCategory}.`
                             );
                           }}
-                          className="inline-flex items-center gap-1 rounded-xl border border-white/10 bg-black/40 hover:border-accent hover:bg-accent/20 px-2.5 py-1 text-[11px] font-bold text-white/90 active:scale-95 transition-all cursor-pointer min-h-[30px]"
+                          className="inline-flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-elevated)] hover:border-accent hover:bg-accent/15 hover:text-accent px-2.5 py-1 text-[11px] font-bold text-[var(--text-primary)] active:scale-95 transition-all cursor-pointer min-h-[30px]"
                           title={`Vincular preset ${preset} a ${selectedCategory}`}
                         >
                           <Plus size={11} className="text-accent" />
