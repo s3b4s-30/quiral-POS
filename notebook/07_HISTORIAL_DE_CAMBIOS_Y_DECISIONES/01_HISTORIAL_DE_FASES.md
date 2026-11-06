@@ -213,3 +213,20 @@ flowchart TD
   - **Selector en Nuevo Producto (`DesktopNewProductModal.tsx`):**
     - Blindaje estricto para que solo puedan asignarse categorías activas en `categoryOrder`, limpiando cualquier preselección si una categoría fue archivada.
   - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y `npx playwright test` (72/72 en Chromium y Mobile Safari).
+
+---
+
+### Fase de Modernización de Navbar Móvil como Cápsula Flotante Liquid Glass (Apple HIG)
+
+- **Objetivo:** Refactorizar la barra de navegación inferior móvil (`src/components/Navbar.tsx`) como una cápsula flotante translúcida estilo iOS 18 / Apple HIG (`rounded-full`), garantizando tap targets ergonómicos (`min-h-[48px]`), desenfoque profundo Dual OLED (`backdrop-blur-2xl backdrop-saturate-150`) y aislamiento físico (`!isDesktop` en `src/App.tsx`).
+- **Hitos Implementados:**
+  - **Cápsula Flotante Liquid Glass (`src/components/Navbar.tsx`):**
+    - Conservación estricta del elemento `<nav>` y la clase `.liquid-glass-surface` para compatibilidad total con la suite E2E.
+    - Posicionamiento desacoplado con safe-area: `fixed z-40 inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] mx-auto max-w-sm`.
+    - Superficie Dual OLED: `rounded-full border border-white/15 dark:border-white/10 bg-white/70 dark:bg-black/65 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_12px_40px_rgba(0,0,0,0.2)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.8)] ring-1 ring-black/5 dark:ring-white/10 p-1.5`.
+    - Botones táctiles `min-h-[48px] rounded-full` con micro-interacción `active:scale-95 transition-all duration-150`, iconos de `20px`, micro-texto `text-[10px]` y badge de carrito `.tabular-nums bg-[#ff3b30]`.
+    - Auto-ocultamiento suave ante modales (`opacity-0 translate-y-8 pointer-events-none invisible`).
+  - **Platform Split Físico (`src/App.tsx`) y Gobernanza de Espaciado (`src/index.css`):**
+    - Montaje condicional `{!isDesktop && <Navbar ... />}` para que jamás exista en el DOM de escritorio (`>= 768px`).
+    - Token `--quiral-bottom-offset: calc(env(safe-area-inset-bottom, 0px) + 5.5rem)` en `.quiral-scroll-container` sin inyectar paddings redundantes en las vistas.
+  - **Certificación 100% Exit 0:** TypeScript (`tsc --noEmit`), Vitest (`56/56`), Vite build y Playwright E2E (`72/72`).

@@ -23,6 +23,7 @@
     --sat: env(safe-area-inset-top, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
     --quiral-header-offset: calc(env(safe-area-inset-top, 0px) + 4rem);
+    --quiral-bottom-offset: calc(env(safe-area-inset-bottom, 0px) + 5.5rem);
   }
 
   .dark {
@@ -325,7 +326,10 @@ body.modal-open nav {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   padding-top: var(--quiral-header-offset);
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5.5rem);
+  padding-bottom: var(
+    --quiral-bottom-offset,
+    calc(env(safe-area-inset-bottom, 0px) + 5.5rem)
+  );
 }
 
 @media (min-width: 768px) {

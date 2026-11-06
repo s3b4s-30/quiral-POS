@@ -261,13 +261,15 @@ function AppInner() {
         Permanece en el árbol DOM para mantener caliente la superficie GPU con backdrop-blur (42px).
         Se oculta y restaura instantáneamente (0ms reflow) mediante transformaciones de hardware.
       */}
-      <Navbar
-        activeTab={activeTab}
-        cartCount={cartUnits}
-        onTabChange={handleTabChange}
-        variant={navbarVariant}
-        isVisible={!hasActiveModal}
-      />
+      {!isDesktop && (
+        <Navbar
+          activeTab={activeTab}
+          cartCount={cartUnits}
+          onTabChange={handleTabChange}
+          variant={navbarVariant}
+          isVisible={!hasActiveModal}
+        />
+      )}
 
       {/* 
         Modales Globales a nivel raíz:
