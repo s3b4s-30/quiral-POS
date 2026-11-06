@@ -120,7 +120,8 @@ interface InventoryContextType {
   completeSale: (
     paymentMethod: PaymentMethod,
     total: number,
-    customerName?: string
+    customerName?: string,
+    note?: string
   ) => boolean;
   updateSale: (updatedSale: Sale) => void;
   deleteSale: (saleId: string, restoreStock?: boolean) => void;
@@ -1526,7 +1527,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const completeSale = (
     paymentMethod: PaymentMethod,
     total: number,
-    customerName?: string
+    customerName?: string,
+    note?: string
   ) => {
     if (saleInFlightRef.current) return false;
     const cartSnapshot = [...cart];
@@ -1572,6 +1574,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         id: makeId("sale"),
         saleNumber: nextNumber,
         customerName: customerName?.trim() || "Cliente General",
+        note: note?.trim() || undefined,
         paymentMethod,
         totalAmount: Math.round(total),
         createdAt: new Date().toISOString(),

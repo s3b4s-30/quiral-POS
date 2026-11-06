@@ -683,9 +683,15 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       .locator('button[data-testid^="clear-selection-"]')
       .first();
     if (await clearBtn.isVisible()) {
+      const testId = await clearBtn.getAttribute("data-testid");
       await clearBtn.click();
-      // Debe mostrar ahora que el atributo es (Opcional)
-      await expect(modal.getByText("(Opcional)").first()).toBeVisible();
+      // La selección se limpia y se verifica que NUNCA aparezca la frase '(Opcional)' en los atributos
+      if (testId) {
+        await expect(
+          modal.locator(`button[data-testid="${testId}"]`)
+        ).not.toBeVisible();
+      }
+      await expect(modal.getByText("(Opcional)")).not.toBeVisible();
     }
 
     // Cerrar modal

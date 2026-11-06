@@ -50,9 +50,19 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
     await expect(ticket.getByText(/1 artículo/i)).toBeVisible();
     await expect(completeBtn).toBeEnabled();
 
-    // Ajustar notas / cliente en el ticket
+    // Ajustar cliente en su apartado dedicado del ticket
     const customerInput = page.getByTestId("pos-customer-input");
     await customerInput.fill("Juan Pérez - Mostrador");
+
+    // Probar apartado de nota opcional con botón +
+    const addNoteBtn = page.getByTestId("pos-add-note-btn");
+    await expect(addNoteBtn).toBeVisible();
+    await expect(addNoteBtn).toContainText(/Añadir una nota/i);
+    await addNoteBtn.click();
+
+    const noteInput = page.getByTestId("pos-note-input");
+    await expect(noteInput).toBeVisible();
+    await noteInput.fill("Garantía extendida por el local");
 
     // Cambiar método de pago a Nequi
     const nequiBtn = page.getByTestId("payment-method-nequi");

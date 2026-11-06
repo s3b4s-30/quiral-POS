@@ -759,13 +759,9 @@ export default function DesktopNewProductModal({
                             }`}
                           />
                           <span>{label}</span>
-                          {currentSelected ? (
+                          {currentSelected && (
                             <span className="text-[10px] text-accent font-semibold ml-1">
                               ({currentSelected})
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-[var(--text-secondary)] italic ml-1">
-                              (Opcional)
                             </span>
                           )}
                         </span>
