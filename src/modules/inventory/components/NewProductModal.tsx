@@ -290,7 +290,7 @@ export default function NewProductModal({
       return `Power Bank ${capVal}${portVal ? ` (${portVal})` : ""}`.trim();
     }
     if (selectedValues.length > 0) {
-      return selectedValues.join(" ").trim();
+      return selectedValues.slice(0, 4).join(" ").trim();
     }
     return "";
   };

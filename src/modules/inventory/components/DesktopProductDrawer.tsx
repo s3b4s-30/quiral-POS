@@ -141,7 +141,7 @@ export default function DesktopProductDrawer({
 
   const computedFinalName =
     includeAttributesInName && selectedAttrValues.length > 0
-      ? `${baseName.trim()} ${selectedAttrValues.join(" ")}`.trim()
+      ? `${baseName.trim()} ${selectedAttrValues.slice(0, 4).join(" ")}`.trim()
       : baseName.trim();
 
   const totalStock = liveProduct.batches.reduce((sum, b) => sum + b.stock, 0);
