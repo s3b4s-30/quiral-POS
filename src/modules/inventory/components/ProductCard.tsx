@@ -1,3 +1,4 @@
+import { EyeOff } from "lucide-react";
 import React from "react";
 import { Product } from "../../../types/domain";
 import { formatCOP } from "../../../utils/formatters";
@@ -14,6 +15,7 @@ export interface ProductCardProps {
   showCosts?: boolean;
   avgCost?: number;
   profitPerUnit?: number;
+  isCategoryHidden?: boolean;
   className?: string;
 }
 
@@ -29,6 +31,7 @@ export const ProductCard = React.memo(function ProductCard({
   showCosts = false,
   avgCost = 0,
   profitPerUnit = 0,
+  isCategoryHidden = false,
   className = "",
 }: ProductCardProps) {
   const stock = product.batches.reduce((sum, batch) => sum + batch.stock, 0);
@@ -101,10 +104,24 @@ export const ProductCard = React.memo(function ProductCard({
               {product.name}
             </h3>
           )}
-          {product.subtitle && (
-            <p className="mt-0.5 truncate text-xs sm:text-sm font-medium text-[var(--text-secondary)]">
-              {product.subtitle}
-            </p>
+          {(product.subtitle || isCategoryHidden) && (
+            <div className="mt-0.5 flex items-center gap-1.5 min-w-0">
+              {product.subtitle && (
+                <p className="truncate text-xs sm:text-sm font-medium text-[var(--text-secondary)]">
+                  {product.subtitle}
+                </p>
+              )}
+              {isCategoryHidden && (
+                <span
+                  data-testid={`card-hidden-category-badge-${product.id}`}
+                  title="Categoría oculta de la barra activa"
+                  className="shrink-0 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded-md text-[10px] font-bold tabular-nums inline-flex items-center gap-1"
+                >
+                  <EyeOff size={11} />
+                  <span>Oculta</span>
+                </span>
+              )}
+            </div>
           )}
         </div>
 

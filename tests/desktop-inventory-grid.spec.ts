@@ -762,6 +762,13 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       managerView.getByText("iPhone", { exact: true })
     ).toBeVisible();
 
+    // Ocultar "Cargadores y Cables" (que tiene productos activos) para validar sincronización de ocultas, badge "Oculta" y toggle discreto
+    const hideCargadoresBtn = managerView.getByTestId(
+      "hide-category-btn-Cargadores y Cables"
+    );
+    await expect(hideCargadoresBtn).toBeVisible();
+    await hideCargadoresBtn.click();
+
     // 7. Guardar y regresar al inventario
     const saveBtn = managerView.getByTestId("save-category-order-btn");
     await expect(saveBtn).toBeVisible();
@@ -769,6 +776,56 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
 
     await expect(managerView).not.toBeVisible();
     await expect(page.locator("#inventory-scroll")).toBeVisible();
+
+    // 7.1. Verificar que "Cargadores y Cables" NO aparece en las pestañas rápidas de navegación
+    const chipsNav = page.getByTestId("desktop-category-chips-nav");
+    await expect(
+      chipsNav.getByRole("button", { name: "Cargadores y Cables", exact: true })
+    ).not.toBeVisible();
+
+    // 7.2. Verificar que en la pestaña "Todos" los productos de la categoría oculta lucen el micro-badge "Oculta"
+    const firstHiddenBadge = page
+      .locator('[data-testid^="hidden-category-badge-"]')
+      .first();
+    await expect(firstHiddenBadge).toBeVisible();
+    await expect(firstHiddenBadge).toContainText("Oculta");
+
+    // 7.3. Verificar el toggle discreto "Ocultar productos archivados (N)" / "Incluir ocultos (N)"
+    const toggleHiddenProdsBtn = page.getByTestId(
+      "toggle-hidden-category-products-btn"
+    );
+    await expect(toggleHiddenProdsBtn).toBeVisible();
+    await expect(toggleHiddenProdsBtn).toContainText(
+      /Ocultar productos archivados/i
+    );
+
+    await toggleHiddenProdsBtn.click();
+    await expect(toggleHiddenProdsBtn).toContainText(/Incluir ocultos/i);
+    await expect(firstHiddenBadge).not.toBeVisible();
+
+    // Volver a incluir los ocultos y verificar el badge en modo Tarjetas (Móvil / Cards)
+    await toggleHiddenProdsBtn.click();
+    await expect(firstHiddenBadge).toBeVisible();
+
+    await page.getByTestId("desktop-view-cards-btn").click();
+    const firstCardHiddenBadge = page
+      .locator('[data-testid^="card-hidden-category-badge-"]')
+      .first();
+    await expect(firstCardHiddenBadge).toBeVisible();
+    await expect(firstCardHiddenBadge).toContainText("Oculta");
+
+    // 7.4. Verificar que en "Nuevo Producto" la categoría oculta NO aparece en el selector
+    await page.getByTestId("desktop-toolbar-new-product-btn").click();
+    const newProdCatSection = page.getByTestId(
+      "desktop-new-product-category-section"
+    );
+    await expect(newProdCatSection).toBeVisible();
+    await expect(
+      newProdCatSection.getByRole("button", {
+        name: "Cargadores y Cables",
+        exact: true,
+      })
+    ).not.toBeVisible();
   });
 
   test("7. Flujo de Clonación Inteligente, Atributos Opcionales (deselección y desmarcado) y Limpieza de IDs en Banco Maestro", async ({

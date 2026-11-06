@@ -110,12 +110,37 @@ export default function DesktopNewProductModal({
     showCosts,
   } = useInventory();
 
-  // 1. Categoría Activa: Inicia con la categoría del producto a clonar o la inicial si está definida
+  // 1. Categoría Activa: Inicia con la categoría del producto a clonar o la inicial solo si está activa en categoryOrder
   const [category, setCategory] = useState<ProductCategory | "">(() => {
-    if (initialProduct?.category) return initialProduct.category;
-    if (initialCategory && initialCategory !== "Todos") return initialCategory;
+    if (
+      initialProduct?.category &&
+      catalogConfig.categoryOrder.some((c) =>
+        isSameCatalogText(c, initialProduct.category)
+      )
+    ) {
+      return initialProduct.category;
+    }
+    if (
+      initialCategory &&
+      initialCategory !== "Todos" &&
+      catalogConfig.categoryOrder.some((c) =>
+        isSameCatalogText(c, initialCategory)
+      )
+    ) {
+      return initialCategory;
+    }
     return "";
   });
+
+  // Garantizar que nunca quede seleccionada una categoría que haya sido ocultada de categoryOrder
+  useEffect(() => {
+    if (
+      category &&
+      !catalogConfig.categoryOrder.some((c) => isSameCatalogText(c, category))
+    ) {
+      setCategory("");
+    }
+  }, [category, catalogConfig.categoryOrder]);
 
   // 2. Creación rápida inline de nueva categoría
   const [isAddingCategory, setIsAddingCategory] = useState(false);

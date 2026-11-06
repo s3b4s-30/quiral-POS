@@ -39,6 +39,7 @@ import { Product, ProductCategory } from "../types/domain";
 import { isSameCatalogText } from "../utils/catalogConfig";
 import { foldDiacritics, formatCOP, parseCOPInput } from "../utils/formatters";
 import { useIsDesktop } from "../hooks/useIsDesktop";
+import { BTN_SECONDARY, BTN_TERTIARY } from "../constants/uiButtons";
 
 interface InventoryViewProps {
   onOpenSuppliers: () => void;
@@ -76,6 +77,8 @@ export default function InventoryView({
     "Todos" | ProductCategory
   >("Todos");
   const [selectedAttributeTag, setSelectedAttributeTag] = useState<string>("");
+  const [includeHiddenCategoryProducts, setIncludeHiddenCategoryProducts] =
+    useState<boolean>(true);
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterValues>(
     DEFAULT_ADVANCED_FILTERS
   );
@@ -235,41 +238,37 @@ export default function InventoryView({
     );
   }, [advancedFilters]);
 
-  // Ordenar dinámicamente la barra de categorías según el orden personalizado en catalogConfig
-  const { sortedCategories, categoryStockMap } = useMemo(() => {
-    const orderedList: ProductCategory[] = [...catalogConfig.categoryOrder];
+  // Ordenar dinámicamente la barra de categorías exclusivamente según catalogConfig.categoryOrder (categorías activas)
+  const { sortedCategories, categoryStockMap, hiddenCategoryProductsCount } =
+    useMemo(() => {
+      const orderedList: ProductCategory[] = [...catalogConfig.categoryOrder];
 
-    products.forEach((p) => {
-      if (
-        p.category &&
-        !orderedList.some((existing) => isSameCatalogText(existing, p.category))
-      ) {
-        orderedList.push(p.category);
+      const stockMap: Record<string, number> = {};
+      for (const cat of orderedList) {
+        stockMap[cat] = 0;
       }
-    });
 
-    const stockMap: Record<string, number> = {};
-    for (const cat of orderedList) {
-      stockMap[cat] = 0;
-    }
+      let hiddenProdCount = 0;
+      products.forEach((p) => {
+        const pStock = p.batches.reduce((sum, b) => sum + b.stock, 0);
+        const matchingKey = orderedList.find((c) =>
+          isSameCatalogText(c, p.category)
+        );
+        if (matchingKey !== undefined) {
+          stockMap[matchingKey] = (stockMap[matchingKey] || 0) + pStock;
+        } else {
+          hiddenProdCount += 1;
+        }
+      });
 
-    products.forEach((p) => {
-      const pStock = p.batches.reduce((sum, b) => sum + b.stock, 0);
-      const matchingKey = orderedList.find((c) =>
-        isSameCatalogText(c, p.category)
-      );
-      if (matchingKey !== undefined) {
-        stockMap[matchingKey] = (stockMap[matchingKey] || 0) + pStock;
-      }
-    });
-
-    return {
-      sortedCategories: ["Todos", ...orderedList] as Array<
-        "Todos" | ProductCategory
-      >,
-      categoryStockMap: stockMap,
-    };
-  }, [products, catalogConfig.categoryOrder]);
+      return {
+        sortedCategories: ["Todos", ...orderedList] as Array<
+          "Todos" | ProductCategory
+        >,
+        categoryStockMap: stockMap,
+        hiddenCategoryProductsCount: hiddenProdCount,
+      };
+    }, [products, catalogConfig.categoryOrder]);
 
   // Si la categoría activa fue eliminada, volver a "Todos"
   useEffect(() => {
@@ -344,11 +343,18 @@ export default function InventoryView({
     const attrTagFolded = foldDiacritics(selectedAttributeTag);
 
     return products.filter((p) => {
-      // 1. Filtro de categoría
+      // 1. Filtro de categoría y control de productos de categorías ocultas
       const matchesCategory =
         selectedCategory === "Todos" ||
         isSameCatalogText(p.category, selectedCategory);
       if (!matchesCategory) return false;
+
+      if (selectedCategory === "Todos" && !includeHiddenCategoryProducts) {
+        const isCatActive = catalogConfig.categoryOrder.some((activeCat) =>
+          isSameCatalogText(activeCat, p.category)
+        );
+        if (!isCatActive) return false;
+      }
 
       // 2. Filtro rápido por etiqueta de atributo / subtipo de la categoría activa
       if (attrTagFolded) {
@@ -405,6 +411,8 @@ export default function InventoryView({
     deferredQuery,
     advancedFilters,
     productSearchIndex,
+    includeHiddenCategoryProducts,
+    catalogConfig.categoryOrder,
   ]);
 
   // Subconjunto visible según la paginación activa (predeterminado 10 productos)
@@ -465,6 +473,7 @@ export default function InventoryView({
     setQuery("");
     setSelectedCategory("Todos");
     setSelectedAttributeTag("");
+    setIncludeHiddenCategoryProducts(true);
     setAdvancedFilters(DEFAULT_ADVANCED_FILTERS);
   };
 
@@ -760,6 +769,36 @@ export default function InventoryView({
               );
             })}
 
+            {/* Toggle discreto para incluir u ocultar productos de categorías archivadas */}
+            {hiddenCategoryProductsCount > 0 && (
+              <button
+                type="button"
+                data-testid="toggle-hidden-category-products-btn"
+                onClick={() =>
+                  setIncludeHiddenCategoryProducts((prev) => !prev)
+                }
+                title={
+                  includeHiddenCategoryProducts
+                    ? "Ocultar productos pertenecientes a categorías archivadas"
+                    : "Incluir productos pertenecientes a categorías archivadas"
+                }
+                className={`whitespace-nowrap shrink-0 ${
+                  includeHiddenCategoryProducts ? BTN_TERTIARY : BTN_SECONDARY
+                }`}
+              >
+                {includeHiddenCategoryProducts ? (
+                  <EyeOff size={12} />
+                ) : (
+                  <Eye size={12} />
+                )}
+                <span className="tabular-nums">
+                  {includeHiddenCategoryProducts
+                    ? `Ocultar productos archivados (${hiddenCategoryProductsCount})`
+                    : `Incluir ocultos (${hiddenCategoryProductsCount})`}
+                </span>
+              </button>
+            )}
+
             {/* Acceso directo accesible para organizar categorías */}
             <button
               type="button"
@@ -965,6 +1004,10 @@ export default function InventoryView({
                       ? Math.round(totalBatchCost / totalStock)
                       : 0;
                   const profitPerUnit = product.price - avgCost;
+                  const isCategoryHidden = !catalogConfig.categoryOrder.some(
+                    (activeCat) =>
+                      isSameCatalogText(activeCat, product.category)
+                  );
 
                   return (
                     <ProductCard
@@ -978,6 +1021,7 @@ export default function InventoryView({
                       showCosts={showCosts}
                       avgCost={avgCost}
                       profitPerUnit={profitPerUnit}
+                      isCategoryHidden={isCategoryHidden}
                     />
                   );
                 })

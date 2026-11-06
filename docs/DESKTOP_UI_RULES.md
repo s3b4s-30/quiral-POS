@@ -224,3 +224,13 @@ Para potenciar la auditoría y diseño con los paquetes upstream oficiales recom
 4. **Inviolabilidad de Colores de Proveedores:**
    - Los puntos e indicadores cromáticos de mayoristas y lotes deben reflejar fidedignamente `supplier.color` mediante `style={{ backgroundColor: supplier.color }}`.
    - Jamás deben ser sobreescritos por las clases dinámicas de acento del sistema (`--accent-*`).
+
+---
+
+## 12. Gobernanza de Visibilidad de Categorías (Activas vs. Ocultas)
+
+1. **Pestañas Rápidas Alimentadas Exclusivamente por `categoryOrder`:**
+   - Ninguna barra de navegación rápida (`InventoryView.tsx`, `PosViewDesktop.tsx`, `PosViewMobile.tsx`) ni el selector de creación (`DesktopNewProductModal.tsx`) puede listar categorías que no estén presentes en `catalogConfig.categoryOrder`.
+2. **Distinción en Pestaña «Todos» y Toggle Discreto:**
+   - En la vista general **«Todos»** de Inventario, los productos cuya categoría haya sido ocultada de la barra activa conservan su visibilidad para control de existencias, identificados con el micro-badge ámbar `Oculta` (`hidden-category-badge-${id}` en tabla desktop y `card-hidden-category-badge-${id}` en tarjetas).
+   - El operador dispone del botón discreto `Ocultar productos archivados (N)` / `Incluir ocultos (N)` (`BTN_TERTIARY` / `BTN_SECONDARY`) para alternar su visualización en un clic.

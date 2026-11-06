@@ -196,3 +196,20 @@ flowchart TD
     - Se sustituyó la sección fija de respaldo por el acordeón colapsable **`Categorías Ocultas y Guardadas (N)`** (`toggle-hidden-categories-btn`), que permanece compacto por defecto y al desplegarse lista todas las categorías de `catalogConfig.categories` ausentes en `draftOrder`.
     - Cada fila de categoría oculta ofrece dos acciones claras: **`+ Activar en barra`** (reutilizando `BTN_SECONDARY` de `src/constants/uiButtons.ts`) y **`Eliminar definitivamente`** (`<Trash2 size={13} />`).
   - **Certificación 100% Exit 0:** TypeScript estricto sin errores (`tsc`), 56/56 pruebas unitarias en Vitest, compilación limpia en Vite y cobertura E2E en `tests/desktop-inventory-grid.spec.ts` validando ocultación, persistencia de atributos/opciones al reactivar y purga definitiva.
+
+---
+
+### Fase de Sincronización Integral de Categorías Ocultas en Desktop y Móvil con Badge Discreto y Toggle de Filtrado
+
+- **Objetivo:** Garantizar que las categorías ocultadas o archivadas de `categoryOrder` desaparezcan estrictamente de todas las barras de pestañas rápidas tanto en Escritorio como en Móvil (Inventario y POS), mientras que en la pestaña **"Todos"** de Inventario sus productos se distingan con un micro-badge discreto (`Oculta`) y un control secundario para ocultarlos o incluirlos a voluntad.
+- **Hitos Implementados:**
+  - **Ocultación Estricta en Pestañas Rápidas (`InventoryView.tsx`, `PosViewDesktop.tsx`, `PosViewMobile.tsx`):**
+    - Se eliminó la re-inyección automática de categorías desde `products` hacia las barras de navegación. Ahora `HorizontalScrollNav` recibe única y exclusivamente `catalogConfig.categoryOrder` en ambas plataformas.
+    - En `PosViewMobile.tsx`, el carrusel horizontal de categorías se estandarizó sobre `HorizontalScrollNav` (`pos-mobile-category-chips-nav`).
+  - **Micro-Badge Discreto «Oculta» en Pestaña "Todos" (`DesktopInventoryGridParts.tsx` y `ProductCard.tsx`):**
+    - En la tabla de escritorio (`InventoryGridRow`) y en las tarjetas móviles/desktop (`ProductCard`), los productos cuya categoría no figura en `categoryOrder` exhiben el micro-badge `bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded-md text-[10px] font-bold tabular-nums inline-flex items-center gap-1` con icono `<EyeOff size={11} />` y texto `Oculta`.
+  - **Toggle Discreto de Filtrado (`InventoryView.tsx`):**
+    - Cuando existen productos pertenecientes a categorías ocultas, la barra de categorías presenta el botón secundario/terciario (`toggle-hidden-category-products-btn`, usando `BTN_TERTIARY` / `BTN_SECONDARY` de `src/constants/uiButtons.ts`) con etiqueta `Ocultar productos archivados (N)` / `Incluir ocultos (N)`.
+  - **Selector en Nuevo Producto (`DesktopNewProductModal.tsx`):**
+    - Blindaje estricto para que solo puedan asignarse categorías activas en `categoryOrder`, limpiando cualquier preselección si una categoría fue archivada.
+  - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y `npx playwright test` (72/72 en Chromium y Mobile Safari).

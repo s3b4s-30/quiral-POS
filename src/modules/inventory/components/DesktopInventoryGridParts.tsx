@@ -1,6 +1,7 @@
 import {
   Check,
   Copy,
+  EyeOff,
   Lock,
   Minus,
   Plus,
@@ -22,6 +23,7 @@ export interface EnrichedRow {
   profit: number;
   marginPct: number;
   attributeBadges: string[];
+  isCategoryHidden?: boolean;
 }
 
 /**
@@ -238,6 +240,7 @@ export const InventoryGridRow = memo(
       profit,
       marginPct,
       attributeBadges,
+      isCategoryHidden,
     } = row;
 
     return (
@@ -333,9 +336,21 @@ export const InventoryGridRow = memo(
 
         {/* 3. Categoría (160px) */}
         <td className="w-[160px] border-r border-[var(--border-color)] px-3 py-2">
-          <span className="inline-flex max-w-full truncate rounded-full border border-accent/30 bg-accent-subtle px-2.5 py-0.5 text-xs font-bold text-accent antialiased-hd">
-            {product.category}
-          </span>
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="inline-flex max-w-full truncate rounded-full border border-accent/30 bg-accent-subtle px-2.5 py-0.5 text-xs font-bold text-accent antialiased-hd">
+              {product.category}
+            </span>
+            {isCategoryHidden && (
+              <span
+                data-testid={`hidden-category-badge-${product.id}`}
+                title="Categoría oculta de la barra activa"
+                className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded-md text-[10px] font-bold tabular-nums inline-flex items-center gap-1"
+              >
+                <EyeOff size={11} />
+                <span>Oculta</span>
+              </span>
+            )}
+          </div>
         </td>
 
         {/* 4. Stock (120px - Editable Inline) */}
@@ -436,6 +451,7 @@ export const InventoryGridRow = memo(
     // producto (inmutable desde el contexto) y los derivados primitivos.
     prev.row.product === next.row.product &&
     prev.row.originalIndex === next.row.originalIndex &&
+    prev.row.isCategoryHidden === next.row.isCategoryHidden &&
     prev.rowIndex === next.rowIndex &&
     prev.isSelected === next.isSelected &&
     prev.activeColKey === next.activeColKey &&

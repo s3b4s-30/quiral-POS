@@ -20,6 +20,7 @@ import { createPortal } from "react-dom";
 import { useInventory } from "../../../context/InventoryContext";
 import { useScrollParentVirtualizer } from "../../../hooks/useScrollParentVirtualizer";
 import { Product, ProductCategory, Supplier } from "../../../types/domain";
+import { isSameCatalogText } from "../../../utils/catalogConfig";
 import {
   type EditableColKey,
   type EnrichedRow,
@@ -144,6 +145,10 @@ export default function DesktopInventoryGrid({
             s.length > 0 && s.toLowerCase() !== product.category.toLowerCase()
         );
 
+      const isCategoryHidden = !catalogConfig.categoryOrder.some((activeCat) =>
+        isSameCatalogText(activeCat, product.category)
+      );
+
       return {
         product,
         originalIndex: idx + 1,
@@ -152,6 +157,7 @@ export default function DesktopInventoryGrid({
         profit,
         marginPct,
         attributeBadges,
+        isCategoryHidden,
       };
     });
 
@@ -185,7 +191,7 @@ export default function DesktopInventoryGrid({
       }
       return sortDirection === "asc" ? cmp : -cmp;
     });
-  }, [products, sortColumn, sortDirection]);
+  }, [products, sortColumn, sortDirection, catalogConfig.categoryOrder]);
 
   // Virtualización sobre el contenedor de scroll de la vista (#inventory-scroll)
   const getRowKey = useCallback(
