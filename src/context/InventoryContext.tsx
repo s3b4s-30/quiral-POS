@@ -154,6 +154,8 @@ interface InventoryContextType {
   clearAllProducts: () => Promise<number>;
   catalogConfig: CatalogConfig;
   updateCategoryOrder: (newOrder: ProductCategory[]) => void;
+  hideCategoryFromOrder: (categoryName: ProductCategory) => void;
+  restoreCategoryToOrder: (categoryName: ProductCategory) => void;
   addCategory: (
     name: string,
     attributeKeys?: string[]
@@ -923,6 +925,80 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const hideCategoryFromOrder = (categoryName: ProductCategory) => {
+    const cleanName = normalizeCatalogText(categoryName);
+    if (!cleanName) return;
+
+    setCatalogConfig((prev) => {
+      const nextOrder = prev.categoryOrder.filter(
+        (c) => !isSameCatalogText(c, cleanName)
+      );
+      const hasCategoryDef = prev.categories.some((c) =>
+        isSameCatalogText(c.name, cleanName)
+      );
+      const nextCategories = hasCategoryDef
+        ? [...prev.categories]
+        : [
+            ...prev.categories,
+            {
+              name: cleanName,
+              isSystemDefault: FACTORY_BASE_CATEGORIES.some((b) =>
+                isSameCatalogText(b, cleanName)
+              ),
+              attributeKeys: inferAttributeKeysForCategory(cleanName),
+            },
+          ];
+
+      const next: CatalogConfig = {
+        ...prev,
+        categoryOrder: nextOrder,
+        categories: nextCategories,
+      };
+      persistCatalogConfig(next);
+      return next;
+    });
+  };
+
+  const restoreCategoryToOrder = (categoryName: ProductCategory) => {
+    const cleanName = normalizeCatalogText(categoryName);
+    if (!cleanName || cleanName.toLowerCase() === "todos") return;
+
+    setCatalogConfig((prev) => {
+      const existing = prev.categories.find((c) =>
+        isSameCatalogText(c.name, cleanName)
+      );
+      const canonicalName = existing ? existing.name : cleanName;
+
+      const isAlreadyInOrder = prev.categoryOrder.some((c) =>
+        isSameCatalogText(c, canonicalName)
+      );
+      const nextOrder = isAlreadyInOrder
+        ? [...prev.categoryOrder]
+        : [...prev.categoryOrder, canonicalName];
+
+      const nextCategories = existing
+        ? [...prev.categories]
+        : [
+            ...prev.categories,
+            {
+              name: canonicalName,
+              isSystemDefault: FACTORY_BASE_CATEGORIES.some((b) =>
+                isSameCatalogText(b, canonicalName)
+              ),
+              attributeKeys: inferAttributeKeysForCategory(canonicalName),
+            },
+          ];
+
+      const next: CatalogConfig = {
+        ...prev,
+        categoryOrder: nextOrder,
+        categories: nextCategories,
+      };
+      persistCatalogConfig(next);
+      return next;
+    });
+  };
+
   const addCategory = (
     name: string,
     attributeKeys?: string[]
@@ -935,7 +1011,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     );
 
     const keys =
-      attributeKeys !== undefined
+      attributeKeys !== undefined && attributeKeys.length > 0
         ? [...attributeKeys]
         : (existing?.attributeKeys ?? []);
 
@@ -988,10 +1064,6 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     categoryName: ProductCategory,
     fallbackCategory: ProductCategory = FALLBACK_ORPHAN_CATEGORY
   ): Promise<number> => {
-    const isFactory = FACTORY_BASE_CATEGORIES.some((b) =>
-      isSameCatalogText(b, categoryName)
-    );
-
     const affectedProducts = products.filter((p) =>
       isSameCatalogText(p.category, categoryName)
     );
@@ -1017,16 +1089,21 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
 
     setCatalogConfig((prev) => {
-      // Si es categoría base de fábrica, se conserva su definición en `categories` (Respaldo) y solo sale de `categoryOrder`
-      const nextCategories = isFactory
-        ? [...prev.categories]
-        : prev.categories.filter(
-            (c) => !isSameCatalogText(c.name, categoryName)
-          );
+      const cleanCat = normalizeCatalogText(categoryName);
+      const nextCategories = prev.categories.filter(
+        (c) => !isSameCatalogText(c.name, categoryName)
+      );
 
       const nextOrder = prev.categoryOrder.filter(
         (c) => !isSameCatalogText(c, categoryName)
       );
+
+      const nextCatValues = { ...(prev.categoryAttributeValues || {}) };
+      for (const k of Object.keys(nextCatValues)) {
+        if (isSameCatalogText(k, cleanCat)) {
+          delete nextCatValues[k];
+        }
+      }
 
       if (
         affectedProducts.length > 0 &&
@@ -1050,6 +1127,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         categoryOrder: nextOrder,
         categories: nextCategories,
+        categoryAttributeValues: nextCatValues,
       };
       persistCatalogConfig(next);
       return next;
@@ -1925,6 +2003,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         clearAllProducts,
         catalogConfig,
         updateCategoryOrder,
+        hideCategoryFromOrder,
+        restoreCategoryToOrder,
         addCategory,
         deleteCategory,
         updateCategoryAttributes,

@@ -180,3 +180,19 @@ flowchart TD
   - **Cabeceras Pegajosas de Catálogo (`InventoryView.tsx` y `PosViewDesktop.tsx`):** Superficies superiores ajustadas a `bg-white/35 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200/60 dark:bg-black/50 dark:border-white/10 shadow-xs`, con todos sus controles interactivos internos (buscador, filtros, conteo rápido, paginación, alternador de vista y chips de categoría) unificados en `bg-white/40 dark:bg-white/10 backdrop-blur-md`, permitiendo el deslizamiento subyacente de las filas de productos con efecto de cristal esmerilado translúcido de alta saturación óptica.
   - **Aserción E2E Flexible (`tests/desktop-inventory-grid.spec.ts`):** Validación en verde de la aserción `/backdrop-blur-(md|xl)/`.
   - **Certificación 100% Exit 0:** TypeScript estricto sin errores (`tsc`), 56/56 pruebas unitarias en Vitest, compilación limpia de producción en Vite y suite Playwright E2E aprobada (72/72 pruebas).
+
+---
+
+### Fase de Gobernanza de Categorías Activas vs. Ocultas y Panel Colapsable de Categorías Guardadas (Opción A)
+
+- **Objetivo:** Separar arquitectónicamente el concepto de **«Ocultar de la barra activa»** del de **«Purgar definitivamente»**, permitiendo que tanto las categorías de fábrica como las categorías personalizadas creadas por el comerciante (ej. «Gorra», «Reloj») puedan retirarse temporalmente de la barra de navegación sin perder sus atributos ni valores configurados, y reactivarse o eliminarse desde un panel inferior colapsable.
+- **Hitos Implementados:**
+  - **Capa de Datos y Estado (`src/context/InventoryContext.tsx`):**
+    - `hideCategoryFromOrder(categoryName)`: Retira la categoría de `categoryOrder` manteniendo intacto su objeto en `catalogConfig.categories` y sus opciones locales en `categoryAttributeValues`.
+    - `restoreCategoryToOrder(categoryName)`: Reinserta la categoría en `categoryOrder` con todos sus atributos y opciones preservados.
+    - `deleteCategory(categoryName, fallbackCategory)`: Purga definitiva de `categories`, `categoryOrder` y `categoryAttributeValues`, con confirmación obligatoria de reasignación si existen productos huérfanos asociados.
+  - **Estación de Configuración de Catálogo (`src/modules/inventory/components/DesktopCategoryManagerView.tsx`):**
+    - En la lista de **Categorías Activas (Columna 1)**, el botón destructivo directo fue reemplazado por el botón no destructivo **`Ocultar de la barra`** (`<EyeOff size={13} />`, `active:scale-95`).
+    - Se sustituyó la sección fija de respaldo por el acordeón colapsable **`Categorías Ocultas y Guardadas (N)`** (`toggle-hidden-categories-btn`), que permanece compacto por defecto y al desplegarse lista todas las categorías de `catalogConfig.categories` ausentes en `draftOrder`.
+    - Cada fila de categoría oculta ofrece dos acciones claras: **`+ Activar en barra`** (reutilizando `BTN_SECONDARY` de `src/constants/uiButtons.ts`) y **`Eliminar definitivamente`** (`<Trash2 size={13} />`).
+  - **Certificación 100% Exit 0:** TypeScript estricto sin errores (`tsc`), 56/56 pruebas unitarias en Vitest, compilación limpia en Vite y cobertura E2E en `tests/desktop-inventory-grid.spec.ts` validando ocultación, persistencia de atributos/opciones al reactivar y purga definitiva.

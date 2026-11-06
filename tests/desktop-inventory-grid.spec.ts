@@ -634,6 +634,78 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       managerView.getByText("Opción Alfa", { exact: true })
     ).toBeVisible();
 
+    // 4.5. Gobernanza de Categorías Activas vs Ocultas (Ocultar de la barra, Acordeón de Ocultas, Reactivar con Atributos Intactos y Purga Definitiva)
+    const hidePruebaBtn = managerView.getByTestId(
+      "hide-category-btn-Prueba Desktop"
+    );
+    await expect(hidePruebaBtn).toBeVisible();
+    await hidePruebaBtn.click();
+
+    // Al ocultarse de la barra activa, ya no está seleccionada en Columna 2
+    await expect(
+      managerView.getByRole("heading", { name: "Prueba Desktop" })
+    ).not.toBeVisible();
+
+    // Expandir el acordeón inferior "Categorías Ocultas y Guardadas"
+    const toggleHiddenBtn = managerView.getByTestId(
+      "toggle-hidden-categories-btn"
+    );
+    await expect(toggleHiddenBtn).toBeVisible();
+    await toggleHiddenBtn.click();
+
+    const hiddenList = managerView.getByTestId("hidden-categories-list");
+    await expect(hiddenList).toBeVisible();
+
+    // Verificar que "Prueba Desktop" se encuentra en las categorías ocultas conservando su atributo
+    const hiddenPruebaRow = managerView.getByTestId(
+      "hidden-category-row-Prueba Desktop"
+    );
+    await expect(hiddenPruebaRow).toBeVisible();
+    await expect(hiddenPruebaRow).toContainText("1 atrib");
+
+    // Reactivar "Prueba Desktop" en la barra activa con "+ Activar en barra"
+    const restorePruebaBtn = managerView.getByTestId(
+      "restore-hidden-category-btn-Prueba Desktop"
+    );
+    await expect(restorePruebaBtn).toBeVisible();
+    await restorePruebaBtn.click();
+
+    // Debe volver a ser la categoría seleccionada en Columna 2 con su atributo "Material" y opciones "Silicona Líquida" y "Opción Alfa" intactos
+    await expect(
+      managerView.getByRole("heading", { name: "Prueba Desktop" })
+    ).toBeVisible();
+    await expect(
+      managerView.getByRole("heading", { name: "Material" })
+    ).toBeVisible();
+    await expect(
+      managerView.getByText("Silicona Líquida", { exact: true })
+    ).toBeVisible();
+    await expect(
+      managerView.getByText("Opción Alfa", { exact: true })
+    ).toBeVisible();
+
+    // Crear una categoría efímera "Temp Purga", ocultarla y eliminarla definitivamente
+    await newCatBtn.click();
+    await catInput.fill("Temp Purga");
+    await submitCatBtn.click();
+    await expect(
+      managerView.getByRole("heading", { name: "Temp Purga" })
+    ).toBeVisible();
+
+    const hideTempBtn = managerView.getByTestId("hide-category-btn-Temp Purga");
+    await hideTempBtn.click();
+
+    const hiddenTempRow = managerView.getByTestId(
+      "hidden-category-row-Temp Purga"
+    );
+    await expect(hiddenTempRow).toBeVisible();
+
+    const purgeTempBtn = managerView.getByTestId(
+      "purge-hidden-category-btn-Temp Purga"
+    );
+    await purgeTempBtn.click();
+    await expect(hiddenTempRow).not.toBeVisible();
+
     // 5. Probar Switch de Enfoque hacia Modo "Banco Maestro (Presets)"
     const presetsTabBtn = managerView.getByTestId("mode-tab-presets");
     await presetsTabBtn.click();

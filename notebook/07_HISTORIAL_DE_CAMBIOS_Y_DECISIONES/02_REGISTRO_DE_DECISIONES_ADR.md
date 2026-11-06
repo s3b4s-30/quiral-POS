@@ -231,3 +231,24 @@
 - **Consecuencias:**
   - _Positivas:_ Eliminación del bug de invisibilidad en hover, unificación visual absoluta en toda la estación de escritorio, consistencia en las 5 paletas dinámicas de acento y soporte limpio para Modo Claro y Modo Oscuro.
   - _Negativas:_ Ninguna. Cobertura completa garantizada por pruebas E2E y unitarias.
+
+---
+
+## ADR-014: Separación de Visibilidad en Barra (`categoryOrder`) vs. Purga Definitiva (`categories`) con Acordeón de Categorías Ocultas
+
+- **Estado:** Aceptado (Inviolable).
+- **Fecha:** 2026-11-05
+- **Contexto:**
+  1. Anteriormente, el botón de papelera en la lista de categorías activas de `DesktopCategoryManagerView.tsx` borraba inmediatamente las categorías personalizadas del catálogo o sólo permitía restaurar las 7 categorías base de `FACTORY_BASE_CATEGORIES`. Si el usuario creaba una categoría personalizada (ej. «Gorra» o «Reloj») con múltiples atributos y opciones y deseaba ocultarla temporalmente de la barra superior, perdía toda su configuración taxonómica.
+  2. Asimismo, mostrar permanentemente una lista expandida de categorías de respaldo en la parte inferior de la Columna 1 restaba espacio vertical útil a la jerarquía activa.
+- **Decisión:**
+  1. **Desacoplamiento entre Visibilidad y Existencia (`InventoryContext.tsx`):**
+     - **Ocultar (`hideCategoryFromOrder`):** Solo remueve el nombre de `catalogConfig.categoryOrder`, preservando intacta la definición en `catalogConfig.categories` y el diccionario `catalogConfig.categoryAttributeValues`.
+     - **Reactivar (`restoreCategoryToOrder`):** Reinserta la categoría en `catalogConfig.categoryOrder` recuperando instantáneamente todos sus atributos y opciones locales.
+     - **Purgar Definitivamente (`deleteCategory`):** Elimina la categoría de `categories`, `categoryOrder` y `categoryAttributeValues`, exigiendo confirmación modal si existen productos asociados para migrarlos a `General / Otros`.
+  2. **Acordeón Colapsable «Categorías Ocultas y Guardadas» (`DesktopCategoryManagerView.tsx`):**
+     - En la lista activa (Columna 1), cada fila presenta el icono `<EyeOff size={13} />` para ocultar sin destruir.
+     - En el pie de la Columna 1, un acordeón colapsable con contador (`Categorías Ocultas y Guardadas (N)`) agrupa todas las categorías registradas en `catalogConfig.categories` que no figuran en `draftOrder` (tanto de fábrica como personalizadas), ofreciendo en cada fila el botón `+ Activar en barra` (`BTN_SECONDARY`) y el botón `<Trash2 size={13} />` para eliminación definitiva.
+- **Consecuencias:**
+  - _Positivas:_ Protección total contra pérdida accidental de taxonomías personalizadas, interfaz limpia y compacta gracias al acordeón colapsable y reutilización estricta de los tokens de `src/constants/uiButtons.ts`.
+  - _Negativas:_ Ninguna. Cobertura E2E y unitaria al 100% Exit 0.
