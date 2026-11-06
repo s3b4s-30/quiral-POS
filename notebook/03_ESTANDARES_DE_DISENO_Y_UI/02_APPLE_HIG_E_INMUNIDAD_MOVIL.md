@@ -34,8 +34,11 @@ En la experiencia táctil móvil de mostrador, el usuario maneja el teléfono co
 2. **Botón de Acción en el Pie Persistente (`footer` slot):**
    - Los botones primarios («Guardar cambios», «Cobrar venta», «Listo») jamás deben alojarse al final del texto scrolleable.
    - Deben residir fijos en el slot `footer` de `ModalSheet`, anclados a `env(safe-area-inset-bottom)` con altura táctil mínima de 48px (`min-h-12`).
-3. **Desmontaje Limpio de la Barra de Navegación (`Navbar.tsx`):**
-   - Cuando un modal está activo, la `Navbar` inferior se desmonta con `!hasActiveModal` y se oculta mediante la regla CSS `body.modal-open nav { display: none !important; }`.
+3. **Cápsula Flotante Liquid Glass y Auto-Ocultamiento (`Navbar.tsx`):**
+   - **Geometría de Cápsula (Pill):** Montada exclusivamente en móvil (`!isDesktop` en `App.tsx`) con `liquid-glass-surface fixed z-40 inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] mx-auto max-w-sm rounded-full`.
+   - **Superficie Dual OLED:** `border border-white/15 dark:border-white/10 bg-white/70 dark:bg-black/65 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_12px_40px_rgba(0,0,0,0.2)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.8)] ring-1 ring-black/5 dark:ring-white/10 p-1.5`.
+   - **Botones Táctiles Ergonómicos:** `min-h-[48px] rounded-full`, iconos de `20px` (`strokeWidth={2.5}` activo, `2` inactivo), etiqueta `text-[10px] leading-tight tracking-tight`, micro-interacción `active:scale-95 transition-all duration-150` y badge numérico `.tabular-nums bg-[#ff3b30]`.
+   - **Auto-Ocultamiento ante Modales:** Cuando un modal está activo (`!isVisible`), aplica `opacity-0 translate-y-8 pointer-events-none invisible` además de la regla CSS `body.modal-open nav { display: none !important; }`.
 
 ---
 

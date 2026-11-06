@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CartSummaryBar from "../../../components/CartSummaryBar";
 import CategoryManagerModal from "../../../components/CategoryManagerModal";
 import CheckoutSheet from "../../../components/CheckoutSheet";
+import HorizontalScrollNav from "../../../components/HorizontalScrollNav";
 import LottiePlayer, {
   EMPTY_BOX_ANIMATION,
 } from "../../../components/LottiePlayer";
@@ -67,21 +68,12 @@ export default function PosViewMobile({
     return () => clearLongPressTimer();
   }, []);
 
-  // Categorías ordenadas según catalogConfig.categoryOrder, con "Todos" fijo al inicio
+  // Categorías ordenadas exclusivamente según catalogConfig.categoryOrder, con "Todos" fijo al inicio
   const categories = useMemo(() => {
-    const ordered: ProductCategory[] = [...catalogConfig.categoryOrder];
-    for (const product of products) {
-      if (
-        product.category &&
-        !ordered.some((existing) =>
-          isSameCatalogText(existing, product.category)
-        )
-      ) {
-        ordered.push(product.category);
-      }
-    }
-    return ["Todos", ...ordered] as Array<"Todos" | ProductCategory>;
-  }, [products, catalogConfig.categoryOrder]);
+    return ["Todos", ...catalogConfig.categoryOrder] as Array<
+      "Todos" | ProductCategory
+    >;
+  }, [catalogConfig.categoryOrder]);
 
   useEffect(() => {
     if (
@@ -175,7 +167,14 @@ export default function PosViewMobile({
               </div>
             </div>
 
-            <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <HorizontalScrollNav
+              testId="pos-mobile-category-chips-nav"
+              variant="none"
+              enableDrag={true}
+              className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar flex-1"
+              containerClassName="mt-3 relative flex items-center w-full min-w-0"
+              scrollAmount={200}
+            >
               {categories.map((item) => {
                 const isActive = category === item;
                 return (
@@ -220,7 +219,7 @@ export default function PosViewMobile({
               >
                 <SlidersHorizontal size={14} />
               </button>
-            </div>
+            </HorizontalScrollNav>
           </div>
 
           {/* Listado de tarjetas de productos en grilla adaptable con margen inferior anti-colisión */}

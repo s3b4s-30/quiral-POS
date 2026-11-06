@@ -3,6 +3,7 @@ import {
   Check,
   CreditCard,
   DollarSign,
+  FileText,
   Minus,
   Plus,
   Receipt,
@@ -52,6 +53,8 @@ export default function DesktopPosTicket({
   const [payment, setPayment] = useState<PaymentMethod>("Efectivo");
   const [customTotalInput, setCustomTotalInput] = useState<string>("");
   const [customerName, setCustomerName] = useState("");
+  const [note, setNote] = useState("");
+  const [showNoteInput, setShowNoteInput] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isSuccessFlash, setIsSuccessFlash] = useState(false);
   const submittingRef = useRef(false);
@@ -98,11 +101,14 @@ export default function DesktopPosTicket({
     const ok = completeSale(
       payment,
       effectiveTotal,
-      customerName.trim() || undefined
+      customerName.trim() || undefined,
+      note.trim() || undefined
     );
     if (ok) {
       setCustomTotalInput("");
       setCustomerName("");
+      setNote("");
+      setShowNoteInput(false);
       setShowClearConfirm(false);
       setIsSuccessFlash(true);
       setTimeout(() => setIsSuccessFlash(false), 2000);
@@ -125,7 +131,7 @@ export default function DesktopPosTicket({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [cart.length, payment, effectiveTotal, customerName]);
+  }, [cart.length, payment, effectiveTotal, customerName, note]);
 
   return (
     <aside
@@ -381,8 +387,8 @@ export default function DesktopPosTicket({
 
       {/* 3. Pie del Ticket: Cobro Directo Integrado (Sin Modales) */}
       <div className="p-4 border-t border-[var(--border-color)] bg-[var(--bg-elevated)] shrink-0 space-y-3.5 shadow-lg shadow-black/5">
-        {/* Nombre de cliente / Notas */}
-        <div>
+        {/* Apartado de Nombre de Cliente y Notas */}
+        <div className="space-y-2">
           <div className="relative">
             <User
               size={14}
@@ -394,10 +400,49 @@ export default function DesktopPosTicket({
               data-testid="pos-customer-input"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="Cliente general / Notas (opcional)..."
-              className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-9 pr-3 py-2.5 text-xs sm:text-sm font-semibold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+              placeholder="Nombre del cliente (opcional)..."
+              className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-9 pr-3 py-2 text-xs sm:text-sm font-semibold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
             />
           </div>
+
+          {!showNoteInput && !note ? (
+            <button
+              type="button"
+              data-testid="pos-add-note-btn"
+              onClick={() => setShowNoteInput(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-accent-hover transition-colors cursor-pointer select-none py-0.5"
+            >
+              <Plus size={13} strokeWidth={2.5} />
+              <span>Añadir una nota (opcional)</span>
+            </button>
+          ) : (
+            <div className="relative flex items-center animate-in fade-in duration-150">
+              <FileText
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none"
+              />
+              <input
+                type="text"
+                data-testid="pos-note-input"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Añadir una nota (opcional)..."
+                autoFocus
+                className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-9 pr-8 py-2 text-xs font-semibold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setNote("");
+                  setShowNoteInput(false);
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-0.5 cursor-pointer rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                title="Quitar nota"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Métodos de Pago en Grilla de 4 */}

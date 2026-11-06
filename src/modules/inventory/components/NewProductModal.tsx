@@ -289,7 +289,10 @@ export default function NewProductModal({
       const portVal = dynamicSelections.ports || "";
       return `Power Bank ${capVal}${portVal ? ` (${portVal})` : ""}`.trim();
     }
-    return [category, ...selectedValues].join(" ").trim();
+    if (selectedValues.length > 0) {
+      return selectedValues.slice(0, 4).join(" ").trim();
+    }
+    return "";
   };
 
   // Construir cadena compacta de atributos seleccionados para agregar a un nombre manual

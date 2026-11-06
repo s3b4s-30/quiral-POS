@@ -238,6 +238,26 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       modal.getByText(/Selecciona una categoría de catálogo/i)
     ).toBeVisible();
 
+    // Verificar que el nombre autogenerado NUNCA antepone la categoría
+    const celularesCatBtn = modal.getByRole("button", {
+      name: "Celulares",
+      exact: true,
+    });
+    await expect(celularesCatBtn).toBeVisible();
+    await celularesCatBtn.click();
+
+    const iphoneAttrBtn = modal.getByRole("button", {
+      name: "iPhone",
+      exact: true,
+    });
+    await expect(iphoneAttrBtn).toBeVisible();
+    await iphoneAttrBtn.click();
+
+    const nameInputPre = page.getByTestId("desktop-new-product-name-input");
+    await expect(nameInputPre).toHaveValue("iPhone");
+    const generatedVal = await nameInputPre.inputValue();
+    expect(generatedVal).not.toContain("Celulares");
+
     // Seleccionar categoría "Forros / Fundas" en el flex-wrap de categorías
     const fundasBtn = modal.getByRole("button", {
       name: "Forros / Fundas",
@@ -343,7 +363,57 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     ).not.toBeVisible();
     await expect(modal.getByTestId("link-global-attr-colors")).toBeVisible();
 
-    // 6. Cerrar modal con tecla Escape
+    // 6. Validación de Estabilidad Dimensional (Cero Layout Shift / CLS) y Anclaje Superior
+    const leftCol = modal.getByTestId("desktop-new-product-left-column");
+    await expect(leftCol).toBeVisible();
+    const boxBefore = await leftCol.boundingBox();
+    expect(boxBefore).not.toBeNull();
+
+    // Vincular múltiples atributos adicionales desde el banco global para inducir scroll vertical
+    const availableAttrBtns = modal.locator(
+      '[data-testid^="link-global-attr-"]'
+    );
+    const count = await availableAttrBtns.count();
+    const toLink = Math.min(count, 4);
+    for (let i = 0; i < toLink; i++) {
+      await availableAttrBtns.first().click();
+    }
+
+    // Verificar que el ancho de la columna izquierda se mantiene idéntico (Cero CLS, tolerancia <= 1px por subpixel)
+    const boxAfter = await leftCol.boundingBox();
+    expect(boxAfter).not.toBeNull();
+    expect(
+      Math.abs((boxAfter?.width ?? 0) - (boxBefore?.width ?? 0))
+    ).toBeLessThanOrEqual(1);
+
+    // Verificar que la sección de categoría sigue anclada en el tope al hacer scroll en atributos
+    const categorySec = modal.getByTestId(
+      "desktop-new-product-category-section"
+    );
+    await expect(categorySec).toBeVisible();
+    const catBoxInitial = await categorySec.boundingBox();
+
+    const attrScroll = modal.getByTestId(
+      "desktop-new-product-attributes-scroll"
+    );
+    await attrScroll.evaluate((el) => {
+      el.scrollTop = el.scrollHeight;
+    });
+
+    await expect(categorySec).toBeVisible();
+    const catBoxAfterScroll = await categorySec.boundingBox();
+    expect(catBoxAfterScroll?.y).toBe(catBoxInitial?.y);
+
+    // Verificar que los botones de acción inferior en la columna derecha se mantienen visibles y anclados
+    const footerActions = modal.getByTestId(
+      "desktop-new-product-footer-actions"
+    );
+    await expect(footerActions).toBeVisible();
+    await expect(
+      footerActions.getByTestId("desktop-new-product-submit-btn")
+    ).toBeVisible();
+
+    // 7. Cerrar modal con tecla Escape
     await page.keyboard.press("Escape");
     await expect(modal).not.toBeVisible();
   });
@@ -564,6 +634,78 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       managerView.getByText("Opción Alfa", { exact: true })
     ).toBeVisible();
 
+    // 4.5. Gobernanza de Categorías Activas vs Ocultas (Ocultar de la barra, Acordeón de Ocultas, Reactivar con Atributos Intactos y Purga Definitiva)
+    const hidePruebaBtn = managerView.getByTestId(
+      "hide-category-btn-Prueba Desktop"
+    );
+    await expect(hidePruebaBtn).toBeVisible();
+    await hidePruebaBtn.click();
+
+    // Al ocultarse de la barra activa, ya no está seleccionada en Columna 2
+    await expect(
+      managerView.getByRole("heading", { name: "Prueba Desktop" })
+    ).not.toBeVisible();
+
+    // Expandir el acordeón inferior "Categorías Ocultas y Guardadas"
+    const toggleHiddenBtn = managerView.getByTestId(
+      "toggle-hidden-categories-btn"
+    );
+    await expect(toggleHiddenBtn).toBeVisible();
+    await toggleHiddenBtn.click();
+
+    const hiddenList = managerView.getByTestId("hidden-categories-list");
+    await expect(hiddenList).toBeVisible();
+
+    // Verificar que "Prueba Desktop" se encuentra en las categorías ocultas conservando su atributo
+    const hiddenPruebaRow = managerView.getByTestId(
+      "hidden-category-row-Prueba Desktop"
+    );
+    await expect(hiddenPruebaRow).toBeVisible();
+    await expect(hiddenPruebaRow).toContainText("1 atrib");
+
+    // Reactivar "Prueba Desktop" en la barra activa con "+ Activar en barra"
+    const restorePruebaBtn = managerView.getByTestId(
+      "restore-hidden-category-btn-Prueba Desktop"
+    );
+    await expect(restorePruebaBtn).toBeVisible();
+    await restorePruebaBtn.click();
+
+    // Debe volver a ser la categoría seleccionada en Columna 2 con su atributo "Material" y opciones "Silicona Líquida" y "Opción Alfa" intactos
+    await expect(
+      managerView.getByRole("heading", { name: "Prueba Desktop" })
+    ).toBeVisible();
+    await expect(
+      managerView.getByRole("heading", { name: "Material" })
+    ).toBeVisible();
+    await expect(
+      managerView.getByText("Silicona Líquida", { exact: true })
+    ).toBeVisible();
+    await expect(
+      managerView.getByText("Opción Alfa", { exact: true })
+    ).toBeVisible();
+
+    // Crear una categoría efímera "Temp Purga", ocultarla y eliminarla definitivamente
+    await newCatBtn.click();
+    await catInput.fill("Temp Purga");
+    await submitCatBtn.click();
+    await expect(
+      managerView.getByRole("heading", { name: "Temp Purga" })
+    ).toBeVisible();
+
+    const hideTempBtn = managerView.getByTestId("hide-category-btn-Temp Purga");
+    await hideTempBtn.click();
+
+    const hiddenTempRow = managerView.getByTestId(
+      "hidden-category-row-Temp Purga"
+    );
+    await expect(hiddenTempRow).toBeVisible();
+
+    const purgeTempBtn = managerView.getByTestId(
+      "purge-hidden-category-btn-Temp Purga"
+    );
+    await purgeTempBtn.click();
+    await expect(hiddenTempRow).not.toBeVisible();
+
     // 5. Probar Switch de Enfoque hacia Modo "Banco Maestro (Presets)"
     const presetsTabBtn = managerView.getByTestId("mode-tab-presets");
     await presetsTabBtn.click();
@@ -620,6 +762,13 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       managerView.getByText("iPhone", { exact: true })
     ).toBeVisible();
 
+    // Ocultar "Cargadores y Cables" (que tiene productos activos) para validar sincronización de ocultas, badge "Oculta" y toggle discreto
+    const hideCargadoresBtn = managerView.getByTestId(
+      "hide-category-btn-Cargadores y Cables"
+    );
+    await expect(hideCargadoresBtn).toBeVisible();
+    await hideCargadoresBtn.click();
+
     // 7. Guardar y regresar al inventario
     const saveBtn = managerView.getByTestId("save-category-order-btn");
     await expect(saveBtn).toBeVisible();
@@ -627,6 +776,56 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
 
     await expect(managerView).not.toBeVisible();
     await expect(page.locator("#inventory-scroll")).toBeVisible();
+
+    // 7.1. Verificar que "Cargadores y Cables" NO aparece en las pestañas rápidas de navegación
+    const chipsNav = page.getByTestId("desktop-category-chips-nav");
+    await expect(
+      chipsNav.getByRole("button", { name: "Cargadores y Cables", exact: true })
+    ).not.toBeVisible();
+
+    // 7.2. Verificar que en la pestaña "Todos" los productos de la categoría oculta lucen el micro-badge "Oculta"
+    const firstHiddenBadge = page
+      .locator('[data-testid^="hidden-category-badge-"]')
+      .first();
+    await expect(firstHiddenBadge).toBeVisible();
+    await expect(firstHiddenBadge).toContainText("Oculta");
+
+    // 7.3. Verificar el toggle discreto "Ocultar productos archivados (N)" / "Incluir ocultos (N)"
+    const toggleHiddenProdsBtn = page.getByTestId(
+      "toggle-hidden-category-products-btn"
+    );
+    await expect(toggleHiddenProdsBtn).toBeVisible();
+    await expect(toggleHiddenProdsBtn).toContainText(
+      /Ocultar productos archivados/i
+    );
+
+    await toggleHiddenProdsBtn.click();
+    await expect(toggleHiddenProdsBtn).toContainText(/Incluir ocultos/i);
+    await expect(firstHiddenBadge).not.toBeVisible();
+
+    // Volver a incluir los ocultos y verificar el badge en modo Tarjetas (Móvil / Cards)
+    await toggleHiddenProdsBtn.click();
+    await expect(firstHiddenBadge).toBeVisible();
+
+    await page.getByTestId("desktop-view-cards-btn").click();
+    const firstCardHiddenBadge = page
+      .locator('[data-testid^="card-hidden-category-badge-"]')
+      .first();
+    await expect(firstCardHiddenBadge).toBeVisible();
+    await expect(firstCardHiddenBadge).toContainText("Oculta");
+
+    // 7.4. Verificar que en "Nuevo Producto" la categoría oculta NO aparece en el selector
+    await page.getByTestId("desktop-toolbar-new-product-btn").click();
+    const newProdCatSection = page.getByTestId(
+      "desktop-new-product-category-section"
+    );
+    await expect(newProdCatSection).toBeVisible();
+    await expect(
+      newProdCatSection.getByRole("button", {
+        name: "Cargadores y Cables",
+        exact: true,
+      })
+    ).not.toBeVisible();
   });
 
   test("7. Flujo de Clonación Inteligente, Atributos Opcionales (deselección y desmarcado) y Limpieza de IDs en Banco Maestro", async ({
@@ -663,9 +862,15 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       .locator('button[data-testid^="clear-selection-"]')
       .first();
     if (await clearBtn.isVisible()) {
+      const testId = await clearBtn.getAttribute("data-testid");
       await clearBtn.click();
-      // Debe mostrar ahora que el atributo es (Opcional)
-      await expect(modal.getByText("(Opcional)").first()).toBeVisible();
+      // La selección se limpia y se verifica que NUNCA aparezca la frase '(Opcional)' en los atributos
+      if (testId) {
+        await expect(
+          modal.locator(`button[data-testid="${testId}"]`)
+        ).not.toBeVisible();
+      }
+      await expect(modal.getByText("(Opcional)")).not.toBeVisible();
     }
 
     // Cerrar modal

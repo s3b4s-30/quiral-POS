@@ -23,6 +23,7 @@
     --sat: env(safe-area-inset-top, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
     --quiral-header-offset: calc(env(safe-area-inset-top, 0px) + 4rem);
+    --quiral-bottom-offset: calc(env(safe-area-inset-bottom, 0px) + 5.5rem);
   }
 
   .dark {
@@ -135,6 +136,32 @@ a {
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--border-color) var(--bg-primary);
+}
+
+/* Utilidad de scrollbar personalizada con contencion dimensional y cero layout shift */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+  scrollbar-gutter: stable;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 9999px;
+  transition: background 200ms ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
 }
 
 /* Bloqueo estricto del scroll de la vista inferior al abrir cualquier modal */
@@ -299,7 +326,10 @@ body.modal-open nav {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   padding-top: var(--quiral-header-offset);
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5.5rem);
+  padding-bottom: var(
+    --quiral-bottom-offset,
+    calc(env(safe-area-inset-bottom, 0px) + 5.5rem)
+  );
 }
 
 @media (min-width: 768px) {

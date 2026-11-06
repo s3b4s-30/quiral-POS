@@ -82,21 +82,12 @@ export default function PosViewDesktop({
     setSelectedAttributeTag("");
   };
 
-  // Categorías ordenadas según catalogConfig.categoryOrder, con "Todos" fijo al inicio
+  // Categorías ordenadas exclusivamente según catalogConfig.categoryOrder, con "Todos" fijo al inicio
   const categories = useMemo(() => {
-    const ordered: ProductCategory[] = [...catalogConfig.categoryOrder];
-    for (const product of products) {
-      if (
-        product.category &&
-        !ordered.some((existing) =>
-          isSameCatalogText(existing, product.category)
-        )
-      ) {
-        ordered.push(product.category);
-      }
-    }
-    return ["Todos", ...ordered] as Array<"Todos" | ProductCategory>;
-  }, [products, catalogConfig.categoryOrder]);
+    return ["Todos", ...catalogConfig.categoryOrder] as Array<
+      "Todos" | ProductCategory
+    >;
+  }, [catalogConfig.categoryOrder]);
 
   useEffect(() => {
     if (

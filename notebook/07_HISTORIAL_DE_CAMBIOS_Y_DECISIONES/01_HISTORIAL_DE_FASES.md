@@ -180,3 +180,53 @@ flowchart TD
   - **Cabeceras Pegajosas de Catálogo (`InventoryView.tsx` y `PosViewDesktop.tsx`):** Superficies superiores ajustadas a `bg-white/35 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200/60 dark:bg-black/50 dark:border-white/10 shadow-xs`, con todos sus controles interactivos internos (buscador, filtros, conteo rápido, paginación, alternador de vista y chips de categoría) unificados en `bg-white/40 dark:bg-white/10 backdrop-blur-md`, permitiendo el deslizamiento subyacente de las filas de productos con efecto de cristal esmerilado translúcido de alta saturación óptica.
   - **Aserción E2E Flexible (`tests/desktop-inventory-grid.spec.ts`):** Validación en verde de la aserción `/backdrop-blur-(md|xl)/`.
   - **Certificación 100% Exit 0:** TypeScript estricto sin errores (`tsc`), 56/56 pruebas unitarias en Vitest, compilación limpia de producción en Vite y suite Playwright E2E aprobada (72/72 pruebas).
+
+---
+
+### Fase de Gobernanza de Categorías Activas vs. Ocultas y Panel Colapsable de Categorías Guardadas (Opción A)
+
+- **Objetivo:** Separar arquitectónicamente el concepto de **«Ocultar de la barra activa»** del de **«Purgar definitivamente»**, permitiendo que tanto las categorías de fábrica como las categorías personalizadas creadas por el comerciante (ej. «Gorra», «Reloj») puedan retirarse temporalmente de la barra de navegación sin perder sus atributos ni valores configurados, y reactivarse o eliminarse desde un panel inferior colapsable.
+- **Hitos Implementados:**
+  - **Capa de Datos y Estado (`src/context/InventoryContext.tsx`):**
+    - `hideCategoryFromOrder(categoryName)`: Retira la categoría de `categoryOrder` manteniendo intacto su objeto en `catalogConfig.categories` y sus opciones locales en `categoryAttributeValues`.
+    - `restoreCategoryToOrder(categoryName)`: Reinserta la categoría en `categoryOrder` con todos sus atributos y opciones preservados.
+    - `deleteCategory(categoryName, fallbackCategory)`: Purga definitiva de `categories`, `categoryOrder` y `categoryAttributeValues`, con confirmación obligatoria de reasignación si existen productos huérfanos asociados.
+  - **Estación de Configuración de Catálogo (`src/modules/inventory/components/DesktopCategoryManagerView.tsx`):**
+    - En la lista de **Categorías Activas (Columna 1)**, el botón destructivo directo fue reemplazado por el botón no destructivo **`Ocultar de la barra`** (`<EyeOff size={13} />`, `active:scale-95`).
+    - Se sustituyó la sección fija de respaldo por el acordeón colapsable **`Categorías Ocultas y Guardadas (N)`** (`toggle-hidden-categories-btn`), que permanece compacto por defecto y al desplegarse lista todas las categorías de `catalogConfig.categories` ausentes en `draftOrder`.
+    - Cada fila de categoría oculta ofrece dos acciones claras: **`+ Activar en barra`** (reutilizando `BTN_SECONDARY` de `src/constants/uiButtons.ts`) y **`Eliminar definitivamente`** (`<Trash2 size={13} />`).
+  - **Certificación 100% Exit 0:** TypeScript estricto sin errores (`tsc`), 56/56 pruebas unitarias en Vitest, compilación limpia en Vite y cobertura E2E en `tests/desktop-inventory-grid.spec.ts` validando ocultación, persistencia de atributos/opciones al reactivar y purga definitiva.
+
+---
+
+### Fase de Sincronización Integral de Categorías Ocultas en Desktop y Móvil con Badge Discreto y Toggle de Filtrado
+
+- **Objetivo:** Garantizar que las categorías ocultadas o archivadas de `categoryOrder` desaparezcan estrictamente de todas las barras de pestañas rápidas tanto en Escritorio como en Móvil (Inventario y POS), mientras que en la pestaña **"Todos"** de Inventario sus productos se distingan con un micro-badge discreto (`Oculta`) y un control secundario para ocultarlos o incluirlos a voluntad.
+- **Hitos Implementados:**
+  - **Ocultación Estricta en Pestañas Rápidas (`InventoryView.tsx`, `PosViewDesktop.tsx`, `PosViewMobile.tsx`):**
+    - Se eliminó la re-inyección automática de categorías desde `products` hacia las barras de navegación. Ahora `HorizontalScrollNav` recibe única y exclusivamente `catalogConfig.categoryOrder` en ambas plataformas.
+    - En `PosViewMobile.tsx`, el carrusel horizontal de categorías se estandarizó sobre `HorizontalScrollNav` (`pos-mobile-category-chips-nav`).
+  - **Micro-Badge Discreto «Oculta» en Pestaña "Todos" (`DesktopInventoryGridParts.tsx` y `ProductCard.tsx`):**
+    - En la tabla de escritorio (`InventoryGridRow`) y en las tarjetas móviles/desktop (`ProductCard`), los productos cuya categoría no figura en `categoryOrder` exhiben el micro-badge `bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded-md text-[10px] font-bold tabular-nums inline-flex items-center gap-1` con icono `<EyeOff size={11} />` y texto `Oculta`.
+  - **Toggle Discreto de Filtrado (`InventoryView.tsx`):**
+    - Cuando existen productos pertenecientes a categorías ocultas, la barra de categorías presenta el botón secundario/terciario (`toggle-hidden-category-products-btn`, usando `BTN_TERTIARY` / `BTN_SECONDARY` de `src/constants/uiButtons.ts`) con etiqueta `Ocultar productos archivados (N)` / `Incluir ocultos (N)`.
+  - **Selector en Nuevo Producto (`DesktopNewProductModal.tsx`):**
+    - Blindaje estricto para que solo puedan asignarse categorías activas en `categoryOrder`, limpiando cualquier preselección si una categoría fue archivada.
+  - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y `npx playwright test` (72/72 en Chromium y Mobile Safari).
+
+---
+
+### Fase de Modernización de Navbar Móvil como Cápsula Flotante Liquid Glass (Apple HIG)
+
+- **Objetivo:** Refactorizar la barra de navegación inferior móvil (`src/components/Navbar.tsx`) como una cápsula flotante translúcida estilo iOS 18 / Apple HIG (`rounded-full`), garantizando tap targets ergonómicos (`min-h-[48px]`), desenfoque profundo Dual OLED (`backdrop-blur-2xl backdrop-saturate-150`) y aislamiento físico (`!isDesktop` en `src/App.tsx`).
+- **Hitos Implementados:**
+  - **Cápsula Flotante Liquid Glass (`src/components/Navbar.tsx`):**
+    - Conservación estricta del elemento `<nav>` y la clase `.liquid-glass-surface` para compatibilidad total con la suite E2E.
+    - Posicionamiento desacoplado con safe-area: `fixed z-40 inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] mx-auto max-w-sm`.
+    - Superficie Dual OLED: `rounded-full border border-white/15 dark:border-white/10 bg-white/70 dark:bg-black/65 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_12px_40px_rgba(0,0,0,0.2)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.8)] ring-1 ring-black/5 dark:ring-white/10 p-1.5`.
+    - Botones táctiles `min-h-[48px] rounded-full` con micro-interacción `active:scale-95 transition-all duration-150`, iconos de `20px`, micro-texto `text-[10px]` y badge de carrito `.tabular-nums bg-[#ff3b30]`.
+    - Auto-ocultamiento suave ante modales (`opacity-0 translate-y-8 pointer-events-none invisible`).
+  - **Platform Split Físico (`src/App.tsx`) y Gobernanza de Espaciado (`src/index.css`):**
+    - Montaje condicional `{!isDesktop && <Navbar ... />}` para que jamás exista en el DOM de escritorio (`>= 768px`).
+    - Token `--quiral-bottom-offset: calc(env(safe-area-inset-bottom, 0px) + 5.5rem)` en `.quiral-scroll-container` sin inyectar paddings redundantes en las vistas.
+  - **Certificación 100% Exit 0:** TypeScript (`tsc --noEmit`), Vitest (`56/56`), Vite build y Playwright E2E (`72/72`).

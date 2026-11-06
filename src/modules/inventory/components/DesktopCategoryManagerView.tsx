@@ -1,10 +1,14 @@
 import {
   AlertTriangle,
+  Archive,
   ArrowDown,
   ArrowLeft,
   ArrowUp,
   Bookmark,
   Check,
+  ChevronDown,
+  ChevronUp,
+  EyeOff,
   FolderTree,
   Link2,
   Minus,
@@ -23,7 +27,6 @@ import {
   FALLBACK_ORPHAN_CATEGORY,
   getAttributePresets,
   getEffectiveAttributeOptions,
-  inferAttributeKeysForCategory,
   isSameCatalogText,
   normalizeCatalogText,
 } from "../../../utils/catalogConfig";
@@ -53,6 +56,8 @@ export default function DesktopCategoryManagerView({
     products,
     catalogConfig,
     updateCategoryOrder,
+    hideCategoryFromOrder,
+    restoreCategoryToOrder,
     addCategory,
     deleteCategory,
     updateCategoryAttributes,
@@ -191,13 +196,18 @@ export default function DesktopCategoryManagerView({
   const activeAttr =
     catalogConfig.attributes[activeAttrKey] || allAttributesList[0];
 
-  // Categorías de fábrica que no están actualmente en el borrador activo (para respaldo)
-  const backupCategories = useMemo(() => {
-    return FACTORY_BASE_CATEGORIES.filter(
-      (baseCat) =>
-        !draftOrder.some((active) => isSameCatalogText(active, baseCat))
-    );
-  }, [draftOrder]);
+  // Estado de expansión del acordeón inferior de Categorías Ocultas y Guardadas
+  const [isHiddenPanelOpen, setIsHiddenPanelOpen] = useState(false);
+
+  // Categorías del catálogo (tanto de fábrica como creadas por el usuario) que no están en la barra activa
+  const hiddenCategories = useMemo(() => {
+    return catalogConfig.categories
+      .map((c) => c.name)
+      .filter(
+        (catName) =>
+          !draftOrder.some((active) => isSameCatalogText(active, catName))
+      );
+  }, [catalogConfig.categories, draftOrder]);
 
   // Atajo <Esc> para cerrar o cancelar
   useEffect(() => {
@@ -244,14 +254,33 @@ export default function DesktopCategoryManagerView({
     });
   };
 
-  // Crear nueva categoría en Columna 1
+  // Crear nueva categoría en Columna 1 (o reactivarla si estaba oculta)
   const handleCreateCategory = (e: React.FormEvent) => {
     e.preventDefault();
     const clean = normalizeCatalogText(newCategoryName);
     if (!clean || clean.toLowerCase() === "todos") return;
 
     if (draftOrder.some((c) => isSameCatalogText(c, clean))) {
-      showFeedback("warning", `La categoría "${clean}" ya existe.`);
+      showFeedback(
+        "warning",
+        `La categoría "${clean}" ya está en la barra activa.`
+      );
+      return;
+    }
+
+    const existingHidden = catalogConfig.categories.find((c) =>
+      isSameCatalogText(c.name, clean)
+    );
+    if (existingHidden) {
+      restoreCategoryToOrder(existingHidden.name);
+      setDraftOrder((prev) => [...prev, existingHidden.name]);
+      setSelectedCategory(existingHidden.name);
+      setNewCategoryName("");
+      setIsCreatingCategory(false);
+      showFeedback(
+        "success",
+        `Categoría "${existingHidden.name}" reactivada en la barra con sus atributos guardados.`
+      );
       return;
     }
 
@@ -265,7 +294,23 @@ export default function DesktopCategoryManagerView({
     }
   };
 
-  // Solicitud de eliminación de categoría
+  // Ocultar categoría de la barra activa (conservando sus atributos y opciones en el catálogo)
+  const handleHideCategory = (catName: ProductCategory) => {
+    hideCategoryFromOrder(catName);
+    const updatedOrder = draftOrder.filter(
+      (c) => !isSameCatalogText(c, catName)
+    );
+    setDraftOrder(updatedOrder);
+    if (isSameCatalogText(selectedCategory, catName)) {
+      setSelectedCategory(updatedOrder[0] || "General / Otros");
+    }
+    showFeedback(
+      "success",
+      `Categoría "${catName}" ocultada de la barra activa (guardada en Categorías Ocultas).`
+    );
+  };
+
+  // Solicitud de eliminación definitiva (purga) de categoría
   const handleRequestDeleteCategory = async (catName: ProductCategory) => {
     const count = productCountByCategory(catName);
     if (count > 0) {
@@ -280,10 +325,13 @@ export default function DesktopCategoryManagerView({
     if (isSameCatalogText(selectedCategory, catName)) {
       setSelectedCategory(updatedOrder[0] || "General / Otros");
     }
-    showFeedback("success", `Categoría "${catName}" eliminada.`);
+    showFeedback(
+      "success",
+      `Categoría "${catName}" eliminada definitivamente.`
+    );
   };
 
-  // Confirmar eliminación de categoría con productos huérfanos
+  // Confirmar eliminación definitiva de categoría con productos huérfanos
   const handleConfirmOrphanMoveAndDelete = async () => {
     if (!categoryPendingDelete) return;
     const catName = categoryPendingDelete.name;
@@ -298,13 +346,13 @@ export default function DesktopCategoryManagerView({
     setCategoryPendingDelete(null);
     showFeedback(
       "success",
-      `Categoría eliminada y productos trasladados a "${FALLBACK_ORPHAN_CATEGORY}".`
+      `Categoría eliminada definitivamente y productos trasladados a "${FALLBACK_ORPHAN_CATEGORY}".`
     );
   };
 
-  // Restaurar categoría de respaldo
+  // Reactivar categoría oculta en la barra activa (conservando toda su configuración)
   const handleRestoreBackupCategory = (catName: ProductCategory) => {
-    addCategory(catName, inferAttributeKeysForCategory(catName));
+    restoreCategoryToOrder(catName);
     setDraftOrder((prev) => {
       if (prev.some((c) => isSameCatalogText(c, catName))) return prev;
       return [...prev, catName];
@@ -312,7 +360,7 @@ export default function DesktopCategoryManagerView({
     setSelectedCategory(catName);
     showFeedback(
       "success",
-      `Categoría "${catName}" restaurada a la barra activa.`
+      `Categoría "${catName}" activada nuevamente en la barra.`
     );
   };
 
@@ -844,7 +892,7 @@ export default function DesktopCategoryManagerView({
                         </span>
                       </button>
 
-                      {/* Controles de Orden y Eliminación por Fila */}
+                      {/* Controles de Orden y Ocultación por Fila */}
                       <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
@@ -868,12 +916,13 @@ export default function DesktopCategoryManagerView({
                         </button>
                         <button
                           type="button"
-                          aria-label={`Eliminar categoría ${cat}`}
-                          onClick={() => handleRequestDeleteCategory(cat)}
-                          title="Eliminar categoría"
-                          className="p-1.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
+                          data-testid={`hide-category-btn-${cat}`}
+                          aria-label={`Ocultar categoría ${cat} de la barra`}
+                          onClick={() => handleHideCategory(cat)}
+                          title="Ocultar de la barra activa (conservar configuración)"
+                          className="p-1.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-accent hover:border-accent/50 hover:bg-accent/10 active:scale-95 transition-all cursor-pointer"
                         >
-                          <Trash2 size={13} />
+                          <EyeOff size={13} />
                         </button>
                       </div>
                     </div>
@@ -881,28 +930,100 @@ export default function DesktopCategoryManagerView({
                 })}
               </div>
 
-              {/* Categorías de Fábrica / Respaldo (Flujo Vertical Adaptativo) */}
-              {backupCategories.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-[var(--border-color)] shrink-0">
-                  <h4 className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
-                    Valores Predeterminados Fijos (Respaldo)
-                  </h4>
-                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto custom-scrollbar p-0.5">
-                    {backupCategories.map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        aria-label={`Recuperar categoría ${cat}`}
-                        onClick={() => handleRestoreBackupCategory(cat)}
-                        className="inline-flex items-center gap-1 rounded-xl border border-dashed border-[var(--border-color)] bg-[var(--bg-primary)] px-2.5 py-1 text-[11px] font-bold text-[var(--text-secondary)] hover:text-accent hover:border-accent active:scale-95 transition-all cursor-pointer"
-                      >
-                        <Plus size={11} />
-                        <span>{cat}</span>
-                      </button>
-                    ))}
+              {/* Panel Colapsable Inferior: Categorías Ocultas y Guardadas */}
+              <div
+                data-testid="hidden-categories-panel"
+                className="mt-3 pt-2.5 border-t border-[var(--border-color)] shrink-0"
+              >
+                <button
+                  type="button"
+                  data-testid="toggle-hidden-categories-btn"
+                  aria-expanded={isHiddenPanelOpen}
+                  onClick={() => setIsHiddenPanelOpen((prev) => !prev)}
+                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-[0.99] transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Archive size={13} className="text-accent shrink-0" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider truncate">
+                      Categorías Ocultas y Guardadas
+                    </span>
+                    <span
+                      data-testid="hidden-categories-count"
+                      className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent font-black tabular-nums shrink-0"
+                    >
+                      {hiddenCategories.length}
+                    </span>
                   </div>
-                </div>
-              )}
+                  <div className="shrink-0 text-[var(--text-secondary)]">
+                    {isHiddenPanelOpen ? (
+                      <ChevronUp size={14} />
+                    ) : (
+                      <ChevronDown size={14} />
+                    )}
+                  </div>
+                </button>
+
+                {isHiddenPanelOpen && (
+                  <div
+                    data-testid="hidden-categories-list"
+                    className="mt-2 max-h-44 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] pr-1 space-y-1.5 animate-in fade-in duration-150"
+                  >
+                    {hiddenCategories.length === 0 ? (
+                      <p className="text-[11px] text-[var(--text-secondary)] text-center py-2.5 px-2 rounded-xl border border-dashed border-[var(--border-color)]">
+                        Todas las categorías del catálogo están activas en la
+                        barra.
+                      </p>
+                    ) : (
+                      hiddenCategories.map((cat) => {
+                        const prodCount = productCountByCategory(cat);
+                        const catObj = catalogConfig.categories.find((c) =>
+                          isSameCatalogText(c.name, cat)
+                        );
+                        const attrCount = catObj?.attributeKeys.length ?? 0;
+                        return (
+                          <div
+                            key={cat}
+                            data-testid={`hidden-category-row-${cat}`}
+                            className="flex items-center justify-between gap-2 p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)]"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-bold text-[var(--text-primary)] truncate">
+                                {cat}
+                              </p>
+                              <p className="text-[10px] text-[var(--text-secondary)] tabular-nums truncate">
+                                {attrCount} atrib · {prodCount} prods
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                data-testid={`restore-hidden-category-btn-${cat}`}
+                                aria-label={`Recuperar categoría ${cat}`}
+                                onClick={() => handleRestoreBackupCategory(cat)}
+                                className={BTN_SECONDARY}
+                                title="Reactivar categoría en la barra de navegación con todos sus atributos"
+                              >
+                                <Plus size={12} strokeWidth={2.5} />
+                                <span>Activar en barra</span>
+                              </button>
+                              <button
+                                type="button"
+                                data-testid={`purge-hidden-category-btn-${cat}`}
+                                aria-label={`Eliminar categoría ${cat}`}
+                                onClick={() => handleRequestDeleteCategory(cat)}
+                                title="Eliminar definitivamente del catálogo"
+                                className="p-1.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* ======================================================== */}
