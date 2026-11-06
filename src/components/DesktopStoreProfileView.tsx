@@ -14,6 +14,7 @@ import {
 import React, { useRef, useState } from "react";
 import { useInventory } from "../context/InventoryContext";
 import { AccentPaletteId, ACCENT_PALETTES } from "../utils/themePalettes";
+import { BTN_PRIMARY, BTN_TERTIARY } from "../constants/uiButtons";
 
 interface DesktopStoreProfileViewProps {
   onBack: () => void;
@@ -119,11 +120,7 @@ export default function DesktopStoreProfileView({
       {/* Cabecera de la vista de pantalla completa en escritorio */}
       <div className="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-elevated)] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all"
-          >
+          <button type="button" onClick={onBack} className={BTN_TERTIARY}>
             <ArrowLeft size={16} />
             <span>Regresar</span>
           </button>
@@ -143,7 +140,7 @@ export default function DesktopStoreProfileView({
           type="submit"
           form="desktop-store-profile-form"
           disabled={saving}
-          className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2 text-sm font-extrabold text-white shadow-accent-glow hover:bg-accent-hover active:scale-95 transition-all disabled:opacity-50"
+          className={`${BTN_PRIMARY} px-5 py-2 text-sm font-extrabold`}
         >
           {success ? (
             <>

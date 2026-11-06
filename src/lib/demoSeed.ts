@@ -8,13 +8,14 @@ import {
   SaleItem,
   Supplier,
 } from "../types/domain";
+import { purgeStoreOfflineStorage } from "../services/offlineDb";
 
 export const DEMO_STORE_ID = "00000000-0000-0000-0000-000000000030";
-export const DEMO_SEED_VERSION = "quiral_seed_v3_30days_2026";
+export const DEMO_SEED_VERSION = "quiral_seed_v4_audited_2026";
 
 /**
- * Limpia cualquier dato o catálogo previo de prueba almacenado en localStorage
- * cuando cambia la versión de la semilla de simulación de 30 días.
+ * Limpia cualquier dato, perfil, cola offline o catálogo previo de prueba almacenado en
+ * localStorage e IndexedDB (Dexie) cuando cambia la versión de la semilla auditada 30/30.
  */
 export function ensureFreshDemoStorage(): void {
   try {
@@ -29,7 +30,8 @@ export function ensureFreshDemoStorage(): void {
         (key.startsWith("quiral_demo_sales") ||
           key.startsWith("quiral_demo_products") ||
           key.startsWith("quiral_demo_closures") ||
-          key.startsWith("quiral_catalog_config"))
+          key.startsWith("quiral_catalog_config") ||
+          key === `quiral_store_profile_${DEMO_STORE_ID}`)
       ) {
         keysToRemove.push(key);
       }
@@ -39,6 +41,7 @@ export function ensureFreshDemoStorage(): void {
       localStorage.removeItem(k);
     }
 
+    void purgeStoreOfflineStorage(DEMO_STORE_ID);
     localStorage.setItem("quiral_seed_version", DEMO_SEED_VERSION);
   } catch {
     // Entorno restringido sin acceso a localStorage
@@ -99,13 +102,13 @@ export function generateDemoSeed() {
     },
   ];
 
-  // Catálogo estructurado bajo el nuevo sistema modular de categorías y atributos en orden estricto
+  // Catálogo estructurado bajo el sistema modular de categorías y atributos sin prefijo de categoría redundante
   const blueprints: RawProductBlueprint[] = [
     // 1. Cargadores y Cables (Orden: Subtipo -> Marca -> Potencia -> Acabado -> Longitud)
     {
       name: "Cubo iPhone 20W",
       category: "Cargadores y Cables",
-      subtitle: "Cubo · iPhone",
+      subtitle: "Cubo · iPhone · 20W",
       price: 85000,
       cost: 42000,
       warrantyDays: 30,
@@ -115,7 +118,7 @@ export function generateDemoSeed() {
     {
       name: "Cubo Anker 30W",
       category: "Cargadores y Cables",
-      subtitle: "Cubo · Anker",
+      subtitle: "Cubo · Anker · 30W",
       price: 95000,
       cost: 48000,
       warrantyDays: 60,
@@ -125,7 +128,7 @@ export function generateDemoSeed() {
     {
       name: "Cubo Samsung 25W",
       category: "Cargadores y Cables",
-      subtitle: "Cubo · Samsung",
+      subtitle: "Cubo · Samsung · 25W",
       price: 78000,
       cost: 39000,
       warrantyDays: 30,
@@ -135,7 +138,7 @@ export function generateDemoSeed() {
     {
       name: "Cubo Ugreen 65W",
       category: "Cargadores y Cables",
-      subtitle: "Cubo · Ugreen",
+      subtitle: "Cubo · Ugreen · 65W",
       price: 145000,
       cost: 82000,
       warrantyDays: 60,
@@ -145,7 +148,7 @@ export function generateDemoSeed() {
     {
       name: "Cable iPhone (Trenzado) 1 Metro",
       category: "Cargadores y Cables",
-      subtitle: "Cable · iPhone · Trenzado",
+      subtitle: "Cable · iPhone · Trenzado · 1 Metro",
       price: 45000,
       cost: 19000,
       warrantyDays: 15,
@@ -155,7 +158,7 @@ export function generateDemoSeed() {
     {
       name: "Cable Anker (Trenzado) 2 Metros",
       category: "Cargadores y Cables",
-      subtitle: "Cable · Anker · Trenzado",
+      subtitle: "Cable · Anker · Trenzado · 2 Metros",
       price: 58000,
       cost: 27000,
       warrantyDays: 30,
@@ -165,7 +168,7 @@ export function generateDemoSeed() {
     {
       name: "Cargador Completo iPhone 20W (Normal)",
       category: "Cargadores y Cables",
-      subtitle: "Cargador Completo · iPhone",
+      subtitle: "Cargador Completo · iPhone · 20W · Normal",
       price: 115000,
       cost: 56000,
       warrantyDays: 30,
@@ -175,7 +178,7 @@ export function generateDemoSeed() {
     {
       name: "Cargador Completo 1Hora 35W (Trenzado)",
       category: "Cargadores y Cables",
-      subtitle: "Cargador Completo · 1Hora",
+      subtitle: "Cargador Completo · 1Hora · 35W · Trenzado",
       price: 68000,
       cost: 32000,
       warrantyDays: 30,
@@ -185,7 +188,7 @@ export function generateDemoSeed() {
     {
       name: "Cargador Inalámbrico / MagSafe Apple Original 20W",
       category: "Cargadores y Cables",
-      subtitle: "Cargador Inalámbrico / MagSafe · Apple Original",
+      subtitle: "Cargador Inalámbrico / MagSafe · Apple Original · 20W",
       price: 165000,
       cost: 92000,
       warrantyDays: 60,
@@ -197,7 +200,7 @@ export function generateDemoSeed() {
     {
       name: "Forro Silicona Líquida (iPhone 15 Pro Max)",
       category: "Forros / Fundas",
-      subtitle: "Forro · iPhone 15 Pro Max",
+      subtitle: "Silicona Líquida · iPhone 15 Pro Max",
       price: 38000,
       cost: 14000,
       warrantyDays: 15,
@@ -207,7 +210,7 @@ export function generateDemoSeed() {
     {
       name: "Forro Transparente Anti-amarilleo (iPhone 15 Pro)",
       category: "Forros / Fundas",
-      subtitle: "Forro · iPhone 15 Pro",
+      subtitle: "Transparente Anti-amarilleo · iPhone 15 Pro",
       price: 42000,
       cost: 16000,
       warrantyDays: 15,
@@ -217,7 +220,7 @@ export function generateDemoSeed() {
     {
       name: "Forro Lujo (iPhone 16 Pro Max)",
       category: "Forros / Fundas",
-      subtitle: "Forro · iPhone 16 Pro Max",
+      subtitle: "Lujo · iPhone 16 Pro Max",
       price: 55000,
       cost: 23000,
       warrantyDays: 15,
@@ -227,7 +230,7 @@ export function generateDemoSeed() {
     {
       name: "Forro Silicona Líquida (iPhone 13 / 14)",
       category: "Forros / Fundas",
-      subtitle: "Forro · iPhone 13 / 14",
+      subtitle: "Silicona Líquida · iPhone 13 / 14",
       price: 32000,
       cost: 12000,
       warrantyDays: 15,
@@ -237,7 +240,7 @@ export function generateDemoSeed() {
     {
       name: "Forro Lujo (iPhone 14 Pro Max)",
       category: "Forros / Fundas",
-      subtitle: "Forro · iPhone 14 Pro Max",
+      subtitle: "Lujo · iPhone 14 Pro Max",
       price: 48000,
       cost: 19000,
       warrantyDays: 15,
@@ -249,7 +252,7 @@ export function generateDemoSeed() {
     {
       name: "AirPods Pro 2da Generación (USB-C)",
       category: "Audio",
-      subtitle: "Audio · USB-C",
+      subtitle: "AirPods Pro 2da Generación · USB-C",
       price: 890000,
       cost: 640000,
       warrantyDays: 60,
@@ -259,7 +262,7 @@ export function generateDemoSeed() {
     {
       name: "AirPods Serie 4 (USB-C)",
       category: "Audio",
-      subtitle: "Audio · USB-C",
+      subtitle: "AirPods Serie 4 · USB-C",
       price: 680000,
       cost: 485000,
       warrantyDays: 60,
@@ -269,7 +272,7 @@ export function generateDemoSeed() {
     {
       name: "AirPods Serie 3 (Lightning)",
       category: "Audio",
-      subtitle: "Audio · Lightning",
+      subtitle: "AirPods Serie 3 · Lightning",
       price: 580000,
       cost: 410000,
       warrantyDays: 60,
@@ -279,7 +282,7 @@ export function generateDemoSeed() {
     {
       name: "AirPods Pro 3ra Generación (MagSafe)",
       category: "Audio",
-      subtitle: "Audio · MagSafe",
+      subtitle: "AirPods Pro 3ra Generación · MagSafe",
       price: 980000,
       cost: 710000,
       warrantyDays: 60,
@@ -510,50 +513,407 @@ export function generateDemoSeed() {
     }>;
     note?: string;
   }> = [
-    { daysAgo: 29, hourOffset: 10, customerIdx: 0, paymentIdx: 0, items: [{ prodIdx: 0, qty: 2 }, { prodIdx: 4, qty: 1 }] },
-    { daysAgo: 29, hourOffset: 16, customerIdx: 1, paymentIdx: 1, items: [{ prodIdx: 9, qty: 1 }, { prodIdx: 29, qty: 1 }] },
-    { daysAgo: 28, hourOffset: 11, customerIdx: 2, paymentIdx: 2, items: [{ prodIdx: 14, qty: 1 }] },
-    { daysAgo: 27, hourOffset: 14, customerIdx: 3, paymentIdx: 0, items: [{ prodIdx: 1, qty: 1 }, { prodIdx: 5, qty: 2 }] },
-    { daysAgo: 26, hourOffset: 17, customerIdx: 4, paymentIdx: 1, items: [{ prodIdx: 18, qty: 1 }] },
-    { daysAgo: 25, hourOffset: 12, customerIdx: 5, paymentIdx: 2, items: [{ prodIdx: 24, qty: 1 }, { prodIdx: 0, qty: 1 }, { prodIdx: 12, qty: 1 }], note: "Combo equipo + cargador 20W + forro" },
-    { daysAgo: 24, hourOffset: 15, customerIdx: 6, paymentIdx: 0, items: [{ prodIdx: 6, qty: 2 }] },
-    { daysAgo: 23, hourOffset: 18, customerIdx: 7, paymentIdx: 1, items: [{ prodIdx: 27, qty: 1 }, { prodIdx: 30, qty: 1 }] },
-    { daysAgo: 22, hourOffset: 11, customerIdx: 8, paymentIdx: 3, items: [{ prodIdx: 15, qty: 1 }] },
-    { daysAgo: 21, hourOffset: 13, customerIdx: 9, paymentIdx: 0, items: [{ prodIdx: 2, qty: 2 }, { prodIdx: 10, qty: 1 }] },
-    { daysAgo: 21, hourOffset: 19, customerIdx: 10, paymentIdx: 1, items: [{ prodIdx: 29, qty: 3 }] },
-    { daysAgo: 20, hourOffset: 14, customerIdx: 11, paymentIdx: 2, items: [{ prodIdx: 3, qty: 1 }, { prodIdx: 5, qty: 1 }] },
-    { daysAgo: 19, hourOffset: 16, customerIdx: 12, paymentIdx: 0, items: [{ prodIdx: 20, qty: 1 }, { prodIdx: 4, qty: 2, warrantyClaimed: true, warrantyNote: "Conector con falso contacto, reemplazado en garantía" }] },
-    { daysAgo: 18, hourOffset: 11, customerIdx: 13, paymentIdx: 1, items: [{ prodIdx: 11, qty: 2 }, { prodIdx: 0, qty: 1 }] },
-    { daysAgo: 17, hourOffset: 15, customerIdx: 14, paymentIdx: 2, items: [{ prodIdx: 26, qty: 1 }] },
-    { daysAgo: 16, hourOffset: 12, customerIdx: 15, paymentIdx: 3, items: [{ prodIdx: 23, qty: 1 }, { prodIdx: 9, qty: 1 }] },
-    { daysAgo: 16, hourOffset: 17, customerIdx: 16, paymentIdx: 0, items: [{ prodIdx: 7, qty: 2 }, { prodIdx: 31, qty: 1 }] },
+    {
+      daysAgo: 29,
+      hourOffset: 10,
+      customerIdx: 0,
+      paymentIdx: 0,
+      items: [
+        { prodIdx: 0, qty: 2 },
+        { prodIdx: 4, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 29,
+      hourOffset: 16,
+      customerIdx: 1,
+      paymentIdx: 1,
+      items: [
+        { prodIdx: 9, qty: 1 },
+        { prodIdx: 29, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 28,
+      hourOffset: 11,
+      customerIdx: 2,
+      paymentIdx: 2,
+      items: [{ prodIdx: 14, qty: 1 }],
+    },
+    {
+      daysAgo: 27,
+      hourOffset: 14,
+      customerIdx: 3,
+      paymentIdx: 0,
+      items: [
+        { prodIdx: 1, qty: 1 },
+        { prodIdx: 5, qty: 2 },
+      ],
+    },
+    {
+      daysAgo: 26,
+      hourOffset: 17,
+      customerIdx: 4,
+      paymentIdx: 1,
+      items: [{ prodIdx: 18, qty: 1 }],
+    },
+    {
+      daysAgo: 25,
+      hourOffset: 12,
+      customerIdx: 5,
+      paymentIdx: 2,
+      items: [
+        { prodIdx: 24, qty: 1 },
+        { prodIdx: 0, qty: 1 },
+        { prodIdx: 12, qty: 1 },
+      ],
+      note: "Combo equipo + cargador 20W + forro",
+    },
+    {
+      daysAgo: 24,
+      hourOffset: 15,
+      customerIdx: 6,
+      paymentIdx: 0,
+      items: [{ prodIdx: 6, qty: 2 }],
+    },
+    {
+      daysAgo: 23,
+      hourOffset: 18,
+      customerIdx: 7,
+      paymentIdx: 1,
+      items: [
+        { prodIdx: 27, qty: 1 },
+        { prodIdx: 30, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 22,
+      hourOffset: 11,
+      customerIdx: 8,
+      paymentIdx: 3,
+      items: [{ prodIdx: 15, qty: 1 }],
+    },
+    {
+      daysAgo: 21,
+      hourOffset: 13,
+      customerIdx: 9,
+      paymentIdx: 0,
+      items: [
+        { prodIdx: 2, qty: 2 },
+        { prodIdx: 10, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 21,
+      hourOffset: 19,
+      customerIdx: 10,
+      paymentIdx: 1,
+      items: [{ prodIdx: 29, qty: 3 }],
+    },
+    {
+      daysAgo: 20,
+      hourOffset: 14,
+      customerIdx: 11,
+      paymentIdx: 2,
+      items: [
+        { prodIdx: 3, qty: 1 },
+        { prodIdx: 5, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 19,
+      hourOffset: 16,
+      customerIdx: 12,
+      paymentIdx: 0,
+      items: [
+        { prodIdx: 20, qty: 1 },
+        {
+          prodIdx: 4,
+          qty: 2,
+          warrantyClaimed: true,
+          warrantyNote: "Conector con falso contacto, reemplazado en garantía",
+        },
+      ],
+    },
+    {
+      daysAgo: 18,
+      hourOffset: 11,
+      customerIdx: 13,
+      paymentIdx: 1,
+      items: [
+        { prodIdx: 11, qty: 2 },
+        { prodIdx: 0, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 17,
+      hourOffset: 15,
+      customerIdx: 14,
+      paymentIdx: 2,
+      items: [{ prodIdx: 26, qty: 1 }],
+    },
+    {
+      daysAgo: 16,
+      hourOffset: 12,
+      customerIdx: 15,
+      paymentIdx: 3,
+      items: [
+        { prodIdx: 23, qty: 1 },
+        { prodIdx: 9, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 16,
+      hourOffset: 17,
+      customerIdx: 16,
+      paymentIdx: 0,
+      items: [
+        { prodIdx: 7, qty: 2 },
+        { prodIdx: 31, qty: 1 },
+      ],
+    },
 
     // Quincena actual (últimos 15 días: forman el Ciclo Actual activo)
-    { daysAgo: 14, hourOffset: 10, customerIdx: 0, paymentIdx: 1, items: [{ prodIdx: 0, qty: 3 }, { prodIdx: 9, qty: 2 }] },
-    { daysAgo: 14, hourOffset: 16, customerIdx: 2, paymentIdx: 0, items: [{ prodIdx: 18, qty: 1 }, { prodIdx: 5, qty: 1 }] },
-    { daysAgo: 13, hourOffset: 12, customerIdx: 4, paymentIdx: 2, items: [{ prodIdx: 14, qty: 1 }, { prodIdx: 11, qty: 1 }] },
-    { daysAgo: 12, hourOffset: 15, customerIdx: 6, paymentIdx: 0, items: [{ prodIdx: 1, qty: 2 }, { prodIdx: 29, qty: 2 }] },
-    { daysAgo: 11, hourOffset: 11, customerIdx: 8, paymentIdx: 1, items: [{ prodIdx: 6, qty: 2 }] },
-    { daysAgo: 11, hourOffset: 18, customerIdx: 10, paymentIdx: 2, items: [{ prodIdx: 22, qty: 1 }, { prodIdx: 0, qty: 1 }], note: "Entrega inmediata en tienda" },
-    { daysAgo: 10, hourOffset: 14, customerIdx: 12, paymentIdx: 0, items: [{ prodIdx: 8, qty: 1 }, { prodIdx: 10, qty: 2 }] },
-    { daysAgo: 9, hourOffset: 16, customerIdx: 14, paymentIdx: 3, items: [{ prodIdx: 19, qty: 1 }] },
-    { daysAgo: 8, hourOffset: 11, customerIdx: 1, paymentIdx: 0, items: [{ prodIdx: 4, qty: 3 }, { prodIdx: 12, qty: 2 }] },
-    { daysAgo: 8, hourOffset: 17, customerIdx: 3, paymentIdx: 1, items: [{ prodIdx: 27, qty: 2 }] },
-    { daysAgo: 7, hourOffset: 13, customerIdx: 5, paymentIdx: 2, items: [{ prodIdx: 15, qty: 1 }, { prodIdx: 2, qty: 1 }] },
-    { daysAgo: 6, hourOffset: 15, customerIdx: 7, paymentIdx: 0, items: [{ prodIdx: 7, qty: 2, warrantyClaimed: true, warrantyNote: "Cambio directo por puerto USB-C flojo" }, { prodIdx: 30, qty: 1 }] },
-    { daysAgo: 6, hourOffset: 19, customerIdx: 9, paymentIdx: 1, items: [{ prodIdx: 0, qty: 2 }, { prodIdx: 9, qty: 1 }] },
-    { daysAgo: 5, hourOffset: 10, customerIdx: 11, paymentIdx: 2, items: [{ prodIdx: 21, qty: 1 }, { prodIdx: 11, qty: 1 }], note: "Cliente VIP - Pago por transferencia" },
-    { daysAgo: 5, hourOffset: 16, customerIdx: 13, paymentIdx: 0, items: [{ prodIdx: 18, qty: 2 }] },
-    { daysAgo: 4, hourOffset: 12, customerIdx: 15, paymentIdx: 1, items: [{ prodIdx: 3, qty: 1 }, { prodIdx: 5, qty: 2 }] },
-    { daysAgo: 4, hourOffset: 18, customerIdx: 17, paymentIdx: 0, items: [{ prodIdx: 28, qty: 1 }] },
-    { daysAgo: 3, hourOffset: 11, customerIdx: 0, paymentIdx: 2, items: [{ prodIdx: 6, qty: 3 }, { prodIdx: 29, qty: 2 }] },
-    { daysAgo: 3, hourOffset: 15, customerIdx: 4, paymentIdx: 0, items: [{ prodIdx: 17, qty: 1 }] },
-    { daysAgo: 2, hourOffset: 10, customerIdx: 6, paymentIdx: 1, items: [{ prodIdx: 0, qty: 2 }, { prodIdx: 4, qty: 2 }, { prodIdx: 10, qty: 1 }] },
-    { daysAgo: 2, hourOffset: 17, customerIdx: 8, paymentIdx: 3, items: [{ prodIdx: 14, qty: 1 }, { prodIdx: 1, qty: 1 }] },
-    { daysAgo: 1, hourOffset: 11, customerIdx: 10, paymentIdx: 0, items: [{ prodIdx: 20, qty: 2 }, { prodIdx: 12, qty: 2 }] },
-    { daysAgo: 1, hourOffset: 16, customerIdx: 12, paymentIdx: 2, items: [{ prodIdx: 26, qty: 1 }, { prodIdx: 31, qty: 1 }] },
-    { daysAgo: 0, hourOffset: 9, customerIdx: 14, paymentIdx: 0, items: [{ prodIdx: 0, qty: 2 }, { prodIdx: 9, qty: 1 }] },
-    { daysAgo: 0, hourOffset: 11, customerIdx: 16, paymentIdx: 1, items: [{ prodIdx: 6, qty: 1 }, { prodIdx: 29, qty: 2 }] },
+    {
+      daysAgo: 14,
+      hourOffset: 10,
+      customerIdx: 0,
+      paymentIdx: 1,
+      items: [
+        { prodIdx: 0, qty: 3 },
+        { prodIdx: 9, qty: 2 },
+      ],
+    },
+    {
+      daysAgo: 14,
+      hourOffset: 16,
+      customerIdx: 2,
+      paymentIdx: 0,
+      items: [
+        { prodIdx: 18, qty: 1 },
+        { prodIdx: 5, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 13,
+      hourOffset: 12,
+      customerIdx: 4,
+      paymentIdx: 2,
+      items: [
+        { prodIdx: 14, qty: 1 },
+        { prodIdx: 11, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 12,
+      hourOffset: 15,
+      customerIdx: 6,
+      paymentIdx: 0,
+      items: [
+        { prodIdx: 1, qty: 2 },
+        { prodIdx: 29, qty: 2 },
+      ],
+    },
+    {
+      daysAgo: 11,
+      hourOffset: 11,
+      customerIdx: 8,
+      paymentIdx: 1,
+      items: [{ prodIdx: 6, qty: 2 }],
+    },
+    {
+      daysAgo: 11,
+      hourOffset: 18,
+      customerIdx: 10,
+      paymentIdx: 2,
+      items: [
+        { prodIdx: 22, qty: 1 },
+        { prodIdx: 0, qty: 1 },
+      ],
+      note: "Entrega inmediata en tienda",
+    },
+    {
+      daysAgo: 10,
+      hourOffset: 14,
+      customerIdx: 12,
+      paymentIdx: 0,
+      items: [
+        { prodIdx: 8, qty: 1 },
+        { prodIdx: 10, qty: 2 },
+      ],
+    },
+    {
+      daysAgo: 9,
+      hourOffset: 16,
+      customerIdx: 14,
+      paymentIdx: 3,
+      items: [{ prodIdx: 19, qty: 1 }],
+    },
+    {
+      daysAgo: 8,
+      hourOffset: 11,
+      customerIdx: 1,
+      paymentIdx: 0,
+      items: [
+        { prodIdx: 4, qty: 3 },
+        { prodIdx: 12, qty: 2 },
+      ],
+    },
+    {
+      daysAgo: 8,
+      hourOffset: 17,
+      customerIdx: 3,
+      paymentIdx: 1,
+      items: [{ prodIdx: 27, qty: 2 }],
+    },
+    {
+      daysAgo: 7,
+      hourOffset: 13,
+      customerIdx: 5,
+      paymentIdx: 2,
+      items: [
+        { prodIdx: 15, qty: 1 },
+        { prodIdx: 2, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 6,
+      hourOffset: 15,
+      customerIdx: 7,
+      paymentIdx: 0,
+      items: [
+        {
+          prodIdx: 7,
+          qty: 2,
+          warrantyClaimed: true,
+          warrantyNote: "Cambio directo por puerto USB-C flojo",
+        },
+        { prodIdx: 30, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 6,
+      hourOffset: 19,
+      customerIdx: 9,
+      paymentIdx: 1,
+      items: [
+        { prodIdx: 0, qty: 2 },
+        { prodIdx: 9, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 5,
+      hourOffset: 10,
+      customerIdx: 11,
+      paymentIdx: 2,
+      items: [
+        { prodIdx: 21, qty: 1 },
+        { prodIdx: 11, qty: 1 },
+      ],
+      note: "Cliente VIP - Pago por transferencia",
+    },
+    {
+      daysAgo: 5,
+      hourOffset: 16,
+      customerIdx: 13,
+      paymentIdx: 0,
+      items: [{ prodIdx: 18, qty: 2 }],
+    },
+    {
+      daysAgo: 4,
+      hourOffset: 12,
+      customerIdx: 15,
+      paymentIdx: 1,
+      items: [
+        { prodIdx: 3, qty: 1 },
+        { prodIdx: 5, qty: 2 },
+      ],
+    },
+    {
+      daysAgo: 4,
+      hourOffset: 18,
+      customerIdx: 17,
+      paymentIdx: 0,
+      items: [{ prodIdx: 28, qty: 1 }],
+    },
+    {
+      daysAgo: 3,
+      hourOffset: 11,
+      customerIdx: 0,
+      paymentIdx: 2,
+      items: [
+        { prodIdx: 6, qty: 3 },
+        { prodIdx: 29, qty: 2 },
+      ],
+    },
+    {
+      daysAgo: 3,
+      hourOffset: 15,
+      customerIdx: 4,
+      paymentIdx: 0,
+      items: [{ prodIdx: 17, qty: 1 }],
+    },
+    {
+      daysAgo: 2,
+      hourOffset: 10,
+      customerIdx: 6,
+      paymentIdx: 1,
+      items: [
+        { prodIdx: 0, qty: 2 },
+        { prodIdx: 4, qty: 2 },
+        { prodIdx: 10, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 2,
+      hourOffset: 17,
+      customerIdx: 8,
+      paymentIdx: 3,
+      items: [
+        { prodIdx: 14, qty: 1 },
+        { prodIdx: 1, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 1,
+      hourOffset: 11,
+      customerIdx: 10,
+      paymentIdx: 0,
+      items: [
+        { prodIdx: 20, qty: 2 },
+        { prodIdx: 12, qty: 2 },
+      ],
+    },
+    {
+      daysAgo: 1,
+      hourOffset: 16,
+      customerIdx: 12,
+      paymentIdx: 2,
+      items: [
+        { prodIdx: 26, qty: 1 },
+        { prodIdx: 31, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 0,
+      hourOffset: 9,
+      customerIdx: 14,
+      paymentIdx: 0,
+      items: [
+        { prodIdx: 0, qty: 2 },
+        { prodIdx: 9, qty: 1 },
+      ],
+    },
+    {
+      daysAgo: 0,
+      hourOffset: 11,
+      customerIdx: 16,
+      paymentIdx: 1,
+      items: [
+        { prodIdx: 6, qty: 1 },
+        { prodIdx: 29, qty: 2 },
+      ],
+    },
   ];
 
   const sales: Sale[] = salePlans.map((plan, idx) => {
@@ -672,9 +1032,14 @@ export function generateDemoSeed() {
       recoveredInvestment: fortnightCost,
       expectedCash: fortnightCash,
       realCashReported: fortnightCash,
-      differenceNote: "Arqueo quincenal cuadrado sin diferencias en efectivo ni Nequi.",
-      topSellers: Array.from(topSellerMap.values()).sort((a, b) => b.qty - a.qty),
-      topReturned: Array.from(topReturnedMap.values()).sort((a, b) => b.qty - a.qty),
+      differenceNote:
+        "Arqueo quincenal cuadrado sin diferencias en efectivo ni Nequi.",
+      topSellers: Array.from(topSellerMap.values()).sort(
+        (a, b) => b.qty - a.qty
+      ),
+      topReturned: Array.from(topReturnedMap.values()).sort(
+        (a, b) => b.qty - a.qty
+      ),
     },
   ];
 

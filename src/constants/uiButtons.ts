@@ -24,8 +24,3 @@ export const BTN_SECONDARY =
  */
 export const BTN_TERTIARY =
   "inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)] bg-[var(--bg-primary)] hover:bg-[var(--bg-elevated)] hover:border-accent/40 active:scale-95 transition-all duration-150 cursor-pointer select-none shrink-0 disabled:opacity-50 disabled:pointer-events-none";
-
-/**
- * Alias de compatibilidad hacia atrás
- */
-export const PRIMARY_ACTION_BTN_CLASS = BTN_PRIMARY;

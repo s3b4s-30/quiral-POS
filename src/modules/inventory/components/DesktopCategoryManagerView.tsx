@@ -34,7 +34,6 @@ import {
   BTN_PRIMARY,
   BTN_SECONDARY,
   BTN_TERTIARY,
-  PRIMARY_ACTION_BTN_CLASS,
 } from "../../../constants/uiButtons";
 
 export interface DesktopCategoryManagerViewProps {
@@ -1637,7 +1636,7 @@ export default function DesktopCategoryManagerView({
                     onClick={() =>
                       setIsCreatingGlobalAttribute((prev) => !prev)
                     }
-                    className={PRIMARY_ACTION_BTN_CLASS}
+                    className={BTN_PRIMARY}
                     title="Crear un nuevo atributo maestro en el Banco Global"
                   >
                     <Plus size={14} strokeWidth={2.5} />

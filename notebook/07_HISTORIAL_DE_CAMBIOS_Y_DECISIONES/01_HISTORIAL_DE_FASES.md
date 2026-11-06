@@ -230,3 +230,21 @@ flowchart TD
     - Montaje condicional `{!isDesktop && <Navbar ... />}` para que jamás exista en el DOM de escritorio (`>= 768px`).
     - Token `--quiral-bottom-offset: calc(env(safe-area-inset-bottom, 0px) + 5.5rem)` en `.quiral-scroll-container` sin inyectar paddings redundantes en las vistas.
   - **Certificación 100% Exit 0:** TypeScript (`tsc --noEmit`), Vitest (`56/56`), Vite build y Playwright E2E (`72/72`).
+
+---
+
+### Fase de Auditoría Integral de Código, Purga Anti-Bloat y Resiembra Limpia de Entorno Demo 30/30
+
+- **Objetivo:** Ejecutar una auditoría forense de extremo a extremo en la base de código de Quiral POS (`v1.0.1`), erradicar código muerto y alias obsoletos, consolidar el uso universal de tokens de botones (`src/constants/uiButtons.ts`) y purgar/resembrar por completo el entorno de demostración 30/30 (`DEMO_SEED_VERSION = "quiral_seed_v4_audited_2026"`).
+- **Hitos Implementados:**
+  - **Eliminación de Código Muerto (~650 líneas removidas):**
+    - Supresión definitiva de `src/modules/inventory/components/DesktopAttributeConfigView.tsx` (600 líneas) y su re-exportador en `src/components/DesktopAttributeConfigView.tsx`, reemplazados íntegramente por la estación de 3 columnas `DesktopCategoryManagerView.tsx`.
+    - Supresión del hook duplicado sin uso `src/modules/pos/hooks/usePosShortcuts.ts` y su barril `src/modules/pos/hooks/index.ts`.
+  - **Unificación Estricta de Tokens de Botones (`src/constants/uiButtons.ts`):**
+    - Eliminación del alias obsoleto `PRIMARY_ACTION_BTN_CLASS` en `src/constants/uiButtons.ts` y migración de todas las vistas de escritorio (`DesktopCategoryManagerView.tsx`, `InventoryView.tsx`, `DesktopStoreProfileView.tsx`, `DesktopSuppliersView.tsx`) al uso exclusivo de `BTN_PRIMARY`, `BTN_SECONDARY` y `BTN_TERTIARY`.
+    - Verificación de ausencia total de `!important` en utilidades de color (`.text-accent`) en `src/styles/themePalettes.css`.
+  - **Purga Dual (`localStorage` + `IndexedDB`) y Resiembra Limpia Demo 30/30 (`src/lib/demoSeed.ts` y `src/services/offlineDb.ts`):**
+    - Actualización de `DEMO_SEED_VERSION` a `"quiral_seed_v4_audited_2026"`.
+    - Creación de `purgeStoreOfflineStorage(storeId)` en `src/services/offlineDb.ts`, invocada automáticamente desde `ensureFreshDemoStorage()` junto con la limpieza de `quiral_demo_sales*`, `quiral_demo_products*`, `quiral_demo_closures*`, `quiral_catalog_config*` y `quiral_store_profile_*`.
+    - Depuración de subtítulos técnicos (`subtitle`) en las 32 referencias multi-lote de `generateDemoSeed()`, eliminando prefijos redundantes de categoría (ej. `"Forro · "` o `"Audio · "`) y reflejando fielmente los atributos reales de cada producto.
+  - **Certificación 100% Exit 0:** Validación limpia de `npx tsc --noEmit` (incluyendo `--noUnusedLocals --noUnusedParameters`), `npm run test:unit` (56/56), `npm run build` y `npx playwright test` (72/72).

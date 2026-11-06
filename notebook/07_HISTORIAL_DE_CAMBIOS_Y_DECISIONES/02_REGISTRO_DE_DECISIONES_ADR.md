@@ -252,3 +252,38 @@
 - **Consecuencias:**
   - _Positivas:_ Protección total contra pérdida accidental de taxonomías personalizadas, interfaz limpia y compacta gracias al acordeón colapsable y reutilización estricta de los tokens de `src/constants/uiButtons.ts`.
   - _Negativas:_ Ninguna. Cobertura E2E y unitaria al 100% Exit 0.
+
+---
+
+## ADR-015: Sincronización Multiplataforma de Categorías Ocultas, Micro-Badge «Oculta» y Cápsula Flotante Liquid Glass en Móvil
+
+- **Estado:** Aceptado (Inviolable).
+- **Fecha:** 2026-11-06
+- **Contexto:**
+  1. Las categorías ocultadas de `categoryOrder` debían ocultarse de manera simétrica tanto en las barras de navegación de Escritorio como en las de Móvil (`InventoryView`, `PosViewDesktop`, `PosViewMobile`), evitando que los productos existentes re-inyectaran sus categorías en las pestañas rápidas.
+  2. En la vista **"Todos"** de Inventario, el comerciante necesitaba distinguir visualmente qué productos pertenecían a categorías archivadas/ocultas y poder filtrarlos sin perder acceso a ellos.
+  3. En móvil (`< 768px`), la barra de navegación inferior (`Navbar.tsx`) requería evolucionar hacia una cápsula flotante translúcida estilo iOS 18 Liquid Glass sin vulnerar la Directiva de Inmunidad de UI ni los localizadores E2E.
+- **Decisión:**
+  1. **Gobernanza Exclusiva de `categoryOrder` en Barras Rápidas:** Tanto Desktop como Móvil alimentan `HorizontalScrollNav` únicamente desde `catalogConfig.categoryOrder`.
+  2. **Micro-Badge «Oculta» y Toggle de Visibilidad:** En la pestaña `"Todos"` de Inventario, los productos cuya categoría no está en `categoryOrder` muestran el badge ámbar `Oculta` (`<EyeOff size={11} />`) y habilitan el botón secundario `toggle-hidden-category-products-btn`.
+  3. **Cápsula Flotante Liquid Glass (`Navbar.tsx`):** Mantener el nodo `<nav className="... liquid-glass-surface">` desacoplado con `fixed z-40 inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] mx-auto max-w-sm rounded-full backdrop-blur-2xl backdrop-saturate-150`, montaje condicional `{!isDesktop && <Navbar />}` y despeje gobernado por `--quiral-bottom-offset`.
+- **Consecuencias:**
+  - _Positivas:_ Coherencia absoluta entre plataformas, control total sobre productos de categorías ocultas y ergonomía táctil Apple HIG de nivel nativo en iPhone.
+  - _Negativas:_ Ninguna.
+
+---
+
+## ADR-016: Auditoría Anti-Bloat y Purga Dual (`localStorage` + `IndexedDB`) en Resiembra Demo 30/30 (`v4`)
+
+- **Estado:** Aceptado.
+- **Fecha:** 2026-11-06
+- **Contexto:**
+  1. Tras la evolución hacia estaciones de trabajo de 3 columnas (`DesktopCategoryManagerView.tsx`) y atajos integrados en `PosViewDesktop.tsx`, permanecían en el árbol de código módulos obsoletos (`DesktopAttributeConfigView.tsx` y `usePosShortcuts.ts`) y el alias transitorio `PRIMARY_ACTION_BTN_CLASS`.
+  2. En el entorno de demostración (`DEMO_STORE_ID`), al actualizar la semilla en `localStorage`, las tablas locales de IndexedDB (`offlineDb`: `salesQueue`, `cachedProducts`, `cachedSuppliers`) y algunos subtítulos antiguos con prefijo de categoría podían retener estados previos.
+- **Decisión:**
+  1. **Eliminación de Código Muerto y Alias Transitorios:** Purgar archivos sin referencias activas (`DesktopAttributeConfigView.tsx`, `usePosShortcuts.ts`) y consolidar el 100% de los botones de acción sobre `BTN_PRIMARY`, `BTN_SECONDARY` y `BTN_TERTIARY` de `src/constants/uiButtons.ts`.
+  2. **Purga Dual en `ensureFreshDemoStorage()` (`DEMO_SEED_VERSION = "quiral_seed_v4_audited_2026"`):** Al detectar cambio de versión en la semilla Demo 30/30, limpiar tanto las claves `quiral_demo_*` / `quiral_catalog_config*` / `quiral_store_profile_*` en `localStorage` como los registros asociados a `DEMO_STORE_ID` en Dexie.js mediante `purgeStoreOfflineStorage(DEMO_STORE_ID)`.
+  3. **Subtítulos Técnicos Puros en Semilla Demo:** Estandarizar los subtítulos de las 32 referencias de `generateDemoSeed()` usando exclusivamente sus valores de atributos reales separados por `·`, sin anteponer el nombre de la categoría.
+- **Consecuencias:**
+  - _Positivas:_ Reducción de ~650 líneas de código muerto, cero discrepancias entre caché local y semilla Demo 30/30, y filtrado por etiquetas de atributos 100% preciso en todas las categorías.
+  - _Negativas:_ Ninguna.

@@ -3,8 +3,6 @@ export * from "./components/DesktopInventoryGrid";
 
 export { default as DesktopProductDrawer } from "./components/DesktopProductDrawer";
 
-export { default as DesktopAttributeConfigView } from "./components/DesktopAttributeConfigView";
-
 export { default as DesktopCategoryManagerView } from "./components/DesktopCategoryManagerView";
 export * from "./components/DesktopCategoryManagerView";
 

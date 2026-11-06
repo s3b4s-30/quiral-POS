@@ -15,5 +15,3 @@ export { default as CheckoutSheet } from "./components/CheckoutSheet";
 export * from "./components/CheckoutSheet";
 
 export { default as FloatingCartFAB } from "./components/FloatingCartFAB";
-
-export * from "./hooks";

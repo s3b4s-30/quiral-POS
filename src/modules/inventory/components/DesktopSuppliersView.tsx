@@ -18,6 +18,7 @@ import {
 } from "../../../context/InventoryContext";
 import { Supplier } from "../../../types/domain";
 import { formatCOP } from "../../../utils/formatters";
+import { BTN_PRIMARY, BTN_TERTIARY } from "../../../constants/uiButtons";
 
 interface DesktopSuppliersViewProps {
   onBack: () => void;
@@ -185,7 +186,7 @@ export default function DesktopSuppliersView({
             type="button"
             data-testid="suppliers-back-btn"
             onClick={onBack}
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-3.5 py-2 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-accent/40 active:scale-95 transition-all shadow-xs"
+            className={BTN_TERTIARY}
           >
             <ArrowLeft size={16} />
             <span>Regresar</span>
@@ -340,7 +341,7 @@ export default function DesktopSuppliersView({
               <button
                 type="submit"
                 data-testid="save-supplier-btn"
-                className="w-full py-2.5 px-4 rounded-xl font-bold text-xs text-white bg-accent hover:bg-accent-hover shadow-accent-glow active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                className={`${BTN_PRIMARY} w-full py-2.5 px-4`}
               >
                 {editingSupplier ? (
                   <>

@@ -39,7 +39,11 @@ import { Product, ProductCategory } from "../types/domain";
 import { isSameCatalogText } from "../utils/catalogConfig";
 import { foldDiacritics, formatCOP, parseCOPInput } from "../utils/formatters";
 import { useIsDesktop } from "../hooks/useIsDesktop";
-import { BTN_SECONDARY, BTN_TERTIARY } from "../constants/uiButtons";
+import {
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TERTIARY,
+} from "../constants/uiButtons";
 
 interface InventoryViewProps {
   onOpenSuppliers: () => void;
@@ -642,7 +646,7 @@ export default function InventoryView({
                   setCloningProduct(null);
                   setIsDesktopNewProductModalOpen(true);
                 }}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-accent-glow hover:bg-accent-hover active:scale-95 transition-all duration-150"
+                className={BTN_PRIMARY}
               >
                 <Plus size={13} strokeWidth={2.5} />
                 <span>Nuevo Producto</span>

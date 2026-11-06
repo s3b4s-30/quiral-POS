@@ -215,3 +215,28 @@ export async function getCachedSuppliersSnapshot(
     .toArray();
   return records.map((r) => r.data);
 }
+
+/**
+ * Purga por completo los datos locales en IndexedDB (cola de ventas, catálogo y proveedores)
+ * pertenecientes a una tienda específica (ej. al resembrar la cuenta Demo 30/30).
+ */
+export async function purgeStoreOfflineStorage(
+  storeId: string,
+  db: QuiralOfflineDatabase = offlineDb
+): Promise<void> {
+  try {
+    await db.transaction(
+      "rw",
+      db.salesQueue,
+      db.cachedProducts,
+      db.cachedSuppliers,
+      async () => {
+        await db.salesQueue.where("storeId").equals(storeId).delete();
+        await db.cachedProducts.where("storeId").equals(storeId).delete();
+        await db.cachedSuppliers.where("storeId").equals(storeId).delete();
+      }
+    );
+  } catch {
+    // Entorno sin soporte de IndexedDB o base cerrada
+  }
+}
