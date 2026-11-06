@@ -238,6 +238,26 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       modal.getByText(/Selecciona una categoría de catálogo/i)
     ).toBeVisible();
 
+    // Verificar que el nombre autogenerado NUNCA antepone la categoría
+    const celularesCatBtn = modal.getByRole("button", {
+      name: "Celulares",
+      exact: true,
+    });
+    await expect(celularesCatBtn).toBeVisible();
+    await celularesCatBtn.click();
+
+    const iphoneAttrBtn = modal.getByRole("button", {
+      name: "iPhone",
+      exact: true,
+    });
+    await expect(iphoneAttrBtn).toBeVisible();
+    await iphoneAttrBtn.click();
+
+    const nameInputPre = page.getByTestId("desktop-new-product-name-input");
+    await expect(nameInputPre).toHaveValue("iPhone");
+    const generatedVal = await nameInputPre.inputValue();
+    expect(generatedVal).not.toContain("Celulares");
+
     // Seleccionar categoría "Forros / Fundas" en el flex-wrap de categorías
     const fundasBtn = modal.getByRole("button", {
       name: "Forros / Fundas",
