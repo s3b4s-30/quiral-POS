@@ -526,9 +526,15 @@ export default function DesktopNewProductModal({
       {/* 2. Cuerpo en Formato Split-Layout (2 Columnas Fijas) */}
       <div className="flex-1 min-h-0 overflow-hidden max-w-7xl mx-auto w-full p-4 lg:p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* COLUMNA IZQUIERDA (7 cols): Taxonomía y Atributos Dinámicos (CERO SCROLL HORIZONTAL) */}
-        <div className="md:col-span-7 flex flex-col min-h-0 overflow-y-auto custom-scrollbar rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-6 space-y-6 shadow-sm">
-          {/* SECCIÓN A: Categoría de Producto y Creación Rápida */}
-          <div className="space-y-3">
+        <div
+          data-testid="desktop-new-product-left-column"
+          className="md:col-span-7 flex flex-col min-h-0 min-w-0 overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-6 shadow-sm"
+        >
+          {/* SECCIÓN A: Categoría de Catálogo y Creación Rápida (ANCLADA / ESTÁTICA) */}
+          <div
+            data-testid="desktop-new-product-category-section"
+            className="shrink-0 pb-4 border-b border-[var(--border-color)] space-y-3"
+          >
             <div className="flex items-center justify-between">
               <label className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
                 <Tag size={13} className="text-accent" />
@@ -603,8 +609,11 @@ export default function DesktopNewProductModal({
             </div>
           </div>
 
-          {/* SECCIÓN B: Banco de Atributos Dinámicos de la Categoría */}
-          <div className="space-y-4 pt-4 border-t border-[var(--border-color)]">
+          {/* SECCIÓN B: Contenedor Desplazable de Atributos Dinámicos y Banco Global */}
+          <div
+            data-testid="desktop-new-product-attributes-scroll"
+            className="flex-1 min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] pr-1 pt-4 space-y-4"
+          >
             <div className="flex items-center justify-between">
               <label className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
                 <Sliders size={13} className="text-accent" />
@@ -1121,8 +1130,15 @@ export default function DesktopNewProductModal({
         </div>
 
         {/* COLUMNA DERECHA (5 cols): Panel Fijo de Control y Datos Críticos */}
-        <div className="md:col-span-5 flex flex-col min-h-0 overflow-y-auto custom-scrollbar rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-6 space-y-5 justify-between shadow-sm">
-          <div className="space-y-5">
+        <div
+          data-testid="desktop-new-product-right-column"
+          className="md:col-span-5 flex flex-col min-h-0 min-w-0 overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-elevated)] p-6 shadow-sm"
+        >
+          {/* Contenedor Desplazable de Formulario y Métricas */}
+          <div
+            data-testid="desktop-new-product-right-scroll"
+            className="flex-1 min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] pr-1 space-y-5"
+          >
             {/* SECCIÓN C: Nombre Comercial y Switch de Autogeneración (Zap Icon) */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -1417,8 +1433,11 @@ export default function DesktopNewProductModal({
             </div>
           </div>
 
-          {/* 3. Panel Inferior Fijo de Acciones */}
-          <div className="pt-4 border-t border-[var(--border-color)] space-y-3">
+          {/* 3. Panel Inferior Fijo de Acciones (ANCLADO / ESTÁTICO) */}
+          <div
+            data-testid="desktop-new-product-footer-actions"
+            className="shrink-0 pt-4 border-t border-[var(--border-color)] space-y-3"
+          >
             {errorMessage && (
               <div className="flex items-center gap-2 p-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-xs font-bold text-red-400 animate-in fade-in duration-150">
                 <AlertTriangle size={14} className="shrink-0" />

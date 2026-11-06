@@ -363,7 +363,57 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     ).not.toBeVisible();
     await expect(modal.getByTestId("link-global-attr-colors")).toBeVisible();
 
-    // 6. Cerrar modal con tecla Escape
+    // 6. Validación de Estabilidad Dimensional (Cero Layout Shift / CLS) y Anclaje Superior
+    const leftCol = modal.getByTestId("desktop-new-product-left-column");
+    await expect(leftCol).toBeVisible();
+    const boxBefore = await leftCol.boundingBox();
+    expect(boxBefore).not.toBeNull();
+
+    // Vincular múltiples atributos adicionales desde el banco global para inducir scroll vertical
+    const availableAttrBtns = modal.locator(
+      '[data-testid^="link-global-attr-"]'
+    );
+    const count = await availableAttrBtns.count();
+    const toLink = Math.min(count, 4);
+    for (let i = 0; i < toLink; i++) {
+      await availableAttrBtns.first().click();
+    }
+
+    // Verificar que el ancho de la columna izquierda se mantiene idéntico (Cero CLS, tolerancia <= 1px por subpixel)
+    const boxAfter = await leftCol.boundingBox();
+    expect(boxAfter).not.toBeNull();
+    expect(
+      Math.abs((boxAfter?.width ?? 0) - (boxBefore?.width ?? 0))
+    ).toBeLessThanOrEqual(1);
+
+    // Verificar que la sección de categoría sigue anclada en el tope al hacer scroll en atributos
+    const categorySec = modal.getByTestId(
+      "desktop-new-product-category-section"
+    );
+    await expect(categorySec).toBeVisible();
+    const catBoxInitial = await categorySec.boundingBox();
+
+    const attrScroll = modal.getByTestId(
+      "desktop-new-product-attributes-scroll"
+    );
+    await attrScroll.evaluate((el) => {
+      el.scrollTop = el.scrollHeight;
+    });
+
+    await expect(categorySec).toBeVisible();
+    const catBoxAfterScroll = await categorySec.boundingBox();
+    expect(catBoxAfterScroll?.y).toBe(catBoxInitial?.y);
+
+    // Verificar que los botones de acción inferior en la columna derecha se mantienen visibles y anclados
+    const footerActions = modal.getByTestId(
+      "desktop-new-product-footer-actions"
+    );
+    await expect(footerActions).toBeVisible();
+    await expect(
+      footerActions.getByTestId("desktop-new-product-submit-btn")
+    ).toBeVisible();
+
+    // 7. Cerrar modal con tecla Escape
     await page.keyboard.press("Escape");
     await expect(modal).not.toBeVisible();
   });
