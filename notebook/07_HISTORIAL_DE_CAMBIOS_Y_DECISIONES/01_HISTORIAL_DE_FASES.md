@@ -248,3 +248,27 @@ flowchart TD
     - Creación de `purgeStoreOfflineStorage(storeId)` en `src/services/offlineDb.ts`, invocada automáticamente desde `ensureFreshDemoStorage()` junto con la limpieza de `quiral_demo_sales*`, `quiral_demo_products*`, `quiral_demo_closures*`, `quiral_catalog_config*` y `quiral_store_profile_*`.
     - Depuración de subtítulos técnicos (`subtitle`) en las 32 referencias multi-lote de `generateDemoSeed()`, eliminando prefijos redundantes de categoría (ej. `"Forro · "` o `"Audio · "`) y reflejando fielmente los atributos reales de cada producto.
   - **Certificación 100% Exit 0:** Validación limpia de `npx tsc --noEmit` (incluyendo `--noUnusedLocals --noUnusedParameters`), `npm run test:unit` (56/56), `npm run build` y `npx playwright test` (72/72).
+
+---
+
+### Fase de Privacidad Universal, Cuadrícula Simétrica 2x2 y Optimización de FAB Flotante
+
+- **Objetivo:** Perfeccionar la ergonomía y la privacidad de datos de mostrador en la vista de Resumen (`SummaryView.tsx`), desaturar la esquina inferior derecha en móvil (< 768px) condicionando el botón flotante `FloatingCartFAB` y corregir el truncamiento de títulos en el historial de cierres.
+- **Hitos Implementados:**
+  - **Enmascaramiento Universal en Modo Privacidad (`!showCosts`):**
+    - En `SummaryView.tsx`, las métricas de **Ingresos**, **Utilidad** y **Valor Inventario** se enmascaran automáticamente con `••••••` al desactivar la visibilidad de costos (`!showCosts`).
+    - En el **Historial de Cierres**, los importes de **Vendido** y **Utilidad** se enmascaran de igual manera con `••••••`.
+    - Se unificó la consistencia cromática y tipográfica del enmascaramiento con `text-[var(--text-secondary)] opacity-70 font-mono tracking-widest font-normal select-none`, eliminando puntos de colores discordantes.
+  - **Desaturación de la Esquina Inferior Derecha (`FloatingCartFAB` vs Navbar):**
+    - En `src/App.tsx`, se condicionó la propiedad `isVisible` de `FloatingCartFAB` a `!hasActiveModal && activeTab !== "sell" && cartUnits > 0`.
+    - Cuando el carrito está vacío (`cartUnits === 0`), el FAB se auto-oculta para no duplicar la pestaña «Vender» del Navbar inferior.
+  - **Cuadrícula Simétrica de Métricas Financieras (Layout 2x2 en Móvil / 4 columnas en Desktop):**
+    - Se reestructuró la cuadrícula de métricas en 4 bloques balanceados:
+      1. **Ingresos** (Total vendido en el ciclo).
+      2. **Utilidad** (Ganancia neta).
+      3. **Valor Inventario** (Costo total en stock).
+      4. **Existencias en Stock** (Total de unidades físicas disponibles formateadas con `formatUnits(totals.stockUnits)` y clase `.tabular-nums`).
+    - Se erradicó la tarjeta ancha huérfana inferior, equilibrando el ritmo visual tanto en estado cargado como en skeletons (`animate-pulse`).
+  - **Corrección de Truncamiento en Historial de Cierres:**
+    - Se reemplazó el `truncate` unidireccional de `closure.periodLabel` por `leading-snug line-clamp-2` con flujo flex responsivo (`flex-col sm:flex-row sm:items-center sm:justify-between`), permitiendo hasta dos líneas completas y ubicando el badge de fecha de forma ordenada.
+  - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y suites E2E Playwright (`platform-split-immunity`, `visual-regression`, `performance-fluidity`) aprobadas en verde.
