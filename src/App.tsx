@@ -253,7 +253,7 @@ function AppInner() {
       <FloatingCartFAB
         cartCount={cartUnits}
         onClick={() => handleTabChange("sell")}
-        isVisible={!hasActiveModal && activeTab !== "sell"}
+        isVisible={!hasActiveModal && activeTab !== "sell" && cartUnits > 0}
       />
 
       {/* 
