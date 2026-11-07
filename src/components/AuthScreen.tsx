@@ -13,6 +13,10 @@ import {
 } from "lucide-react";
 import React, { useRef, useState } from "react";
 import {
+  RESTRICTED_REGISTRATION_MESSAGE,
+  isEmailAllowedForRegistration,
+} from "../config/authWhitelist";
+import {
   DEMO_BYPASS_PASS,
   DEMO_BYPASS_USER,
   requestPasswordReset,
@@ -92,12 +96,13 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     try {
       const authResult = await signIn(cleanUser, password);
       if (!authResult) {
-        throw new Error("No se pudo iniciar sesión. Verifica tus credenciales.");
+        throw new Error(
+          "No se pudo iniciar sesión. Verifica tus credenciales."
+        );
       }
       await onAuthSuccess();
     } catch (err: unknown) {
       console.error("Error en login:", err);
-      const message = err instanceof Error ? err.message : String(err);
       setError(humanizeSupabaseError(err));
     } finally {
       setLoading(false);
@@ -112,6 +117,11 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     setError(null);
     setSuccessMessage(null);
 
+    if (!isEmailAllowedForRegistration(email)) {
+      setError(RESTRICTED_REGISTRATION_MESSAGE);
+      return;
+    }
+
     isSubmittingRef.current = true;
     setLoading(true);
     try {
@@ -122,7 +132,9 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         isJoiningStore ? "" : storeName || "Mi tienda",
         isJoiningStore ? storeIdToJoin : undefined
       );
-      setSuccessMessage("¡Cuenta creada exitosamente! Te enviamos un enlace de confirmación a tu correo. Por favor revísalo antes de iniciar sesión.");
+      setSuccessMessage(
+        "¡Cuenta creada exitosamente! Te enviamos un enlace de confirmación a tu correo. Por favor revísalo antes de iniciar sesión."
+      );
       try {
         await signIn(username, registerPassword);
         await onAuthSuccess();
@@ -133,7 +145,6 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
       }
     } catch (err: unknown) {
       console.error("Error en registro:", err);
-      const message = err instanceof Error ? err.message : String(err);
       setError(humanizeSupabaseError(err));
     } finally {
       setLoading(false);
@@ -160,7 +171,6 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
       setSuccessMessage("Se ha enviado un enlace de recuperación a tu correo.");
     } catch (err: unknown) {
       console.error("Error en recuperación:", err);
-      const message = err instanceof Error ? err.message : String(err);
       setError(humanizeSupabaseError(err));
     } finally {
       setLoading(false);
@@ -169,6 +179,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
   };
 
   const handleQuickDemoFill = () => {
+    if (!import.meta.env.DEV) return;
     setIdentifier(DEMO_BYPASS_USER);
     setPassword(DEMO_BYPASS_PASS);
   };
@@ -186,7 +197,8 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
           </h1>
           <p className="text-xs text-[var(--text-secondary)] mt-1 font-medium">
             {mode === "login" && "Acceso para propietarios y colaboradores"}
-            {mode === "register" && "Crea tu tienda segura o únete como colaborador"}
+            {mode === "register" &&
+              "Crea tu tienda segura o únete como colaborador"}
             {mode === "forgot" && "Recuperación de contraseña segura"}
           </p>
         </div>
@@ -261,8 +273,12 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 />
                 <button
                   type="button"
-                  aria-label={showLoginPassword ? "Ocultar contraseña" : "Ver contraseña"}
-                  title={showLoginPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                  aria-label={
+                    showLoginPassword ? "Ocultar contraseña" : "Ver contraseña"
+                  }
+                  title={
+                    showLoginPassword ? "Ocultar contraseña" : "Ver contraseña"
+                  }
                   onClick={() => setShowLoginPassword(!showLoginPassword)}
                   className="absolute right-3 p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors focus:outline-none"
                 >
@@ -280,23 +296,29 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
               <span>{loading ? "Iniciando sesión..." : "Iniciar Sesión"}</span>
             </button>
 
-            {/* Acceso Rápido de Prueba 30 / 30 */}
-            <div className="mt-4 pt-3 border-t border-[var(--border-color)]">
-              <button
-                type="button"
-                onClick={handleQuickDemoFill}
-                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold hover:bg-amber-500/15 active:scale-95 transition-all"
-              >
-                <KeyRound size={14} />
-                <span>Rellenar Acceso Rápido de Prueba (30 / 30)</span>
-              </button>
-              <p className="mt-1.5 text-[10px] text-center text-amber-500/80 font-medium leading-tight">
-                ⚠️ Acceso exclusivo para pruebas de desarrollo. Se eliminará antes del lanzamiento en quiral.xyz.
-              </p>
-            </div>
+            {/* Acceso Rápido de Prueba 30 / 30 (Exclusivo Localhost / Desarrollo) */}
+            {import.meta.env.DEV && (
+              <div className="mt-4 pt-3 border-t border-[var(--border-color)]">
+                <button
+                  type="button"
+                  data-testid="quick-demo-fill-btn"
+                  onClick={handleQuickDemoFill}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold hover:bg-amber-500/15 active:scale-95 transition-all"
+                >
+                  <KeyRound size={14} />
+                  <span>Rellenar Acceso Rápido de Prueba (30 / 30)</span>
+                </button>
+                <p className="mt-1.5 text-[10px] text-center text-amber-500/80 font-medium leading-tight">
+                  ⚠️ Acceso exclusivo para pruebas en entorno de desarrollo
+                  local. Deshabilitado en producción.
+                </p>
+              </div>
+            )}
 
             <div className="text-center pt-2">
-              <span className="text-xs text-[var(--text-secondary)]">¿No tienes cuenta? </span>
+              <span className="text-xs text-[var(--text-secondary)]">
+                ¿No tienes cuenta?{" "}
+              </span>
               <button
                 type="button"
                 onClick={() => {
@@ -353,7 +375,9 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 {username.trim().length > 0 && (
                   <span
                     className={`text-[11px] font-bold ${
-                      usernameCheck.isValid ? "text-emerald-500" : "text-amber-500"
+                      usernameCheck.isValid
+                        ? "text-emerald-500"
+                        : "text-amber-500"
                     }`}
                   >
                     {usernameCheck.isValid ? "Válido" : "3-24 letras/núms"}
@@ -370,7 +394,9 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   autoCapitalize="none"
                   value={username}
                   onChange={(e) =>
-                    setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, ""))
+                    setUsername(
+                      e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, "")
+                    )
                   }
                   placeholder="ej. juan_pos"
                   className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] pl-10 pr-4 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-accent transition-colors"
@@ -385,10 +411,14 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 </label>
                 {registerPassword.length > 0 && (
                   <div className="flex items-center gap-1 text-[11px]">
-                    <span className="text-[var(--text-secondary)]">Fortaleza:</span>
+                    <span className="text-[var(--text-secondary)]">
+                      Fortaleza:
+                    </span>
                     <span
                       className={`font-bold ${
-                        passwordStrength.isValid ? "text-emerald-500" : passwordStrength.colorClass.split(" ")[1]
+                        passwordStrength.isValid
+                          ? "text-emerald-500"
+                          : passwordStrength.colorClass.split(" ")[1]
                       }`}
                     >
                       {passwordStrength.label}
@@ -410,12 +440,24 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 />
                 <button
                   type="button"
-                  aria-label={showRegisterPassword ? "Ocultar contraseña" : "Ver contraseña"}
-                  title={showRegisterPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                  aria-label={
+                    showRegisterPassword
+                      ? "Ocultar contraseña"
+                      : "Ver contraseña"
+                  }
+                  title={
+                    showRegisterPassword
+                      ? "Ocultar contraseña"
+                      : "Ver contraseña"
+                  }
                   onClick={() => setShowRegisterPassword(!showRegisterPassword)}
                   className="absolute right-3 p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors focus:outline-none"
                 >
-                  {showRegisterPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showRegisterPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
                 </button>
               </div>
 
@@ -423,7 +465,9 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
               {registerPassword.length > 0 && (
                 <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
                   <div
-                    className={`h-full transition-all duration-300 ${passwordStrength.colorClass.split(" ")[0]} ${passwordStrength.barWidthClass}`}
+                    className={`h-full transition-all duration-300 ${
+                      passwordStrength.colorClass.split(" ")[0]
+                    } ${passwordStrength.barWidthClass}`}
                   />
                 </div>
               )}
@@ -439,7 +483,10 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                     }`}
                   >
                     {passwordStrength.rules.minLength ? (
-                      <CheckCircle size={13} className="shrink-0 text-emerald-500" />
+                      <CheckCircle
+                        size={13}
+                        className="shrink-0 text-emerald-500"
+                      />
                     ) : (
                       <div className="h-3 w-3 rounded-full border border-current opacity-60 shrink-0" />
                     )}
@@ -454,7 +501,10 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                     }`}
                   >
                     {passwordStrength.rules.hasUpper ? (
-                      <CheckCircle size={13} className="shrink-0 text-emerald-500" />
+                      <CheckCircle
+                        size={13}
+                        className="shrink-0 text-emerald-500"
+                      />
                     ) : (
                       <div className="h-3 w-3 rounded-full border border-current opacity-60 shrink-0" />
                     )}
@@ -469,7 +519,10 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                     }`}
                   >
                     {passwordStrength.rules.hasLower ? (
-                      <CheckCircle size={13} className="shrink-0 text-emerald-500" />
+                      <CheckCircle
+                        size={13}
+                        className="shrink-0 text-emerald-500"
+                      />
                     ) : (
                       <div className="h-3 w-3 rounded-full border border-current opacity-60 shrink-0" />
                     )}
@@ -484,7 +537,10 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                     }`}
                   >
                     {passwordStrength.rules.hasNumber ? (
-                      <CheckCircle size={13} className="shrink-0 text-emerald-500" />
+                      <CheckCircle
+                        size={13}
+                        className="shrink-0 text-emerald-500"
+                      />
                     ) : (
                       <div className="h-3 w-3 rounded-full border border-current opacity-60 shrink-0" />
                     )}
@@ -499,7 +555,10 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                     }`}
                   >
                     {passwordStrength.rules.hasSpecial ? (
-                      <CheckCircle size={13} className="shrink-0 text-emerald-500" />
+                      <CheckCircle
+                        size={13}
+                        className="shrink-0 text-emerald-500"
+                      />
                     ) : (
                       <div className="h-3 w-3 rounded-full border border-current opacity-60 shrink-0" />
                     )}
@@ -548,12 +607,24 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 />
                 <button
                   type="button"
-                  aria-label={showConfirmPassword ? "Ocultar contraseña" : "Ver contraseña"}
-                  title={showConfirmPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                  aria-label={
+                    showConfirmPassword
+                      ? "Ocultar contraseña"
+                      : "Ver contraseña"
+                  }
+                  title={
+                    showConfirmPassword
+                      ? "Ocultar contraseña"
+                      : "Ver contraseña"
+                  }
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors focus:outline-none"
                 >
-                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showConfirmPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
                 </button>
               </div>
             </div>
@@ -562,14 +633,18 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             <div className="pt-1">
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-                  {isJoiningStore ? "ID de Tienda a Unirse" : "Nombre de tu Tienda"}
+                  {isJoiningStore
+                    ? "ID de Tienda a Unirse"
+                    : "Nombre de tu Tienda"}
                 </label>
                 <button
                   type="button"
                   onClick={() => setIsJoiningStore(!isJoiningStore)}
                   className="text-xs font-semibold text-accent hover:underline transition-colors duration-200"
                 >
-                  {isJoiningStore ? "Crear nueva tienda" : "Unirse a tienda existente"}
+                  {isJoiningStore
+                    ? "Crear nueva tienda"
+                    : "Unirse a tienda existente"}
                 </button>
               </div>
 
@@ -602,13 +677,15 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 {loading
                   ? "Creando cuenta..."
                   : isJoiningStore
-                  ? "Unirse a Tienda"
-                  : "Registrar Tienda"}
+                    ? "Unirse a Tienda"
+                    : "Registrar Tienda"}
               </span>
             </button>
 
             <div className="text-center pt-2">
-              <span className="text-xs text-[var(--text-secondary)]">¿Ya tienes cuenta? </span>
+              <span className="text-xs text-[var(--text-secondary)]">
+                ¿Ya tienes cuenta?{" "}
+              </span>
               <button
                 type="button"
                 onClick={() => {
@@ -651,7 +728,9 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
               disabled={loading}
               className="w-full mt-2 flex items-center justify-center gap-2 rounded-2xl bg-accent hover:bg-accent-hover py-3.5 text-sm font-bold text-white shadow-md active:scale-[0.99] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none"
             >
-              <span>{loading ? "Enviando..." : "Enviar Enlace de Recuperación"}</span>
+              <span>
+                {loading ? "Enviando..." : "Enviar Enlace de Recuperación"}
+              </span>
             </button>
 
             <div className="text-center pt-2">

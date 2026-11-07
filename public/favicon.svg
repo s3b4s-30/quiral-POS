@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <defs>
+    <linearGradient id="quiral-grad" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0A84FF" />
+      <stop offset="50%" stop-color="#007AFF" />
+      <stop offset="100%" stop-color="#0051D5" />
+    </linearGradient>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#007AFF" flood-opacity="0.35" />
+    </filter>
+  </defs>
+  <rect x="8" y="8" width="104" height="104" rx="26" fill="url(#quiral-grad)" filter="url(#glow)" />
+  <rect x="9" y="9" width="102" height="102" rx="25" stroke="white" stroke-opacity="0.22" stroke-width="2" />
+  <circle cx="58" cy="56" r="22" stroke="white" stroke-width="9" />
+  <path d="M72 70L86 84" stroke="white" stroke-width="9" stroke-linecap="round" />
+  <circle cx="58" cy="56" r="6" fill="white" />
+</svg>

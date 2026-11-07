@@ -315,3 +315,17 @@ flowchart TD
   - **Fusión Limpia a `main` y `develop`:**
     - Fusión sin conflictos de la rama `origin/copilot/fix-test-job-failure` con `develop` y `main`, garantizando que todo el código esté unificado y desplegado para producción en `quiral.xyz`.
   - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y suite Playwright E2E aprobadas en verde.
+
+---
+
+### Fase de Blindaje de Entorno Demo, Whitelist de Registro y Documentación Comercial (`README.md`)
+
+- **Objetivo:** Restringir estrictamente el acceso rápido demo (`30 / 30`) al entorno de desarrollo local (`import.meta.env.DEV === true`), implementar una lista de control de acceso (Whitelist) en `src/config/authWhitelist.ts` para impedir registros anónimos en producción, endurecer `.gitignore` y redactar el `README.md` corporativo y técnico en la raíz del proyecto.
+- **Hitos Implementados:**
+  - **Aislamiento de Acceso Demo (`30 / 30`) a Localhost:**
+    - En `src/lib/authService.ts`, `src/components/AuthScreen.tsx` y `src/context/InventoryContext.tsx`, el bypass de demostración queda condicionado a `import.meta.env.DEV`. En compilaciones de producción (`npm run build`), el botón desaparece del DOM y `signIn` rechaza credenciales demo.
+  - **Whitelist de Registro Multi-Tenant (`src/config/authWhitelist.ts`):**
+    - Creación de `isEmailAllowedForRegistration` y validación obligatoria en `AuthScreen.tsx` y `signUpUser` (`authService.ts`), rechazando correos no autorizados con el mensaje: _"Registro restringido por administración. Contacte al propietario de la tienda."_
+  - **Documentación Comercial y Técnica (`README.md`):**
+    - Redacción integral en dos mitades: sección superior comercial enfocada en propuesta de valor, flujo operativo y roadmap 2026-2027, y sección inferior colapsable (`<details>`) con especificaciones de arquitectura, seguridad RLS, motor Offline-First y comandos de desarrollo.
+  - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y suite Playwright E2E aprobadas en verde.
