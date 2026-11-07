@@ -1,10 +1,16 @@
 export type BaseProductCategory =
   | "Cargadores y Cables"
   | "Forros / Fundas"
+  | "Protección de Pantalla"
   | "Audio / AirPods"
+  | "Audio"
   | "Power Banks / Baterías"
+  | "Power Banks / Baterías portatiles"
+  | "Almacenamiento"
   | "Celulares"
   | "Perfumes"
+  | "Smartwatch y Wearables"
+  | "Soportes y Accesorios de Auto"
   | "Streaming"
   | "General / Otros";
 
@@ -23,6 +29,13 @@ export interface CategoryConfig {
   attributeKeys: string[];
 }
 
+export interface TrashedCategoryEntry {
+  category: CategoryConfig;
+  attributeValues: Record<string, string[]>;
+  wasInActiveOrder: boolean;
+  trashedAt: string;
+}
+
 export interface CatalogConfig {
   /** Orden personalizado de categorías en la barra de filtros (sin incluir "Todos", que va fijo al inicio) */
   categoryOrder: ProductCategory[];
@@ -32,6 +45,8 @@ export interface CatalogConfig {
   attributes: Record<string, AttributeDefinition>;
   /** Opciones personalizadas de atributos con scope por categoría: [categoryName][attributeKey] = string[] */
   categoryAttributeValues?: Record<string, Record<string, string[]>>;
+  /** Papelera temporal de categorías descartadas con retención íntegra de atributos y opciones */
+  trashedCategories?: TrashedCategoryEntry[];
 }
 
 export interface Supplier {

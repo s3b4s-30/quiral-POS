@@ -329,3 +329,21 @@ flowchart TD
   - **Documentación Comercial y Técnica (`README.md`):**
     - Redacción integral en dos mitades: sección superior comercial enfocada en propuesta de valor, flujo operativo y roadmap 2026-2027, y sección inferior colapsable (`<details>`) con especificaciones de arquitectura, seguridad RLS, motor Offline-First y comandos de desarrollo.
   - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y suite Playwright E2E aprobadas en verde.
+
+---
+
+### Fase de Ampliación del Banco Maestro Global, Papelera Temporal Discreta y Resiembra Demo sin iPhone
+
+- **Objetivo:** Ampliar el Banco Maestro de Atributos y Categorías (`src/utils/catalogConfig.ts`) con marcas y categorías universales de retail moderno, reestructurar la semilla de demostración (`src/lib/demoSeed.ts` v5) excluyendo celulares iPhone de la categoría `Celulares` y simulando un catálogo realista con categorías activas y ocultas, e implementar una papelera temporal ultradiscreta (`trashedCategories`) con preservación del 100% de los atributos y restauración en 1 clic.
+- **Hitos Implementados:**
+  - **Ampliación del Banco Maestro Global (`src/utils/catalogConfig.ts`):**
+    - Incorporación de marcas universales (`Samsung`, `Xiaomi`, `Motorola`, `JBL`, `Sony`, `Baseus`, `Huawei`, `ZTE`, `Kingston`, `SanDisk`) y nuevos atributos especializados (`screenProtectorTypes`, `storageTypes`, `watchSizes`, `watchBands`, `carMountTypes`, `32GB` en `storageCapacities`).
+    - Nuevas categorías de catálogo: **Protección de Pantalla**, **Almacenamiento**, **Smartwatch y Wearables** y **Soportes y Accesorios de Auto**, con aislamiento estricto de valores por categoría en `DEFAULT_CATEGORY_ATTRIBUTE_VALUES`.
+  - **Reestructuración de la Semilla Demo (`src/lib/demoSeed.ts`):**
+    - Actualización de `DEMO_SEED_VERSION` a `"quiral_seed_v5_expanded_catalog_2026"`.
+    - Exclusión de teléfonos iPhone dentro de la categoría `Celulares` (reservados para un futuro módulo especializado con IMEI y salud de batería), conservando `Samsung Galaxy S24 Ultra` y `Xiaomi Redmi Note 13 Pro`, e incorporando productos de alta rotación en `Protección de Pantalla` y `Almacenamiento`.
+    - Simulación realista de tienda con 8 categorías activas en `categoryOrder` y 3 categorías (`Smartwatch y Wearables`, `Soportes y Accesorios de Auto`, `Streaming`) almacenadas en **Categorías Ocultas y Guardadas**.
+  - **Papelera Temporal Ultradiscreta (`trashedCategories`) y Restauración con Memoria Completa:**
+    - Implementación de `trashCategory` y `restoreTrashedCategory` en `InventoryContext.tsx`, conservando el 100% de `attributeKeys` y `categoryAttributeValues` al descartar una categoría.
+    - Integración en `DesktopCategoryManagerView.tsx` de la sección colapsable `🗑️ Papelera (N) [Ver / Ocultar]` debajo del panel de categorías ocultas, junto con el botón de restauración (`BTN_SECONDARY`), eliminación definitiva y Toast con acción inmediata `[Deshacer]`.
+  - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y suite Playwright E2E aprobadas en verde.

@@ -156,6 +156,11 @@ interface InventoryContextType {
   updateCategoryOrder: (newOrder: ProductCategory[]) => void;
   hideCategoryFromOrder: (categoryName: ProductCategory) => void;
   restoreCategoryToOrder: (categoryName: ProductCategory) => void;
+  trashCategory: (categoryName: ProductCategory) => void;
+  restoreTrashedCategory: (
+    categoryName: ProductCategory,
+    toActiveOrder?: boolean
+  ) => void;
   addCategory: (
     name: string,
     attributeKeys?: string[]
@@ -1064,6 +1069,142 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     return newCat;
   };
 
+  const trashCategory = (categoryName: ProductCategory) => {
+    const cleanName = normalizeCatalogText(categoryName);
+    if (!cleanName || cleanName.toLowerCase() === "todos") return;
+
+    setCatalogConfig((prev) => {
+      const existingCat = prev.categories.find((c) =>
+        isSameCatalogText(c.name, cleanName)
+      ) || {
+        name: cleanName,
+        isSystemDefault: FACTORY_BASE_CATEGORIES.some((b) =>
+          isSameCatalogText(b, cleanName)
+        ),
+        attributeKeys: inferAttributeKeysForCategory(cleanName),
+      };
+
+      const canonicalName = existingCat.name;
+      const wasInActiveOrder = prev.categoryOrder.some((c) =>
+        isSameCatalogText(c, canonicalName)
+      );
+
+      const scopedKey = Object.keys(prev.categoryAttributeValues || {}).find(
+        (k) => isSameCatalogText(k, canonicalName)
+      );
+      const savedAttrValues: Record<string, string[]> = {};
+      if (scopedKey && prev.categoryAttributeValues?.[scopedKey]) {
+        for (const [ak, opts] of Object.entries(
+          prev.categoryAttributeValues[scopedKey]
+        )) {
+          savedAttrValues[ak] = [...opts];
+        }
+      }
+
+      const nextOrder = prev.categoryOrder.filter(
+        (c) => !isSameCatalogText(c, canonicalName)
+      );
+      const nextCategories = prev.categories.filter(
+        (c) => !isSameCatalogText(c.name, canonicalName)
+      );
+      const filteredTrash = (prev.trashedCategories || []).filter(
+        (t) => !isSameCatalogText(t.category.name, canonicalName)
+      );
+
+      const next: CatalogConfig = {
+        ...prev,
+        categoryOrder: nextOrder,
+        categories: nextCategories,
+        trashedCategories: [
+          {
+            category: {
+              name: existingCat.name,
+              isSystemDefault: existingCat.isSystemDefault,
+              attributeKeys: [...existingCat.attributeKeys],
+            },
+            attributeValues: savedAttrValues,
+            wasInActiveOrder,
+            trashedAt: new Date().toISOString(),
+          },
+          ...filteredTrash,
+        ],
+      };
+      persistCatalogConfig(next);
+      return next;
+    });
+  };
+
+  const restoreTrashedCategory = (
+    categoryName: ProductCategory,
+    toActiveOrder?: boolean
+  ) => {
+    const cleanName = normalizeCatalogText(categoryName);
+    if (!cleanName || cleanName.toLowerCase() === "todos") return;
+
+    setCatalogConfig((prev) => {
+      const trashedEntry = (prev.trashedCategories || []).find((t) =>
+        isSameCatalogText(t.category.name, cleanName)
+      );
+
+      const catToRestore: CategoryConfig = trashedEntry
+        ? {
+            name: trashedEntry.category.name,
+            isSystemDefault: trashedEntry.category.isSystemDefault,
+            attributeKeys: [...trashedEntry.category.attributeKeys],
+          }
+        : {
+            name: cleanName,
+            isSystemDefault: FACTORY_BASE_CATEGORIES.some((b) =>
+              isSameCatalogText(b, cleanName)
+            ),
+            attributeKeys: inferAttributeKeysForCategory(cleanName),
+          };
+
+      const canonicalName = catToRestore.name;
+      const shouldActivate =
+        toActiveOrder !== undefined
+          ? toActiveOrder
+          : Boolean(trashedEntry?.wasInActiveOrder);
+
+      const nextCategories = prev.categories.some((c) =>
+        isSameCatalogText(c.name, canonicalName)
+      )
+        ? prev.categories.map((c) =>
+            isSameCatalogText(c.name, canonicalName) ? catToRestore : c
+          )
+        : [...prev.categories, catToRestore];
+
+      const nextOrder =
+        shouldActivate &&
+        !prev.categoryOrder.some((c) => isSameCatalogText(c, canonicalName))
+          ? [...prev.categoryOrder, canonicalName]
+          : [...prev.categoryOrder];
+
+      const nextCatValues = { ...(prev.categoryAttributeValues || {}) };
+      if (trashedEntry?.attributeValues) {
+        const restoredMap: Record<string, string[]> = {};
+        for (const [ak, opts] of Object.entries(trashedEntry.attributeValues)) {
+          restoredMap[ak] = [...opts];
+        }
+        nextCatValues[canonicalName] = restoredMap;
+      }
+
+      const nextTrashed = (prev.trashedCategories || []).filter(
+        (t) => !isSameCatalogText(t.category.name, canonicalName)
+      );
+
+      const next: CatalogConfig = {
+        ...prev,
+        categoryOrder: nextOrder,
+        categories: nextCategories,
+        categoryAttributeValues: nextCatValues,
+        trashedCategories: nextTrashed,
+      };
+      persistCatalogConfig(next);
+      return next;
+    });
+  };
+
   const deleteCategory = async (
     categoryName: ProductCategory,
     fallbackCategory: ProductCategory = FALLBACK_ORPHAN_CATEGORY
@@ -1127,11 +1268,16 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         nextOrder.push(cleanFallback);
       }
 
+      const nextTrashed = (prev.trashedCategories || []).filter(
+        (t) => !isSameCatalogText(t.category.name, categoryName)
+      );
+
       const next: CatalogConfig = {
         ...prev,
         categoryOrder: nextOrder,
         categories: nextCategories,
         categoryAttributeValues: nextCatValues,
+        trashedCategories: nextTrashed,
       };
       persistCatalogConfig(next);
       return next;
@@ -2009,6 +2155,8 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         updateCategoryOrder,
         hideCategoryFromOrder,
         restoreCategoryToOrder,
+        trashCategory,
+        restoreTrashedCategory,
         addCategory,
         deleteCategory,
         updateCategoryAttributes,

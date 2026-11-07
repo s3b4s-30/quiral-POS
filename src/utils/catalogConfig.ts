@@ -3,6 +3,7 @@ import {
   CatalogConfig,
   CategoryConfig,
   ProductCategory,
+  TrashedCategoryEntry,
 } from "../types/domain";
 
 /**
@@ -12,10 +13,14 @@ import {
 export const FACTORY_BASE_CATEGORIES: ProductCategory[] = [
   "Cargadores y Cables",
   "Forros / Fundas",
+  "Protección de Pantalla",
   "Audio",
   "Power Banks / Baterías portatiles",
+  "Almacenamiento",
   "Celulares",
   "Perfumes",
+  "Smartwatch y Wearables",
+  "Soportes y Accesorios de Auto",
   "Streaming",
 ];
 
@@ -50,9 +55,6 @@ export function isSameCatalogText(a: string, b: string): boolean {
   );
 }
 
-/**
- * Infiere inteligentemente los bloques de atributos recomendados según el nombre de la categoría.
- */
 /**
  * Obtiene las opciones efectivas de un atributo para una categoría específica.
  * Arquitectura de Cascarones Globales e Instanciación Local:
@@ -95,6 +97,9 @@ export function getAttributePresets(
   return config.attributes[attributeKey]?.options ?? [];
 }
 
+/**
+ * Infiere inteligentemente los bloques de atributos recomendados según el nombre de la categoría.
+ */
 export function inferAttributeKeysForCategory(categoryName: string): string[] {
   const lower = categoryName.trim().toLowerCase();
 
@@ -107,7 +112,14 @@ export function inferAttributeKeysForCategory(categoryName: string): string[] {
       "cableLengths",
     ];
   }
-  if (/forro|funda|case|estuche|protector|vidrio|mica/.test(lower)) {
+  if (
+    /vidrio|templado|mica|proteccion|protección|ceramica|cerámica|antiespia|antiespía/.test(
+      lower
+    )
+  ) {
+    return ["screenProtectorTypes", "caseModels"];
+  }
+  if (/forro|funda|case|estuche|protector/.test(lower)) {
     return ["caseMaterials", "caseModels"];
   }
   if (
@@ -125,10 +137,13 @@ export function inferAttributeKeysForCategory(categoryName: string): string[] {
     return ["capacities", "ports"];
   }
   if (/ssd|disco|memoria|almacenamiento|pendrive|micro\s*sd|usb/.test(lower)) {
-    return ["brands", "storageCapacities", "connections"];
+    return ["storageTypes", "storageCapacities", "brands"];
   }
-  if (/reloj|smartwatch|watch|pulsera|band/.test(lower)) {
-    return ["brands", "colors"];
+  if (/reloj|smartwatch|watch|wearable|pulsera|band/.test(lower)) {
+    return ["watchSizes", "watchBands", "colors", "brands"];
+  }
+  if (/soporte|auto|carro|vehiculo|vehículo|rejilla|chupa/.test(lower)) {
+    return ["carMountTypes", "brands"];
   }
   if (/celular|telefono|teléfono|smartphone|tablet|ipad/.test(lower)) {
     return ["brands", "storageCapacities", "colors"];
@@ -166,6 +181,14 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
       "Ugreen",
       "Apple Original",
       "Xiaomi",
+      "Motorola",
+      "JBL",
+      "Sony",
+      "Baseus",
+      "Huawei",
+      "ZTE",
+      "Kingston",
+      "SanDisk",
       "Genérico Premium",
     ],
   },
@@ -207,6 +230,11 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
       "iPhone 16 Pro",
       "iPhone 16 Pro Max",
     ],
+  },
+  screenProtectorTypes: {
+    key: "screenProtectorTypes",
+    label: "Vidrios Templados",
+    options: ["Cerámica", "Privacidad", "9D", "Antiespía"],
   },
   audioModels: {
     key: "audioModels",
@@ -258,10 +286,30 @@ export const DEFAULT_ATTRIBUTES: Record<string, AttributeDefinition> = {
       "MagSafe Inalámbrico",
     ],
   },
+  storageTypes: {
+    key: "storageTypes",
+    label: "Formato de Memoria",
+    options: ["MicroSD", "USB", "SSD Portátil", "Adaptador OTG"],
+  },
   storageCapacities: {
     key: "storageCapacities",
     label: "Capacidad",
-    options: ["64GB", "128GB", "256GB", "512GB", "1TB", "2TB", "4TB"],
+    options: ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB", "2TB", "4TB"],
+  },
+  watchSizes: {
+    key: "watchSizes",
+    label: "Tamaño de caja",
+    options: ["40mm", "44mm", "45mm", "49mm Ultra"],
+  },
+  watchBands: {
+    key: "watchBands",
+    label: "Tipo de Correa",
+    options: ["Silicona", "Milanesa", "Cuero", "Océano"],
+  },
+  carMountTypes: {
+    key: "carMountTypes",
+    label: "Tipo de agarre",
+    options: ["Rejilla", "Chupa", "MagSafe / Magnético"],
   },
   colors: {
     key: "colors",
@@ -346,6 +394,11 @@ export const DEFAULT_CATEGORY_CONFIGS: CategoryConfig[] = [
     attributeKeys: ["caseMaterials", "caseModels"],
   },
   {
+    name: "Protección de Pantalla",
+    isSystemDefault: true,
+    attributeKeys: ["screenProtectorTypes", "caseModels"],
+  },
+  {
     name: "Audio",
     isSystemDefault: true,
     attributeKeys: ["audioModels", "connections"],
@@ -356,6 +409,11 @@ export const DEFAULT_CATEGORY_CONFIGS: CategoryConfig[] = [
     attributeKeys: ["capacities", "ports"],
   },
   {
+    name: "Almacenamiento",
+    isSystemDefault: true,
+    attributeKeys: ["storageTypes", "storageCapacities", "brands"],
+  },
+  {
     name: "Celulares",
     isSystemDefault: true,
     attributeKeys: ["brands", "storageCapacities", "colors"],
@@ -364,6 +422,16 @@ export const DEFAULT_CATEGORY_CONFIGS: CategoryConfig[] = [
     name: "Perfumes",
     isSystemDefault: true,
     attributeKeys: ["perfumeVolumes", "perfumeTypes"],
+  },
+  {
+    name: "Smartwatch y Wearables",
+    isSystemDefault: true,
+    attributeKeys: ["watchSizes", "watchBands", "colors", "brands"],
+  },
+  {
+    name: "Soportes y Accesorios de Auto",
+    isSystemDefault: true,
+    attributeKeys: ["carMountTypes", "brands"],
   },
   {
     name: "Streaming",
@@ -378,7 +446,18 @@ export const DEFAULT_CATEGORY_ATTRIBUTE_VALUES: Record<
 > = {
   "Cargadores y Cables": {
     chargerSubtypes: [...DEFAULT_ATTRIBUTES.chargerSubtypes.options],
-    brands: [...DEFAULT_ATTRIBUTES.brands.options],
+    brands: [
+      "iPhone",
+      "1Hora",
+      "Anker",
+      "Belkin",
+      "Samsung",
+      "Ugreen",
+      "Apple Original",
+      "Xiaomi",
+      "Baseus",
+      "Genérico Premium",
+    ],
     powers: [...DEFAULT_ATTRIBUTES.powers.options],
     cableFinishes: [...DEFAULT_ATTRIBUTES.cableFinishes.options],
   },
@@ -386,22 +465,59 @@ export const DEFAULT_CATEGORY_ATTRIBUTE_VALUES: Record<
     caseMaterials: [...DEFAULT_ATTRIBUTES.caseMaterials.options],
     caseModels: [...DEFAULT_ATTRIBUTES.caseModels.options],
   },
+  "Protección de Pantalla": {
+    screenProtectorTypes: [...DEFAULT_ATTRIBUTES.screenProtectorTypes.options],
+    caseModels: [...DEFAULT_ATTRIBUTES.caseModels.options],
+  },
   Audio: {
     audioModels: [...DEFAULT_ATTRIBUTES.audioModels.options],
-    connections: [...DEFAULT_ATTRIBUTES.connections.options],
+    connections: [
+      "USB-C",
+      "Lightning",
+      "MagSafe",
+      "Bluetooth 5.3",
+      "Auxiliar 3.5mm",
+    ],
   },
   "Power Banks / Baterías portatiles": {
     capacities: [...DEFAULT_ATTRIBUTES.capacities.options],
     ports: [...DEFAULT_ATTRIBUTES.ports.options],
   },
+  Almacenamiento: {
+    storageTypes: [...DEFAULT_ATTRIBUTES.storageTypes.options],
+    storageCapacities: ["32GB", "64GB", "128GB", "256GB"],
+    brands: ["Kingston", "SanDisk", "Samsung", "Xiaomi"],
+  },
   Celulares: {
-    brands: [...DEFAULT_ATTRIBUTES.brands.options],
-    storageCapacities: [...DEFAULT_ATTRIBUTES.storageCapacities.options],
-    colors: [...DEFAULT_ATTRIBUTES.colors.options],
+    brands: ["Samsung", "Xiaomi", "Motorola", "Huawei", "ZTE"],
+    storageCapacities: ["64GB", "128GB", "256GB", "512GB"],
+    colors: [
+      "Negro Espacial",
+      "Blanco Estelar",
+      "Titanio Natural",
+      "Azul",
+      "Plata",
+    ],
   },
   Perfumes: {
     perfumeVolumes: [...DEFAULT_ATTRIBUTES.perfumeVolumes.options],
     perfumeTypes: [...DEFAULT_ATTRIBUTES.perfumeTypes.options],
+  },
+  "Smartwatch y Wearables": {
+    watchSizes: [...DEFAULT_ATTRIBUTES.watchSizes.options],
+    watchBands: [...DEFAULT_ATTRIBUTES.watchBands.options],
+    colors: [
+      "Negro Espacial",
+      "Blanco Estelar",
+      "Titanio Natural",
+      "Plata",
+      "Rosa",
+    ],
+    brands: ["Apple Original", "Samsung", "Xiaomi", "Huawei"],
+  },
+  "Soportes y Accesorios de Auto": {
+    carMountTypes: [...DEFAULT_ATTRIBUTES.carMountTypes.options],
+    brands: ["Baseus", "Ugreen", "1Hora", "Anker", "Belkin"],
   },
   Streaming: {
     streamingPlatforms: [...DEFAULT_ATTRIBUTES.streamingPlatforms.options],
@@ -413,21 +529,23 @@ export const DEFAULT_CATALOG_CONFIG: CatalogConfig = {
   categoryOrder: [
     "Cargadores y Cables",
     "Forros / Fundas",
+    "Protección de Pantalla",
     "Audio",
     "Power Banks / Baterías portatiles",
+    "Almacenamiento",
     "Celulares",
     "Perfumes",
-    "Streaming",
   ],
   categories: DEFAULT_CATEGORY_CONFIGS,
   attributes: DEFAULT_ATTRIBUTES,
   categoryAttributeValues: DEFAULT_CATEGORY_ATTRIBUTE_VALUES,
+  trashedCategories: [],
 };
 
 /**
  * Fusiona de manera segura una configuración almacenada con la configuración base de fábrica.
- * Respeta las categorías predeterminadas que el usuario haya decidido quitar de la barra activa (`categoryOrder`),
- * conservando sus definiciones en `categories` para que puedan restaurarse desde Respaldo.
+ * Respeta las categorías predeterminadas que el usuario haya decidido quitar de la barra activa (`categoryOrder`)
+ * o enviado a la papelera temporal (`trashedCategories`).
  */
 export function mergeWithDefaultCatalogConfig(
   stored?: Partial<CatalogConfig> | null
@@ -469,6 +587,18 @@ export function mergeWithDefaultCatalogConfig(
             }
           }
         }
+        // Si es un atributo base de fábrica, garantizar también los nuevos presets universales
+        if (DEFAULT_ATTRIBUTES[k]) {
+          for (const defOpt of DEFAULT_ATTRIBUTES[k].options) {
+            if (
+              !cleanOptions.some((existing) =>
+                isSameCatalogText(existing, defOpt)
+              )
+            ) {
+              cleanOptions.push(defOpt);
+            }
+          }
+        }
         if (cleanOptions.length > 0) {
           mergedAttributes[k] = {
             key: userAttr.key,
@@ -480,7 +610,50 @@ export function mergeWithDefaultCatalogConfig(
     }
   }
 
-  // 2. Categorías fusionadas (garantizando que las definiciones base de fábrica existan como respaldo)
+  // 2. Papelera temporal de categorías descartadas
+  const mergedTrashed: TrashedCategoryEntry[] = [];
+  const trashedLowerNames = new Set<string>();
+  if (Array.isArray(stored.trashedCategories)) {
+    for (const entry of stored.trashedCategories) {
+      if (entry && entry.category && typeof entry.category.name === "string") {
+        const cleanName = normalizeCatalogText(entry.category.name);
+        if (!cleanName || cleanName.toLowerCase() === "todos") continue;
+        const lower = cleanName.toLowerCase();
+        if (trashedLowerNames.has(lower)) continue;
+        trashedLowerNames.add(lower);
+
+        const clonedValues: Record<string, string[]> = {};
+        if (
+          entry.attributeValues &&
+          typeof entry.attributeValues === "object"
+        ) {
+          for (const [ak, opts] of Object.entries(entry.attributeValues)) {
+            if (Array.isArray(opts)) {
+              clonedValues[ak] = opts.filter((o) => typeof o === "string");
+            }
+          }
+        }
+
+        mergedTrashed.push({
+          category: {
+            name: cleanName,
+            isSystemDefault: Boolean(entry.category.isSystemDefault),
+            attributeKeys: Array.isArray(entry.category.attributeKeys)
+              ? [...entry.category.attributeKeys]
+              : [],
+          },
+          attributeValues: clonedValues,
+          wasInActiveOrder: Boolean(entry.wasInActiveOrder),
+          trashedAt:
+            typeof entry.trashedAt === "string"
+              ? entry.trashedAt
+              : new Date().toISOString(),
+        });
+      }
+    }
+  }
+
+  // 3. Categorías fusionadas (garantizando que las definiciones base de fábrica existan como respaldo, salvo que estén en la papelera)
   const mergedCategories: CategoryConfig[] = [];
   const seenNames = new Set<string>();
 
@@ -490,7 +663,6 @@ export function mergeWithDefaultCatalogConfig(
         const cleanName = normalizeCatalogText(cat.name);
         if (!cleanName || cleanName.toLowerCase() === "todos") continue;
 
-        // Migrar nombres viejos si existían ("Audio / AirPods" -> "Audio", "Power Banks / Baterías" -> "Power Banks / Baterías portatiles")
         let finalCatName = cleanName;
         if (isSameCatalogText(cleanName, "Audio / AirPods")) {
           finalCatName = "Audio";
@@ -499,7 +671,7 @@ export function mergeWithDefaultCatalogConfig(
         }
 
         const lower = finalCatName.toLowerCase();
-        if (seenNames.has(lower)) continue;
+        if (seenNames.has(lower) || trashedLowerNames.has(lower)) continue;
         seenNames.add(lower);
 
         const defaultMatch = DEFAULT_CATEGORY_CONFIGS.find((d) =>
@@ -521,7 +693,7 @@ export function mergeWithDefaultCatalogConfig(
 
   for (const defCat of DEFAULT_CATEGORY_CONFIGS) {
     const lower = defCat.name.toLowerCase();
-    if (!seenNames.has(lower)) {
+    if (!seenNames.has(lower) && !trashedLowerNames.has(lower)) {
       seenNames.add(lower);
       mergedCategories.push({
         name: defCat.name,
@@ -531,7 +703,7 @@ export function mergeWithDefaultCatalogConfig(
     }
   }
 
-  // 3. Orden activo de categorías (respeta si el usuario eliminó categorías predeterminadas de la barra activa)
+  // 4. Orden activo de categorías
   const mergedOrder: ProductCategory[] = [];
   const seenOrder = new Set<string>();
 
@@ -551,25 +723,24 @@ export function mergeWithDefaultCatalogConfig(
       const finalName = matchCat ? matchCat.name : norm;
       if (!finalName || finalName.toLowerCase() === "todos") continue;
       const lower = finalName.toLowerCase();
-      if (!seenOrder.has(lower)) {
+      if (!seenOrder.has(lower) && !trashedLowerNames.has(lower)) {
         seenOrder.add(lower);
         mergedOrder.push(finalName);
       }
     }
   } else {
-    for (const cat of mergedCategories) {
-      const lower = cat.name.toLowerCase();
-      if (!seenOrder.has(lower)) {
+    for (const catName of DEFAULT_CATALOG_CONFIG.categoryOrder) {
+      const lower = catName.toLowerCase();
+      if (!seenOrder.has(lower) && !trashedLowerNames.has(lower)) {
         seenOrder.add(lower);
-        mergedOrder.push(cat.name);
+        mergedOrder.push(catName);
       }
     }
   }
 
-  // 4. Opciones de atributos aisladas por categoría (Scoping sin contaminación)
+  // 5. Opciones de atributos aisladas por categoría (Scoping sin contaminación)
   const mergedCategoryValues: Record<string, Record<string, string[]>> = {};
 
-  // Inicializar primero con las 7 categorías base de fábrica para garantizar cero rompimiento
   for (const [catName, attrMap] of Object.entries(
     DEFAULT_CATEGORY_ATTRIBUTE_VALUES
   )) {
@@ -619,6 +790,7 @@ export function mergeWithDefaultCatalogConfig(
     categories: mergedCategories,
     attributes: mergedAttributes,
     categoryAttributeValues: mergedCategoryValues,
+    trashedCategories: mergedTrashed,
   };
 }
 
@@ -635,6 +807,25 @@ export function structuredCloneConfig(config: CatalogConfig): CatalogConfig {
     }
   }
 
+  const clonedTrashed: TrashedCategoryEntry[] = (
+    config.trashedCategories || []
+  ).map((t) => {
+    const attrVals: Record<string, string[]> = {};
+    for (const [k, v] of Object.entries(t.attributeValues || {})) {
+      attrVals[k] = [...v];
+    }
+    return {
+      category: {
+        name: t.category.name,
+        isSystemDefault: t.category.isSystemDefault,
+        attributeKeys: [...t.category.attributeKeys],
+      },
+      attributeValues: attrVals,
+      wasInActiveOrder: t.wasInActiveOrder,
+      trashedAt: t.trashedAt,
+    };
+  });
+
   return {
     categoryOrder: [...config.categoryOrder],
     categories: config.categories.map((c) => ({
@@ -649,5 +840,6 @@ export function structuredCloneConfig(config: CatalogConfig): CatalogConfig {
       ])
     ),
     categoryAttributeValues: clonedCategoryValues,
+    trashedCategories: clonedTrashed,
   };
 }

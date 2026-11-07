@@ -23,6 +23,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useInventory } from "../../../context/InventoryContext";
 import { ProductCategory } from "../../../types/domain";
 import {
+  DEFAULT_CATALOG_CONFIG,
   FACTORY_BASE_CATEGORIES,
   FALLBACK_ORPHAN_CATEGORY,
   getAttributePresets,
@@ -58,6 +59,8 @@ export default function DesktopCategoryManagerView({
     hideCategoryFromOrder,
     restoreCategoryToOrder,
     addCategory,
+    trashCategory,
+    restoreTrashedCategory,
     deleteCategory,
     updateCategoryAttributes,
     addAttributeOption,
@@ -127,17 +130,22 @@ export default function DesktopCategoryManagerView({
     productCount: number;
   } | null>(null);
 
-  // Banner temporal de feedback
+  // Banner temporal de feedback (con soporte de acción rápida Deshacer)
   const [feedbackMsg, setFeedbackMsg] = useState<{
     type: "success" | "warning";
     text: string;
+    undoCategory?: ProductCategory;
   } | null>(null);
 
-  const showFeedback = (type: "success" | "warning", text: string) => {
-    setFeedbackMsg({ type, text });
+  const showFeedback = (
+    type: "success" | "warning",
+    text: string,
+    undoCategory?: ProductCategory
+  ) => {
+    setFeedbackMsg({ type, text, undoCategory });
     setTimeout(() => {
       setFeedbackMsg((prev) => (prev?.text === text ? null : prev));
-    }, 2800);
+    }, 4500);
   };
 
   // Cantidad de productos activos por categoría
@@ -198,6 +206,9 @@ export default function DesktopCategoryManagerView({
   // Estado de expansión del acordeón inferior de Categorías Ocultas y Guardadas
   const [isHiddenPanelOpen, setIsHiddenPanelOpen] = useState(false);
 
+  // Estado de expansión de la Papelera temporal ultradiscreta (colapsada por defecto)
+  const [isTrashPanelOpen, setIsTrashPanelOpen] = useState(false);
+
   // Categorías del catálogo (tanto de fábrica como creadas por el usuario) que no están en la barra activa
   const hiddenCategories = useMemo(() => {
     return catalogConfig.categories
@@ -207,6 +218,11 @@ export default function DesktopCategoryManagerView({
           !draftOrder.some((active) => isSameCatalogText(active, catName))
       );
   }, [catalogConfig.categories, draftOrder]);
+
+  // Categorías en la papelera temporal (con su configuración intacta)
+  const trashedCategories = useMemo(() => {
+    return catalogConfig.trashedCategories ?? [];
+  }, [catalogConfig.trashedCategories]);
 
   // Atajo <Esc> para cerrar o cancelar
   useEffect(() => {
@@ -309,7 +325,39 @@ export default function DesktopCategoryManagerView({
     );
   };
 
-  // Solicitud de eliminación definitiva (purga) de categoría
+  // Descartar categoría hacia la Papelera temporal (Soft-Delete con memoria completa)
+  const handleTrashCategory = (catName: ProductCategory) => {
+    trashCategory(catName);
+    const updatedOrder = draftOrder.filter(
+      (c) => !isSameCatalogText(c, catName)
+    );
+    setDraftOrder(updatedOrder);
+    if (isSameCatalogText(selectedCategory, catName)) {
+      setSelectedCategory(updatedOrder[0] || "General / Otros");
+    }
+    showFeedback("warning", "Categoría descartada", catName);
+  };
+
+  // Restaurar categoría desde la Papelera temporal (conservando 100% de sus atributos y opciones)
+  const handleRestoreFromTrash = (
+    catName: ProductCategory,
+    toActiveBar = false
+  ) => {
+    restoreTrashedCategory(catName, toActiveBar);
+    if (toActiveBar) {
+      setDraftOrder((prev) => {
+        if (prev.some((c) => isSameCatalogText(c, catName))) return prev;
+        return [...prev, catName];
+      });
+      setSelectedCategory(catName);
+    }
+    showFeedback(
+      "success",
+      `Categoría "${catName}" restaurada con todos sus atributos intactos.`
+    );
+  };
+
+  // Solicitud de eliminación definitiva (purga permanente) de categoría
   const handleRequestDeleteCategory = async (catName: ProductCategory) => {
     const count = productCountByCategory(catName);
     if (count > 0) {
@@ -366,8 +414,8 @@ export default function DesktopCategoryManagerView({
   // Restablecer categorías a las de fábrica
   const handleResetDefaults = () => {
     resetCatalogConfigToDefault();
-    setDraftOrder([...FACTORY_BASE_CATEGORIES]);
-    setSelectedCategory(FACTORY_BASE_CATEGORIES[0]);
+    setDraftOrder([...DEFAULT_CATALOG_CONFIG.categoryOrder]);
+    setSelectedCategory(DEFAULT_CATALOG_CONFIG.categoryOrder[0]);
     showFeedback("success", "Categorías restablecidas a valores de fábrica.");
   };
 
@@ -714,18 +762,36 @@ export default function DesktopCategoryManagerView({
       {/* Banner de Feedback */}
       {feedbackMsg && (
         <div
-          className={`shrink-0 px-6 py-2 text-xs font-bold flex items-center gap-2 animate-in fade-in duration-150 ${
+          data-testid="catalog-feedback-banner"
+          className={`shrink-0 px-6 py-2 text-xs font-bold flex items-center justify-between gap-2 animate-in fade-in duration-150 ${
             feedbackMsg.type === "success"
               ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-b border-emerald-500/25"
               : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-b border-amber-500/25"
           }`}
         >
-          {feedbackMsg.type === "success" ? (
-            <Check size={14} />
-          ) : (
-            <AlertTriangle size={14} />
+          <div className="flex items-center gap-2">
+            {feedbackMsg.type === "success" ? (
+              <Check size={14} />
+            ) : (
+              <AlertTriangle size={14} />
+            )}
+            <span>{feedbackMsg.text}</span>
+          </div>
+          {feedbackMsg.undoCategory && (
+            <button
+              type="button"
+              data-testid="undo-trash-category-btn"
+              onClick={() => {
+                if (feedbackMsg.undoCategory) {
+                  handleRestoreFromTrash(feedbackMsg.undoCategory, false);
+                }
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-amber-500/40 bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500/30 text-[11px] font-black transition-all cursor-pointer"
+            >
+              <RotateCcw size={11} />
+              <span>Deshacer</span>
+            </button>
           )}
-          <span>{feedbackMsg.text}</span>
         </div>
       )}
 
@@ -1008,9 +1074,9 @@ export default function DesktopCategoryManagerView({
                               <button
                                 type="button"
                                 data-testid={`purge-hidden-category-btn-${cat}`}
-                                aria-label={`Eliminar categoría ${cat}`}
-                                onClick={() => handleRequestDeleteCategory(cat)}
-                                title="Eliminar definitivamente del catálogo"
+                                aria-label={`Descartar categoría ${cat} a la papelera`}
+                                onClick={() => handleTrashCategory(cat)}
+                                title="Enviar a la papelera temporal (conserva atributos)"
                                 className="p-1.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
                               >
                                 <Trash2 size={13} />
@@ -1022,6 +1088,91 @@ export default function DesktopCategoryManagerView({
                     )}
                   </div>
                 )}
+
+                {/* Sección Ultradiscreta Inferior: Papelera Temporal con Memoria de Atributos */}
+                <div
+                  data-testid="trash-categories-panel"
+                  className="mt-2 pt-2 border-t border-dashed border-[var(--border-color)]"
+                >
+                  <button
+                    type="button"
+                    data-testid="toggle-trash-categories-btn"
+                    aria-expanded={isTrashPanelOpen}
+                    onClick={() => setIsTrashPanelOpen((prev) => !prev)}
+                    className="w-full flex items-center justify-between px-2 py-1 rounded-lg text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                  >
+                    <span className="inline-flex items-center gap-1.5 font-semibold">
+                      <Trash2 size={11} className="opacity-70" />
+                      <span>Papelera ({trashedCategories.length})</span>
+                    </span>
+                    <span className="text-[10px] font-bold text-accent">
+                      {isTrashPanelOpen ? "Ocultar" : "Ver"}
+                    </span>
+                  </button>
+
+                  {isTrashPanelOpen && (
+                    <div
+                      data-testid="trash-categories-list"
+                      className="mt-1.5 max-h-36 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] pr-1 space-y-1.5 animate-in fade-in duration-150"
+                    >
+                      {trashedCategories.length === 0 ? (
+                        <p className="text-[10px] text-[var(--text-secondary)] text-center py-2 px-2 rounded-lg border border-dashed border-[var(--border-color)] opacity-75">
+                          La papelera temporal está vacía.
+                        </p>
+                      ) : (
+                        trashedCategories.map((entry) => {
+                          const catName = entry.category.name;
+                          const prodCount = productCountByCategory(catName);
+                          const attrCount = entry.category.attributeKeys.length;
+                          return (
+                            <div
+                              key={catName}
+                              data-testid={`trashed-category-row-${catName}`}
+                              className="flex items-center justify-between gap-2 p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)]/70"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-bold text-[var(--text-primary)] truncate">
+                                  {catName}
+                                </p>
+                                <p className="text-[10px] text-[var(--text-secondary)] tabular-nums truncate">
+                                  {attrCount} atrib guardados · {prodCount}{" "}
+                                  prods
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                  type="button"
+                                  data-testid={`restore-trashed-category-btn-${catName}`}
+                                  aria-label={`Restaurar categoría ${catName}`}
+                                  onClick={() =>
+                                    handleRestoreFromTrash(catName, false)
+                                  }
+                                  className={BTN_SECONDARY}
+                                  title="Restaurar categoría con todos sus atributos intactos"
+                                >
+                                  <RotateCcw size={12} strokeWidth={2.5} />
+                                  <span>Restaurar</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  data-testid={`permanent-delete-category-btn-${catName}`}
+                                  aria-label={`Eliminar definitivamente categoría ${catName}`}
+                                  onClick={() =>
+                                    handleRequestDeleteCategory(catName)
+                                  }
+                                  title="Eliminar definitivamente del catálogo"
+                                  className="p-1.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-red-500 hover:border-red-500/50 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
+                                >
+                                  <X size={13} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

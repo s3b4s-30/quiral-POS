@@ -247,15 +247,15 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     await expect(celularesCatBtn).toBeVisible();
     await celularesCatBtn.click();
 
-    const iphoneAttrBtn = modal.getByRole("button", {
-      name: "iPhone",
+    const samsungAttrBtn = modal.getByRole("button", {
+      name: "Samsung",
       exact: true,
     });
-    await expect(iphoneAttrBtn).toBeVisible();
-    await iphoneAttrBtn.click();
+    await expect(samsungAttrBtn).toBeVisible();
+    await samsungAttrBtn.click();
 
     const nameInputPre = page.getByTestId("desktop-new-product-name-input");
-    await expect(nameInputPre).toHaveValue("iPhone");
+    await expect(nameInputPre).toHaveValue("Samsung");
     const generatedVal = await nameInputPre.inputValue();
     expect(generatedVal).not.toContain("Celulares");
 
@@ -706,6 +706,37 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
     );
     await purgeTempBtn.click();
     await expect(hiddenTempRow).not.toBeVisible();
+
+    // Verificar Toast con Deshacer inmediato y Papelera temporal ultradiscreta
+    const undoTrashBtn = managerView.getByTestId("undo-trash-category-btn");
+    await expect(undoTrashBtn).toBeVisible();
+
+    const toggleTrashBtn = managerView.getByTestId(
+      "toggle-trash-categories-btn"
+    );
+    await expect(toggleTrashBtn).toBeVisible();
+    await toggleTrashBtn.click();
+
+    const trashedTempRow = managerView.getByTestId(
+      "trashed-category-row-Temp Purga"
+    );
+    await expect(trashedTempRow).toBeVisible();
+
+    // Restaurar desde la papelera y verificar que regresa a Categorías Ocultas
+    const restoreTrashedBtn = managerView.getByTestId(
+      "restore-trashed-category-btn-Temp Purga"
+    );
+    await restoreTrashedBtn.click();
+    await expect(hiddenTempRow).toBeVisible();
+
+    // Enviar de nuevo a la papelera y eliminar definitivamente
+    await purgeTempBtn.click();
+    await expect(trashedTempRow).toBeVisible();
+    const permanentDeleteBtn = managerView.getByTestId(
+      "permanent-delete-category-btn-Temp Purga"
+    );
+    await permanentDeleteBtn.click();
+    await expect(trashedTempRow).not.toBeVisible();
 
     // 5. Probar Switch de Enfoque hacia Modo "Banco Maestro (Presets)"
     const presetsTabBtn = managerView.getByTestId("mode-tab-presets");
