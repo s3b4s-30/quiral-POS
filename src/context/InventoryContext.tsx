@@ -278,7 +278,10 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const [storeId, setStoreId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isDemoUser, setIsDemoUser] = useState<boolean>(() => {
-    return localStorage.getItem("quiral_demo_bypass") === "true";
+    return (
+      Boolean(import.meta.env.DEV) &&
+      localStorage.getItem("quiral_demo_bypass") === "true"
+    );
   });
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -447,6 +450,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       try {
         const hasDemoBypass =
+          Boolean(import.meta.env.DEV) &&
           localStorage.getItem("quiral_demo_bypass") === "true";
 
         if (hasDemoBypass) {

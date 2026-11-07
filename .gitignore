@@ -34,8 +34,9 @@ Thumbs.db
 *.sln
 *.sw?
 
-# Artefactos, logs y cachés de Agentes de Inteligencia Artificial (IA)
+# Artefactos, logs y cachés de Herramientas y Entornos Auxiliares
 .gemini/
+.codex/
 gemini-bundle/
 .cursor/
 .claude/
@@ -54,7 +55,9 @@ __pycache__/
 .agents/**/*.log
 
 # Frameworks de Testing y Reportes (Playwright, Vitest)
+test-results/
 /test-results/
+playwright-report/
 /playwright-report/
 /blob-report/
 /playwright/.cache/

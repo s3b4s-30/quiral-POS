@@ -7,7 +7,9 @@ test.describe("Quiral POS — Flujo de Registro, Blindaje de Contraseñas y Segu
       "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
   });
 
-  test("1. Alternancia de visibilidad de contraseña (Eye / EyeOff) en login", async ({ page }) => {
+  test("1. Alternancia de visibilidad de contraseña (Eye / EyeOff) en login", async ({
+    page,
+  }) => {
     // Entrar sin bypass para ver la pantalla de login
     await page.goto("http://localhost:5173/");
 
@@ -27,12 +29,16 @@ test.describe("Quiral POS — Flujo de Registro, Blindaje de Contraseñas y Segu
     await expect(passwordInput).toHaveAttribute("type", "text");
 
     // Volver a enmascarar
-    const hideEyeBtn = page.getByRole("button", { name: /Ocultar contraseña/i });
+    const hideEyeBtn = page.getByRole("button", {
+      name: /Ocultar contraseña/i,
+    });
     await hideEyeBtn.click();
     await expect(passwordInput).toHaveAttribute("type", "password");
   });
 
-  test("2. Validación de fortaleza de contraseña interactiva y doble confirmación en registro", async ({ page }) => {
+  test("2. Validación de fortaleza de contraseña interactiva, doble confirmación y bloqueo por Whitelist en registro", async ({
+    page,
+  }) => {
     await page.goto("http://localhost:5173/");
 
     // Cambiar a formulario de registro "Crear tienda"
@@ -41,20 +47,32 @@ test.describe("Quiral POS — Flujo de Registro, Blindaje de Contraseñas y Segu
     await createStoreBtn.click();
 
     // Verificar que estamos en la vista de registro
-    await expect(page.getByRole("heading", { name: "Quiral POS" })).toBeVisible();
-    await expect(page.getByText("Crea tu tienda segura o únete como colaborador")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Quiral POS" })
+    ).toBeVisible();
+    await expect(
+      page.getByText("Crea tu tienda segura o únete como colaborador")
+    ).toBeVisible();
 
-    const emailInput = page.locator('input[placeholder="propietario@tienda.com"]');
+    const emailInput = page.locator(
+      'input[placeholder="propietario@tienda.com"]'
+    );
     const userInput = page.locator('input[placeholder="ej. juan_pos"]');
-    const passInput = page.locator('input[placeholder="Mínimo 8 caracteres seguros"]');
-    const confirmInput = page.locator('input[placeholder="Repite la contraseña exacta"]');
-    const storeInput = page.locator('input[placeholder="ej. Apple Store Medellín"]');
+    const passInput = page.locator(
+      'input[placeholder="Mínimo 8 caracteres seguros"]'
+    );
+    const confirmInput = page.locator(
+      'input[placeholder="Repite la contraseña exacta"]'
+    );
+    const storeInput = page.locator(
+      'input[placeholder="ej. Apple Store Medellín"]'
+    );
     const submitBtn = page.getByRole("button", { name: /Registrar Tienda/i });
 
     // El botón debe estar inicialmente deshabilitado
     await expect(submitBtn).toBeDisabled();
 
-    // 1. Ingresar correo válido
+    // 1. Ingresar correo externo no autorizado en Whitelist
     await emailInput.fill("propietario@tiendatest.com");
     await expect(page.getByText("Válido")).toBeVisible();
 
@@ -70,11 +88,21 @@ test.describe("Quiral POS — Flujo de Registro, Blindaje de Contraseñas y Segu
     // 4. Probar contraseña robusta completa (8+ chars, mayúscula, minúscula, número, símbolo)
     await passInput.fill("Quiral2026!#Secure");
     await expect(page.getByText(/Excelente/i)).toBeVisible();
-    await expect(page.getByText("8+ caracteres").locator("..")).toHaveClass(/text-emerald/);
-    await expect(page.getByText("Mayúscula (A-Z)").locator("..")).toHaveClass(/text-emerald/);
-    await expect(page.getByText("Minúscula (a-z)").locator("..")).toHaveClass(/text-emerald/);
-    await expect(page.getByText("Un número (0-9)").locator("..")).toHaveClass(/text-emerald/);
-    await expect(page.getByText("Símbolo especial (!@#$%^&*)").locator("..")).toHaveClass(/text-emerald/);
+    await expect(page.getByText("8+ caracteres").locator("..")).toHaveClass(
+      /text-emerald/
+    );
+    await expect(page.getByText("Mayúscula (A-Z)").locator("..")).toHaveClass(
+      /text-emerald/
+    );
+    await expect(page.getByText("Minúscula (a-z)").locator("..")).toHaveClass(
+      /text-emerald/
+    );
+    await expect(page.getByText("Un número (0-9)").locator("..")).toHaveClass(
+      /text-emerald/
+    );
+    await expect(
+      page.getByText("Símbolo especial (!@#$%^&*)").locator("..")
+    ).toHaveClass(/text-emerald/);
 
     // 5. Probar discrepancia en confirmación de contraseña
     await confirmInput.fill("QuiralDiferente123!");
@@ -90,14 +118,26 @@ test.describe("Quiral POS — Flujo de Registro, Blindaje de Contraseñas y Segu
 
     // 8. El botón de envío debe activarse una vez todos los criterios se cumplen
     await expect(submitBtn).toBeEnabled();
+
+    // 9. Intentar registrar correo fuera de la Whitelist administrativa y verificar rechazo
+    await submitBtn.click();
+    await expect(
+      page.getByText(
+        "Registro restringido por administración. Contacte al propietario de la tienda."
+      )
+    ).toBeVisible();
   });
 
-  test("3. Alternancia accesible de texto plano en campo de registro", async ({ page }) => {
+  test("3. Alternancia accesible de texto plano en campo de registro", async ({
+    page,
+  }) => {
     await page.goto("http://localhost:5173/");
 
     await page.getByRole("button", { name: "Crear tienda" }).click();
 
-    const passInput = page.locator('input[placeholder="Mínimo 8 caracteres seguros"]');
+    const passInput = page.locator(
+      'input[placeholder="Mínimo 8 caracteres seguros"]'
+    );
     await passInput.fill("ClaveSuperSegura99!");
     await expect(passInput).toHaveAttribute("type", "password");
 

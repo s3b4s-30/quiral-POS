@@ -1,21 +1,29 @@
+import {
+  RESTRICTED_REGISTRATION_MESSAGE,
+  isEmailAllowedForRegistration,
+} from "../config/authWhitelist";
 import { supabase } from "./supabase";
 
 export const DEMO_BYPASS_USER = "30";
 export const DEMO_BYPASS_PASS = "30";
 export const DEMO_EMAIL = "demo30@quiral.xyz";
 export const DEMO_PASSWORD = "QuiralDemo30!#";
+export const IS_DEV_ENV = Boolean(import.meta.env.DEV);
 
 const looksLikeEmail = (v: string) => /^\S+@\S+\.\S+$/.test(v.trim());
 
 export const printSecurityWarning = () => {
+  if (!import.meta.env.DEV) return;
   console.warn(
-    "%c⚠️ RECORDATORIO DE SEGURIDAD:%c El acceso rápido 30 / 30 está activo exclusivamente para pruebas. Es un hueco de seguridad intencional que DEBE eliminarse antes del lanzamiento comercial definitivo en quiral.xyz.",
+    "%c⚠️ RECORDATORIO DE SEGURIDAD:%c El acceso rápido 30 / 30 está activo exclusivamente en el entorno local de desarrollo (DEV). Deshabilitado en producción.",
     "color: #ff9500; font-weight: bold; font-size: 13px;",
     "color: inherit; font-size: 13px;"
   );
 };
 
-export async function resolveLoginEmail(identifier: string): Promise<string | null> {
+export async function resolveLoginEmail(
+  identifier: string
+): Promise<string | null> {
   const clean = identifier.trim();
   if (!clean) return null;
   if (looksLikeEmail(clean)) return clean;
@@ -35,7 +43,9 @@ export async function resolveLoginEmail(identifier: string): Promise<string | nu
   }
 }
 
-export async function checkUsernameAvailability(username: string): Promise<boolean> {
+export async function checkUsernameAvailability(
+  username: string
+): Promise<boolean> {
   const clean = username.trim().toLowerCase();
   if (!clean || clean.length < 3) return false;
   try {
@@ -54,6 +64,14 @@ export async function signIn(identifier: string, password: string) {
   const isDemo = cleanId === DEMO_BYPASS_USER && password === DEMO_BYPASS_PASS;
 
   if (isDemo) {
+    // Blindaje estricto: el modo demo solo se compila y autoriza en entorno local (import.meta.env.DEV)
+    if (!import.meta.env.DEV) {
+      localStorage.removeItem("quiral_demo_bypass");
+      throw new Error(
+        "El acceso de demostración está deshabilitado en el entorno de producción."
+      );
+    }
+
     printSecurityWarning();
     try {
       // Intentar iniciar sesión con la cuenta demo fija
@@ -93,7 +111,10 @@ export async function signIn(identifier: string, password: string) {
       localStorage.setItem("quiral_demo_bypass", "true");
       return { session: data.session, user: data.user, isDemo: true };
     } catch (err) {
-      console.warn("Fallo en auth demo de Supabase, activando demo offline local:", err);
+      console.warn(
+        "Fallo en auth demo de Supabase, activando demo offline local:",
+        err
+      );
       localStorage.setItem("quiral_demo_bypass", "true");
       return { session: null, user: null, isDemo: true };
     }
@@ -128,6 +149,11 @@ export async function signUpUser(
   const cleanUser = username.trim().toLowerCase();
   const cleanStore = storeName.trim() || "Mi tienda";
 
+  // Validación estricta mediante Whitelist de administración
+  if (!isEmailAllowedForRegistration(cleanEmail)) {
+    throw new Error(RESTRICTED_REGISTRATION_MESSAGE);
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email: cleanEmail,
     password,
@@ -141,7 +167,11 @@ export async function signUpUser(
   });
 
   if (error) throw error;
-  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+  if (
+    data.user &&
+    Array.isArray(data.user.identities) &&
+    data.user.identities.length === 0
+  ) {
     throw new Error("El correo electrónico ya se encuentra registrado.");
   }
   return data;
@@ -149,7 +179,8 @@ export async function signUpUser(
 
 export async function requestPasswordReset(email: string) {
   const cleanEmail = email.trim();
-  const redirectOrigin = typeof window !== "undefined" ? window.location.origin : undefined;
+  const redirectOrigin =
+    typeof window !== "undefined" ? window.location.origin : undefined;
 
   const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
     redirectTo: redirectOrigin,
