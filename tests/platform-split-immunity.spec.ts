@@ -4,6 +4,7 @@ test.describe("Quiral POS — Directiva de Inmunidad UI y Ergonomía en Estació
   test.use({
     viewport: { width: 1280, height: 800 },
   });
+  test.skip(({ isMobile }) => isMobile, "Suite exclusiva para escritorio.");
 
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
