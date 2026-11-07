@@ -302,3 +302,16 @@ flowchart TD
     - La pestaña "Todos" muestra de forma predeterminada únicamente productos de categorías activas en `categoryOrder`.
     - El botón interactivo presenta el estado accesible `Incluir ocultos (N)` con `<Eye size={12} />` y estilo `BTN_SECONDARY`, permitiendo al usuario expandirlos cuando lo requiera.
   - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y suite Playwright E2E aprobadas en verde.
+
+---
+
+### Fase de Consolidación e Integración de Suites E2E Desktop en CI
+
+- **Objetivo:** Auditar e integrar las optimizaciones de CI generadas por Copilot en la rama `copilot/fix-test-job-failure`, aislando las suites exclusivas de escritorio (`desktop-inventory-grid`, `desktop-pos-split`, `desktop-suppliers-and-history`, `platform-split-immunity [desktop]`) para omitir su ejecución bajo el proyecto de emulación `Mobile Safari iPhone 14 Standalone` (`isMobile: true`).
+- **Hitos Implementados:**
+  - **Aislamiento de Suites de Escritorio en Playwright:**
+    - Se agregó `test.skip(({ isMobile }) => isMobile, "Suite exclusiva para escritorio.")` en `tests/desktop-inventory-grid.spec.ts`, `tests/desktop-pos-split.spec.ts`, `tests/desktop-suppliers-and-history.spec.ts` y en el bloque desktop de `tests/platform-split-immunity.spec.ts`.
+    - Esto previene falsos positivos y cuellos de botella por timeouts en jobs de CI (GitHub Actions) al no forzar la ejecución de vistas de escritorio de 1280x800 dentro del runner móvil emulado.
+  - **Fusión Limpia a `main` y `develop`:**
+    - Fusión sin conflictos de la rama `origin/copilot/fix-test-job-failure` con `develop` y `main`, garantizando que todo el código esté unificado y desplegado para producción en `quiral.xyz`.
+  - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y suite Playwright E2E aprobadas en verde.

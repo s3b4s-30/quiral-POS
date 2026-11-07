@@ -784,22 +784,27 @@ test.describe("Quiral POS — Estación de Trabajo Desktop Data-Grid (1280x800)"
       chipsNav.getByRole("button", { name: "Cargadores y Cables", exact: true })
     ).not.toBeVisible();
 
-    // 7.2. Verificar que en la pestaña "Todos" los productos de la categoría oculta lucen el micro-badge "Oculta"
-    const firstHiddenBadge = page
-      .locator('[data-testid^="hidden-category-badge-"]')
-      .first();
-    await expect(firstHiddenBadge).toBeVisible();
-    await expect(firstHiddenBadge).toContainText("Oculta");
-
-    // 7.3. Verificar el toggle discreto "Ocultar productos archivados (N)" / "Incluir ocultos (N)"
+    // 7.2. Por defecto en la pestaña "Todos", los productos de categorías archivadas están ocultos
     const toggleHiddenProdsBtn = page.getByTestId(
       "toggle-hidden-category-products-btn"
     );
     await expect(toggleHiddenProdsBtn).toBeVisible();
+    await expect(toggleHiddenProdsBtn).toContainText(/Incluir ocultos/i);
+
+    const firstHiddenBadge = page
+      .locator('[data-testid^="hidden-category-badge-"]')
+      .first();
+    await expect(firstHiddenBadge).not.toBeVisible();
+
+    // 7.3. Al hacer clic en "Incluir ocultos", se muestran y lucen el micro-badge "Oculta"
+    await toggleHiddenProdsBtn.click();
     await expect(toggleHiddenProdsBtn).toContainText(
       /Ocultar productos archivados/i
     );
+    await expect(firstHiddenBadge).toBeVisible();
+    await expect(firstHiddenBadge).toContainText("Oculta");
 
+    // Probar el toggle nuevamente para volver a ocultar
     await toggleHiddenProdsBtn.click();
     await expect(toggleHiddenProdsBtn).toContainText(/Incluir ocultos/i);
     await expect(firstHiddenBadge).not.toBeVisible();

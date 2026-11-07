@@ -5,6 +5,8 @@ test.describe("Quiral POS — Estación de Trabajo Desktop: Proveedores Full-Vie
     viewport: { width: 1280, height: 800 },
   });
 
+  test.skip(({ isMobile }) => isMobile, "Suite exclusiva para escritorio.");
+
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem("quiral_demo_bypass", "true");
@@ -53,7 +55,9 @@ test.describe("Quiral POS — Estación de Trabajo Desktop: Proveedores Full-Vie
     await saveBtn.click();
 
     // Verificar confirmación y aparición inmediata en la tabla
-    await expect(suppliersTable.getByText("Importadora Tech Mayorista")).toBeVisible();
+    await expect(
+      suppliersTable.getByText("Importadora Tech Mayorista")
+    ).toBeVisible();
 
     // Pulsar botón "← Regresar" y verificar retorno fluido a la vista anterior
     const backBtn = page.getByTestId("suppliers-back-btn");
@@ -77,7 +81,9 @@ test.describe("Quiral POS — Estación de Trabajo Desktop: Proveedores Full-Vie
     await desktopSidebar.getByRole("button", { name: "Historial" }).click();
 
     // Validar contenedor de la tabla de historial en escritorio
-    const historyTableContainer = page.getByTestId("desktop-history-table-container");
+    const historyTableContainer = page.getByTestId(
+      "desktop-history-table-container"
+    );
     await expect(historyTableContainer).toBeVisible();
 
     // Verificar que los nombres de clientes usan clases de tipografía ampliada (text-base / font-bold)

@@ -5,6 +5,8 @@ test.describe("Quiral POS — Estación de Trabajo Desktop POS Split-View (1280x
     viewport: { width: 1280, height: 800 },
   });
 
+  test.skip(({ isMobile }) => isMobile, "Suite exclusiva para escritorio.");
+
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem("quiral_demo_bypass", "true");
