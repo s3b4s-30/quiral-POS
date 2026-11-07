@@ -100,7 +100,7 @@ export default function SummaryView({ onModalStateChange }: SummaryViewProps) {
         className={
           isDesktop
             ? "w-full px-6 lg:px-8 py-6 flex flex-col space-y-6 animate-in fade-in duration-200"
-            : "mx-auto max-w-xl md:max-w-4xl lg:max-w-5xl px-4 pt-3 pb-6"
+            : "mx-auto max-w-xl md:max-w-4xl lg:max-w-5xl px-4 pt-3 pb-6 flex flex-col space-y-4 sm:space-y-5.5"
         }
       >
         {/* 1. Dashboard Principal de Métricas (Tokens del Sistema Apple HIG - Cuadrícula Simétrica 2x2 en Móvil / 4 cols en Desktop) */}
@@ -178,19 +178,19 @@ export default function SummaryView({ onModalStateChange }: SummaryViewProps) {
         )}
 
         {/* 2. Tarjetas de Acción / Navegación (Estilo iOS Settings Row) */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3.5">
           {/* Botón 1: Más Vendidos y Devueltos */}
           <button
             type="button"
             onClick={handleOpenPerformance}
-            className="w-full rounded-2xl p-4 sm:p-5 bg-[var(--bg-elevated)] border border-[var(--border-color)] shadow-sm hover:border-accent/40 hover:bg-[var(--bg-surface)] hover:shadow-md flex items-center justify-between active:scale-[0.99] transition-all duration-200 text-left cursor-pointer select-none"
+            className="w-full rounded-2xl p-4 sm:p-4.5 bg-[var(--bg-elevated)] border border-[var(--border-color)] shadow-sm hover:border-accent/40 hover:bg-[var(--bg-surface)] hover:shadow-md flex items-center justify-between active:scale-[0.98] transition-all duration-200 text-left cursor-pointer select-none"
           >
             <div className="flex items-center gap-3.5 min-w-0 pr-2">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-subtle text-accent transition-colors duration-200">
                 <BarChart2 size={22} />
               </div>
               <div className="min-w-0">
-                <h4 className="text-base font-bold text-[var(--text-primary)] leading-snug truncate">
+                <h4 className="text-sm sm:text-base font-bold text-[var(--text-primary)] leading-snug truncate">
                   Más Vendidos y Devueltos
                 </h4>
                 <p className="text-xs font-medium text-[var(--text-secondary)] mt-0.5 truncate">
@@ -208,14 +208,14 @@ export default function SummaryView({ onModalStateChange }: SummaryViewProps) {
           <button
             type="button"
             onClick={handleOpenCycleClose}
-            className="w-full rounded-2xl p-4 sm:p-5 bg-[var(--bg-elevated)] border border-[var(--border-color)] shadow-sm hover:border-emerald-500/40 hover:bg-[var(--bg-surface)] hover:shadow-md flex items-center justify-between active:scale-[0.99] transition-all duration-200 text-left cursor-pointer select-none"
+            className="w-full rounded-2xl p-4 sm:p-4.5 bg-[var(--bg-elevated)] border border-[var(--border-color)] shadow-sm hover:border-emerald-500/40 hover:bg-[var(--bg-surface)] hover:shadow-md flex items-center justify-between active:scale-[0.98] transition-all duration-200 text-left cursor-pointer select-none"
           >
             <div className="flex items-center gap-3.5 min-w-0 pr-2">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
                 <Lock size={20} />
               </div>
               <div className="min-w-0">
-                <h4 className="text-base font-bold text-[var(--text-primary)] leading-snug truncate">
+                <h4 className="text-sm sm:text-base font-bold text-[var(--text-primary)] leading-snug truncate">
                   Cerrar Ciclo
                 </h4>
                 <p className="text-xs font-medium text-[var(--text-secondary)] mt-0.5 truncate">
@@ -232,7 +232,7 @@ export default function SummaryView({ onModalStateChange }: SummaryViewProps) {
 
         {/* 3. Sección HISTORIAL DE CIERRES */}
         <section className="space-y-3">
-          <h3 className="text-xs font-bold tracking-wider text-[var(--text-secondary)] uppercase">
+          <h3 className="text-xs font-bold tracking-wider text-[var(--text-secondary)] uppercase pt-1">
             HISTORIAL DE CIERRES ({loading ? "..." : closures.length})
           </h3>
 

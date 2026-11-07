@@ -272,3 +272,21 @@ flowchart TD
   - **Corrección de Truncamiento en Historial de Cierres:**
     - Se reemplazó el `truncate` unidireccional de `closure.periodLabel` por `leading-snug line-clamp-2` con flujo flex responsivo (`flex-col sm:flex-row sm:items-center sm:justify-between`), permitiendo hasta dos líneas completas y ubicando el badge de fecha de forma ordenada.
   - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y suites E2E Playwright (`platform-split-immunity`, `visual-regression`, `performance-fluidity`) aprobadas en verde.
+
+---
+
+### Fase de Ritmo Vertical, "Respiración" y Ergonomía en Resumen Móvil
+
+- **Objetivo:** Perfeccionar la jerarquía de espacios y el ritmo visual aireado de la pantalla de Resumen (`SummaryView.tsx`) en dispositivos móviles (< 768px), garantizando un descanso óptico entre bloques y micro-interacciones táctiles suaves bajo Apple HIG.
+- **Hitos Implementados:**
+  - **Descompresión Vertical y Separación Entre Secciones:**
+    - Se aplicó `flex flex-col space-y-4 sm:space-y-5.5` en el contenedor móvil de `SummaryView.tsx`, asegurando separación proporcional entre el dashboard de métricas 2x2, las tarjetas de acción y el historial de cierres.
+  - **Refinamiento de Tarjetas de Navegación (Estilo Apple Settings Rows):**
+    - Se calibraron los botones _Más Vendidos y Devueltos_ y _Cerrar Ciclo_ con `rounded-2xl p-4 sm:p-4.5`, espaciado `gap-2.5 sm:gap-3.5` y micro-interacción de respuesta táctil `active:scale-[0.98]`.
+    - Tipografía aireada y equilibrada con `text-sm sm:text-base font-bold text-[var(--text-primary)] leading-snug` y subtítulos en `text-xs font-medium text-[var(--text-secondary)] mt-0.5`.
+  - **Corte de Sección Nítido en Historial de Cierres:**
+    - Separación del encabezado `HISTORIAL DE CIERRES` con `pt-1` para asentar la división de contenidos.
+  - **Inmunidad Estricta de UI y Platform Split:**
+    - Preservación íntegra de `.quiral-scroll-container` y su despeje `--quiral-bottom-offset` sin inyectar paddings redundantes (`pb-28`, `pb-32`, etc.).
+    - Preservación sin modificaciones del layout de 4 columnas en escritorio (`isDesktop`).
+  - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y suites E2E Playwright (`platform-split-immunity`, `visual-regression`, `performance-fluidity`) aprobadas en verde.
