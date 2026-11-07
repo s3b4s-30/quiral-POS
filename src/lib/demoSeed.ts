@@ -11,7 +11,7 @@ import {
 import { purgeStoreOfflineStorage } from "../services/offlineDb";
 
 export const DEMO_STORE_ID = "00000000-0000-0000-0000-000000000030";
-export const DEMO_SEED_VERSION = "quiral_seed_v4_audited_2026";
+export const DEMO_SEED_VERSION = "quiral_seed_v5_expanded_catalog_2026";
 
 /**
  * Limpia cualquier dato, perfil, cola offline o catálogo previo de prueba almacenado en
@@ -322,51 +322,51 @@ export function generateDemoSeed() {
       stockB: 5,
     },
 
-    // 5. Celulares (Orden: Almacenamiento -> Color / Acabado -> Marca)
+    // 5. Protección de Pantalla, Almacenamiento y Celulares (Sin equipos iPhone)
     {
-      name: "iPhone 16 Pro Max 256GB Titanio Natural",
-      category: "Celulares",
-      subtitle: "256GB · Titanio Natural · iPhone",
-      price: 5450000,
-      cost: 4680000,
-      warrantyDays: 90,
-      stockA: 3,
-      stockB: 1,
+      name: "Vidrio Templado Privacidad (iPhone 15 Pro Max)",
+      category: "Protección de Pantalla",
+      subtitle: "Privacidad · iPhone 15 Pro Max",
+      price: 35000,
+      cost: 12000,
+      warrantyDays: 15,
+      stockA: 26,
+      stockB: 10,
     },
     {
-      name: "iPhone 15 Pro Max 256GB Titanio Negro",
-      category: "Celulares",
-      subtitle: "256GB · Titanio Negro · iPhone",
-      price: 4650000,
-      cost: 3950000,
-      warrantyDays: 90,
-      stockA: 4,
-      stockB: 2,
+      name: "Vidrio Templado Cerámica (iPhone 16 Pro Max)",
+      category: "Protección de Pantalla",
+      subtitle: "Cerámica · iPhone 16 Pro Max",
+      price: 40000,
+      cost: 14000,
+      warrantyDays: 15,
+      stockA: 20,
+      stockB: 8,
     },
     {
-      name: "iPhone 15 128GB Azul",
+      name: "Memoria MicroSD Kingston 128GB",
+      category: "Almacenamiento",
+      subtitle: "MicroSD · 128GB · Kingston",
+      price: 68000,
+      cost: 36000,
+      warrantyDays: 60,
+      stockA: 15,
+      stockB: 6,
+    },
+    {
+      name: "Xiaomi Redmi Note 13 Pro 256GB Negro Espacial",
       category: "Celulares",
-      subtitle: "128GB · Azul · iPhone",
-      price: 3290000,
-      cost: 2760000,
+      subtitle: "Xiaomi · 256GB · Negro Espacial",
+      price: 1180000,
+      cost: 890000,
       warrantyDays: 90,
       stockA: 5,
       stockB: 2,
     },
     {
-      name: "iPhone 13 128GB Negro Medianoche",
-      category: "Celulares",
-      subtitle: "128GB · Negro Medianoche · iPhone",
-      price: 2250000,
-      cost: 1840000,
-      warrantyDays: 90,
-      stockA: 6,
-      stockB: 2,
-    },
-    {
       name: "Samsung Galaxy S24 Ultra 256GB Titanio Negro",
       category: "Celulares",
-      subtitle: "256GB · Titanio Negro · Samsung",
+      subtitle: "Samsung · 256GB · Titanio Natural",
       price: 4490000,
       cost: 3750000,
       warrantyDays: 90,
