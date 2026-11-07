@@ -82,7 +82,7 @@ export default function InventoryView({
   >("Todos");
   const [selectedAttributeTag, setSelectedAttributeTag] = useState<string>("");
   const [includeHiddenCategoryProducts, setIncludeHiddenCategoryProducts] =
-    useState<boolean>(true);
+    useState<boolean>(false);
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterValues>(
     DEFAULT_ADVANCED_FILTERS
   );
@@ -477,7 +477,7 @@ export default function InventoryView({
     setQuery("");
     setSelectedCategory("Todos");
     setSelectedAttributeTag("");
-    setIncludeHiddenCategoryProducts(true);
+    setIncludeHiddenCategoryProducts(false);
     setAdvancedFilters(DEFAULT_ADVANCED_FILTERS);
   };
 

@@ -290,3 +290,15 @@ flowchart TD
     - Preservación íntegra de `.quiral-scroll-container` y su despeje `--quiral-bottom-offset` sin inyectar paddings redundantes (`pb-28`, `pb-32`, etc.).
     - Preservación sin modificaciones del layout de 4 columnas en escritorio (`isDesktop`).
   - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y suites E2E Playwright (`platform-split-immunity`, `visual-regression`, `performance-fluidity`) aprobadas en verde.
+
+---
+
+### Fase de Ocultación Predeterminada de Productos Archivados en Pestaña "Todos"
+
+- **Objetivo:** Establecer por defecto la exclusión visual de productos pertenecientes a categorías archivadas/ocultas al visualizar la pestaña "Todos" de Inventario (`InventoryView.tsx`), manteniendo la opción de incluirlos a voluntad con el control secundario.
+- **Hitos Implementados:**
+  - **Ocultación por Defecto (`includeHiddenCategoryProducts: false`):**
+    - En `InventoryView.tsx`, el estado `includeHiddenCategoryProducts` se inicializa estrictamente en `false`, tanto en el montaje inicial como al restablecer los filtros con `handleResetAllFilters()`.
+    - La pestaña "Todos" muestra de forma predeterminada únicamente productos de categorías activas en `categoryOrder`.
+    - El botón interactivo presenta el estado accesible `Incluir ocultos (N)` con `<Eye size={12} />` y estilo `BTN_SECONDARY`, permitiendo al usuario expandirlos cuando lo requiera.
+  - **Certificación 100% Exit 0:** `npx tsc --noEmit`, `npm run test:unit` (56/56), `npm run build` y suite Playwright E2E aprobadas en verde.
