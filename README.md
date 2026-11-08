@@ -1,17 +1,17 @@
 <div align="center">
 
-<img src="public/favicon.svg" alt="Quiral POS Logo" width="96" height="96" />
+<img src="public/iconquiral.png" alt="Quiral POS Logo" width="120" height="120" style="border-radius: 28px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
 
 # Quiral POS — Sistema de Punto de Venta y Gestión de Inventario Minorista
 
 **Velocidad de mostrador en 3 toques, inventario multi-lote con utilidad real al centavo, arqueos de caja inmutables y operación continua con o sin internet.**
 
-[![Versión](https://img.shields.io/badge/Versión-1.0.1-007AFF?style=for-the-badge)](https://quiral.xyz)
-[![Plataforma](https://img.shields.io/badge/Plataforma-Web%20%7C%20iOS%20PWA%20%7C%20Escritorio-141416?style=for-the-badge)](https://quiral.xyz)
-[![Moneda](<https://img.shields.io/badge/Mercado-Colombia%20(COP)-28CD41?style=for-the-badge>)](https://quiral.xyz)
-[![Disponibilidad](https://img.shields.io/badge/Operación-Offline--First-FF9500?style=for-the-badge)](https://quiral.xyz)
+[![Versión](https://img.shields.io/badge/Versión-v1.0.1%20Estable-007AFF?style=for-the-badge)](https://quiral.xyz)
+[![Plataformas](https://img.shields.io/badge/Plataformas-Móvil%20y%20Escritorio-141416?style=for-the-badge)](https://quiral.xyz)
+[![Mercado](<https://img.shields.io/badge/Mercado-Colombia%20(COP)-28CD41?style=for-the-badge>)](https://quiral.xyz)
+[![Operación](https://img.shields.io/badge/Operación-Offline--First-FF9500?style=for-the-badge)](https://quiral.xyz)
 
-[**Ir a la Aplicación en Vivo (quiral.xyz)**](https://quiral.xyz) · [**Beneficios Clave**](#-qué-resuelve-quiral-pos) · [**Operación Diaria**](#-flujo-de-uso-del-día-a-día) · [**Hoja de Ruta 2026–2027**](#-roadmap-20262027-el-futuro-del-producto)
+[**Probar Aplicación en Vivo (quiral.xyz)**](https://quiral.xyz) · [**Galería Visual**](#-galería-visual-y-experiencia-de-usuario) · [**¿Qué Resuelve?**](#-qué-resuelve-quiral-pos) · [**Operación Diaria**](#-flujo-de-uso-del-día-a-día) · [**Especificaciones Técnicas**](#-especificaciones-técnicas-arquitectura-y-seguridad)
 
 </div>
 
@@ -19,34 +19,94 @@
 
 ## 🏪 Diseñado para el Ritmo Real del Comercio Minorista
 
-**Quiral POS** nació para resolver el problema más costoso de las tiendas de tecnología, accesorios, perfumería y comercio minorista en Colombia: **los sistemas lentos que detienen la fila en mostrador y los inventarios que mienten sobre las ganancias reales**.
+**Quiral POS** nació en el mostrador para resolver el problema más costoso de los comercios minoristas (tiendas de tecnología, accesorios para móviles, perfumería y gadgets): **sistemas lentos que hacen fila en la caja e inventarios que mienten sobre las ganancias reales**.
 
-Ya sea atendiendo desde un **iPhone o tablet en el pasillo** o desde una **estación de caja de escritorio con teclado y lector de códigos**, Quiral POS adapta su interfaz automáticamente para ofrecer respuesta instantánea en menos de un segundo.
+Ya sea cobrando desde un **celular o tablet en el pasillo** o desde una **estación de computador fija con teclado y lector de códigos de barras**, Quiral POS ofrece una experiencia fluida, rápida y libre de fricciones.
+
+---
+
+## 📸 Galería Visual y Experiencia de Usuario
+
+### 📱 1. Venta Rápida de Mostrador (Regla de los 3 Toques)
+
+Atención de mostrador diseñada para cobrar en menos de 5 segundos: busca por referencia, marca o código, selecciona y confirma. Permite pagos combinados (**Efectivo, Nequi, Daviplata, Tarjeta o Mixto**), selección de lote de proveedor específico, descuentos al instante y adición opcional de notas de garantía o nombre del cliente.
+
+<div align="center">
+
+|                         Estación de Mostrador en Escritorio (Desktop)                         |                          Terminal Móvil de Pasillo (Móvil / PWA)                          |
+| :-------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------: |
+| <img src="docs/screenshots/desktop-pos.png" alt="Punto de Venta en Escritorio" width="560" /> | <img src="docs/screenshots/mobile-pos.png" alt="Punto de Venta en Celular" width="260" /> |
+
+</div>
+
+---
+
+### 💻 2. Estación de Trabajo Desktop de Alta Densidad
+
+Pensada para dueños y cajeros en computadores de mostrador. Cero doble scroll, vista tabular compacta sin desplazamientos horizontales incómodos, ticket de venta lateral en tiempo real y navegación **Keyboard-First** (`/` para enfocar la búsqueda, flechas direccionales y `Ctrl + Enter` para cobrar al vuelo).
+
+<p align="center">
+  <img src="docs/screenshots/desktop-inventory.png" alt="Inventario de Alta Densidad en Computador" width="850" />
+</p>
+
+---
+
+### 🎨 3. Personalización Cromática y Modos Visuales (Dual OLED)
+
+Quiral POS se adapta a la identidad visual de tu marca y al confort de tus ojos:
+
+- **5 Paletas de Acento Profesionales:** Azul Clásico, Verde Esmeralda, Púrpura Pro, Naranja Dinámico y Rosa Boutique.
+- **Modo Claro y Modo Oscuro Puro (`#000000`):** Cumplimiento estricto de Apple Human Interface Guidelines (HIG). El negro absoluto descansa la vista en turnos nocturnos y ahorra batería en pantallas OLED y iPads.
+- **Modo Privacidad en 1 Clic:** Oculta instantáneamente los costos de compra y los márgenes de ganancia (`••••••`) cuando hay clientes mirando la pantalla de caja.
+
+---
+
+### 📦 4. Inventario Inteligente por Lotes Reales
+
+A diferencia de los sistemas anticuados que mezclan los precios de compra con promedios inexactos, Quiral POS rastrea cada entrada de inventario como un lote individual:
+
+- **Trazabilidad por lote:** Cada compra conserva su costo unitario exacto, fecha de ingreso, proveedor asignado y unidades disponibles.
+- **Ganancia neta real:** Al vender un producto, el sistema descuenta del lote correspondiente y calcula el margen de utilidad exacto al centavo.
+- **Catálogo Vivo y Banco de Atributos:** Crea categorías (_Protectores de Pantalla, Smartwatches, Cargadores, Audio, Perfumería_) y asocia atributos dinámicos con generación automática de nombres comerciales.
+
+<p align="center">
+  <img src="docs/screenshots/desktop-catalog.png" alt="Gestor de Catálogo y Banco de Atributos" width="850" />
+</p>
+
+---
+
+### 🔒 5. Cierres de Caja y Arqueos Inmutables
+
+Control financiero blindado al finalizar el turno, la quincena o el mes:
+
+- **Arqueo y Congelación de Métricas:** Cierra el ciclo operativo con un solo clic. Los ingresos, costos y ganancias netas quedan congelados con desglose detallado por cada método de pago.
+- **Auditoría Transparente:** Registro de observaciones de arqueo para justificar descuadres o sobrantes de caja sin alterar el histórico contable de ventas pasadas.
+
+<p align="center">
+  <img src="docs/screenshots/desktop-summary.png" alt="Resumen Financiero y Cierres de Ciclo" width="850" />
+</p>
 
 ---
 
 ## 🎯 ¿Qué resuelve Quiral POS?
 
-### 1. ⚡ Venta Ultrarrápida sin Fricciones (Regla de los 3 Toques)
+### 1. ⚡ Venta Ultrarrápida sin Fricciones
 
-- **Cero pantallas de carga lentas:** Búsqueda instantánea por modelo, marca, categoría o referencia mientras el cliente habla.
-- **Ergonomía dual (Móvil y PC):** En teléfonos opera con una sola mano mediante cápsulas táctiles; en computadores ofrece una estación de trabajo en pantalla dividida con tabla de alta densidad, atajos de teclado (`/` para buscar, `Ctrl + Enter` para cobrar) y ticket lateral permanente.
+- **Cero pantallas de carga lentas:** Búsqueda instantánea por modelo, marca o referencia mientras hablas con el cliente.
+- **Ergonomía dual adaptativa:** En teléfonos móviles se maneja cómodamente con una sola mano mediante cápsulas táctiles inferiores; en computadores de mostrador ofrece un panel dividido con ticket lateral y atajos de teclado.
 
-### 2. 📦 Control de Inventario por Lotes Reales (Adiós a las Utilidades Inventadas)
+### 2. 📦 Márgenes Reales sin Promedios Falsos
 
-- En el comercio real, una misma referencia comprada el lunes cuesta diferente a la comprada el viernes o a otro proveedor.
-- **Trazabilidad por ingreso:** Cada lote conserva su **costo unitario exacto**, **fecha de entrada**, **proveedor asociado** y **unidades disponibles**.
-- **Cálculo de ganancia exacta:** Al vender un producto, el sistema descuenta del lote correspondiente y congela el costo real de ese artículo en la factura, calculando tu margen neto verdadero sin promedios engañosos.
+- En el comercio diario, una referencia comprada a principio de mes cuesta distinto a la comprada semanas después o a otro distribuidor.
+- Quiral POS liquida cada venta contra el costo real de su lote específico, garantizando que tu utilidad contable coincida exactamente con el dinero en tu bolsillo.
 
-### 3. 🔒 Arqueo de Caja, Privacidad en Mostrador y Cierres de Ciclo
+### 3. 🔒 Privacidad Instantánea en Mostrador
 
-- **Modo Privacidad en un toque:** Oculta costos de compra, márgenes de ganancia y acumulados del día con un solo clic cuando hay clientes observando la pantalla.
-- **Cierres de Ciclo (Quincenales / Mensuales):** Congela formalmente los ingresos, costos y ganancias netas de un periodo con reporte detallado por método de pago, reiniciando el contador operativo sin perder el historial contable.
+- Un cliente asomado al mostrador jamás verá cuánto te costó la mercancía ni cuánto te estás ganando: activa el **Modo Privacidad** con un toque y censura todas las cifras sensibles.
 
-### 4. 🧩 Catálogo Vivo y Adaptable (Sin Depender de Programadores)
+### 4. 🧩 Catálogo Personalizable sin Depender de Programadores
 
-- **Crea categorías y atributos al vuelo:** Configura tus propias familias de productos (_Cargadores, Audio, Celulares, Perfumes, Fundas_) y personaliza sus características (_Potencia, Conector, Capacidad, Marca, Material_) en segundos.
-- **Nomenclatura estandarizada automática:** El asistente de creación genera nombres comerciales limpios para los tickets y subtítulos técnicos detallados para el cajero.
+- Modifica categorías, marcas y atributos al vuelo. El asistente construye automáticamente nombres comerciales claros para tickets térmicos y subtítulos técnicos para el cajero.
 
 ---
 
@@ -54,138 +114,133 @@ Ya sea atendiendo desde un **iPhone o tablet en el pasillo** o desde una **estac
 
 ### Paso 1: Registrar un Producto en 15 Segundos
 
-1. Entra a **Inventario** y pulsa **`+ Nuevo Producto`** (o usa la fila de creación rápida estilo hoja de cálculo en PC).
-2. Elige la **Categoría** y haz clic en los **Atributos** (ej. _Cubo · 20W · Tipo C · Apple_): el nombre comercial se construye automáticamente.
-3. Ingresa el **Precio de Venta ($ COP)**, el **Costo de Compra**, las **Unidades iniciales** y el **Proveedor**.
-4. ¡Listo! El producto queda disponible inmediatamente en todas las cajas conectadas.
+1. Entra a **Inventario** y pulsa **`+ Nuevo Producto`** (o utiliza la fila de creación rápida estilo Excel en PC).
+2. Selecciona la **Categoría** y toca los **Atributos** deseados (ej. _Cubo · 20W · Tipo C · Apple_): el título se autogenera de inmediato.
+3. Asigna el **Precio de Venta ($ COP)**, el **Costo de Compra**, las **Unidades iniciales** y el **Proveedor**.
+4. Guarda y el producto estará disponible de inmediato en todas las cajas de tu tienda.
 
 ### Paso 2: Cobrar una Venta en Mostrador
 
-1. En la vista **Vender (POS)**, busca o toca los artículos que lleva el cliente.
-2. Si necesitas otorgar un descuento o elegir un lote de un proveedor específico, ajústalo directamente desde el ticket.
-3. Selecciona el medio de pago (**Efectivo, Transferencia / Nequi / Daviplata, Tarjeta o Mixto**), añade opcionalmente el nombre del comprador o una nota de garantía y confirma con **`Cobrar`**.
-4. El inventario se actualiza al instante en todos los dispositivos de la tienda.
+1. En la vista **Vender (POS)**, busca o toca los artículos que lleva el comprador.
+2. Si deseas otorgar un descuento o seleccionar un lote de un proveedor específico, hazlo directamente en el ticket.
+3. Elige el medio de pago (**Efectivo, Nequi, Daviplata, Tarjeta o Mixto**), añade el nombre del cliente o una nota de garantía y confirma en **`Cobrar`**.
+4. El stock se descuenta en tiempo real en todos tus dispositivos.
 
-### Paso 3: Consultar Historial, Garantías y Devoluciones
+### Paso 3: Historial, Garantías y Devoluciones Seguras
 
-1. En **Historial**, filtra ventas por fecha, cliente, número de recibo o método de pago.
-2. **Gestión de Garantías:** Marca cualquier artículo vendido con sello de garantía y registra la observación técnica sin alterar la contabilidad histórica.
-3. **Modificación o Anulación Segura:** Si un cliente devuelve un producto o cambia de método de pago, edita o elimina el registro bajo confirmación administrativa; **Quiral POS devuelve automáticamente las unidades al lote original** sin descuadrar tu bodega.
+1. En **Historial**, consulta ventas pasadas filtradas por fecha, cliente, comprobante o método de pago.
+2. **Control de Garantías:** Registra anotaciones técnicas de servicio posventa sin corromper el balance histórico.
+3. **Devoluciones con Reconciliación de Stock:** Si anulas o ajustas una venta, **Quiral POS devuelve automáticamente las unidades al lote original**, manteniendo tu bodega 100% cuadrada.
 
 ---
 
 ## 📊 Comparativa Operativa en Tienda
 
-| Capacidad Comercial                                 |       Cuaderno / Excel       |    POS Tradicional Antiguo    |               **Quiral POS**               |
-| :-------------------------------------------------- | :--------------------------: | :---------------------------: | :----------------------------------------: |
-| **Tiempo promedio para cobrar una venta**           |        2 a 3 minutos         | 45 segundos (múltiples menús) | **< 5 segundos (3 toques o `Ctrl+Enter`)** |
-| **Manejo de costos distintos por lote y proveedor** | ❌ Manual y propenso a error |  ❌ Promedio simple inexacto  |    **✅ Multi-lote real por proveedor**    |
-| **Funciona si se cae el internet del local**        |            ✅ Sí             |     ❌ Se bloquea la caja     |    **✅ Modo Offline-First automático**    |
-| **Uso simultáneo en celular y computador**          |            ❌ No             |        ❌ Solo PC fijo        |    **✅ Sincronización en tiempo real**    |
-| **Privacidad de costos frente al cliente**          |    ❌ Visible en la hoja     |   ⚠️ Requiere cerrar sesión   |   **✅ Censura instantánea en 1 toque**    |
+| Capacidad Comercial                        |  Cuaderno / Hoja de Cálculo  |   POS Tradicional Antiguo    |               **Quiral POS**               |
+| :----------------------------------------- | :--------------------------: | :--------------------------: | :----------------------------------------: |
+| **Tiempo promedio para cobrar**            |        2 a 3 minutos         |  45 segundos (menús lentos)  | **< 5 segundos (3 toques o `Ctrl+Enter`)** |
+| **Control de costos por lote y proveedor** | ❌ Manual y propenso a error | ❌ Promedio simple inexacto  |    **✅ Multi-lote real por proveedor**    |
+| **Operación si se cae el internet**        |         ✅ En papel          |    ❌ Se bloquea la caja     |    **✅ Modo Offline-First automático**    |
+| **Uso simultáneo en celular y PC**         |       ❌ No disponible       |   ❌ Solo computador fijo    |    **✅ Sincronización en tiempo real**    |
+| **Privacidad de costos frente al cliente** |      ❌ Todo a la vista      |  ⚠️ Requiere cerrar sesión   |    **✅ Censura instantánea en 1 clic**    |
+| **Personalización de catálogo**            |   ⚠️ Desorden en columnas    | ❌ Rígido / Requiere soporte | **✅ Banco de atributos vivo y flexible**  |
 
 ---
 
 ## 🗺️ Roadmap 2026–2027 (El Futuro del Producto)
 
-Nuestro compromiso es evolucionar junto con el crecimiento de los comercios minoristas en Latinoamérica:
-
 - [ ] **Módulo de Facturación Electrónica DIAN (Colombia):** Emisión directa de factura electrónica y documento equivalente POS conectado con proveedores tecnológicos autorizados.
-- [ ] **Sincronización Multi-Sucursal y Traslados entre Bodegas:** Control centralizado para negocios con 2 o más locales físicos, remisiones de mercancía entre sedes y consolidado gerencial.
-- [ ] **Aplicación Nativa con Impresión Térmica Bluetooth / USB:** Disparo directo a impresoras térmicas de 58mm y 80mm sin diálogos del navegador y apertura automática de cajón monedero.
-- [ ] ** Alertas Inteligentes de Reabastecimiento:** Notificaciones automáticas cuando los productos de mayor rotación alcancen su punto crítico de stock.
+- [ ] **Sincronización Multi-Sucursal y Traslados entre Bodegas:** Control unificado para negocios con 2 o más sedes físicas, remisiones internas de mercancía y consolidado administrativo.
+- [ ] **Aplicación Nativa con Impresión Térmica Bluetooth / USB:** Envío directo a impresoras de 58mm y 80mm sin cuadros de diálogo del navegador y apertura automática de cajón monedero.
+- [ ] **Alertas Predictivas de Reabastecimiento:** Notificaciones automáticas cuando las referencias de mayor rotación alcancen su nivel crítico de existencias.
 
 ---
 
 <details>
-<summary><strong>🛠️ Especificaciones Técnicas, Arquitectura y Seguridad (Documentación para Ingenieros y Auditores)</strong></summary>
+<summary><strong>🛠️ Especificaciones Técnicas, Arquitectura y Seguridad (Documentación para Desarrolladores)</strong></summary>
 
 <br />
 
 ### 1. Stack Tecnológico de Alto Rendimiento
 
-| Capa                         | Tecnología                                   | Propósito en Producción                                                                                                 |
-| :--------------------------- | :------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
-| **Frontend Core**            | React 18.3 + TypeScript 5.7 (`strict: true`) | Interfaz reactiva con tipado estático estricto (cero `any`) y separación física de vistas (`Platform Split`).           |
-| **Sistema de Diseño**        | Tailwind CSS 3.4 + Tokens Dual OLED          | Paleta adaptativa de alto contraste (`#000000` en modo oscuro OLED, `#F2F2F7` en modo claro) bajo estándares Apple HIG. |
-| **Build & Bundler**          | Vite 6                                       | Empaquetado optimizado con _tree-shaking_ estático y eliminación de código de desarrollo en producción.                 |
-| **Base de Datos & Backend**  | Supabase (PostgreSQL 15+)                    | Almacenamiento relacional en la nube, funciones RPC transaccionales y canales de sincronización Realtime.               |
-| **Motor Offline-First**      | Dexie.js (IndexedDB) + TanStack Query v5     | Persistencia local en el navegador, caché de catálogo y cola de sincronización diferida de ventas.                      |
-| **Aseguramiento de Calidad** | Vitest + Playwright E2E                      | Pruebas unitarias sobre lógica financiera/formateadores y pruebas End-to-End automatizadas en Desktop y Mobile Safari.  |
+| Capa                         | Tecnología                                   | Propósito en Producción                                                                                                             |
+| :--------------------------- | :------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend Core**            | React 18.3 + TypeScript 5.7 (`strict: true`) | Interfaz reactiva con tipado estático estricto (cero `any`) y desacoplamiento físico de vistas (`Platform Split` Móvil vs Desktop). |
+| **Sistema de Diseño**        | Tailwind CSS 3.4 + Tokens Dual OLED          | Paleta adaptativa de alto contraste (`#000000` en modo oscuro OLED, `#F2F2F7` en modo claro) bajo Apple HIG.                        |
+| **Build & Bundler**          | Vite 6                                       | Empaquetado optimizado con _tree-shaking_ estático y eliminación de código de desarrollo en producción.                             |
+| **Base de Datos & Backend**  | Supabase (PostgreSQL 15+)                    | Almacenamiento relacional en la nube, procedimientos RPC atómicos y canales de sincronización Realtime.                             |
+| **Motor Offline-First**      | Dexie.js (IndexedDB) + TanStack Query v5     | Persistencia local en navegador, caché de catálogo y cola de sincronización diferida de ventas sin conexión.                        |
+| **Aseguramiento de Calidad** | Vitest + Playwright E2E                      | Pruebas unitarias sobre cálculos financieros/formateadores y pruebas End-to-End automatizadas (Desktop Chromium + Mobile Safari).   |
 
 ---
 
 ### 2. Arquitectura de Seguridad y Privacidad de Datos
 
 1. **Autenticación Robusta y Control de Acceso (Whitelist):**
-   - Gestión de sesiones mediante **Supabase Auth** con contraseñas cifradas bajo algoritmos estándar de la industria (`bcrypt` / `argon2`).
-   - **Whitelist de Registro (`src/config/authWhitelist.ts`):** El alta de nuevas tiendas y cuentas en producción está protegida por una lista de control de acceso (ACL) administrativa por correo y dominio autorizado, bloqueando el registro de terceros no autorizados.
-   - **Aislamiento Estricto de Entorno Demo:** El acceso rápido de demostración (`30 / 30`) está restringido a nivel de compilación exclusivamente a `import.meta.env.DEV === true`. En compilaciones de producción (`npm run build`), tanto el botón como la ruta de autenticación demo quedan completamente deshabilitados.
+   - Sesiones gestionadas con **Supabase Auth** con contraseñas encriptadas mediante algoritmos estándar de la industria (`bcrypt` / `argon2`).
+   - **Whitelist de Registro (`src/config/authWhitelist.ts`):** El alta de nuevas tiendas y cuentas en producción está protegida por una lista de control de acceso (ACL) administrativa por correo y dominio autorizado, bloqueando el registro de usuarios no autorizados.
+   - **Aislamiento Estricto de Entorno Demo:** El atajo de demostración (`30 / 30`) está restringido a nivel de compilación exclusivamente a `import.meta.env.DEV === true`. En compilaciones de producción (`npm run build`), tanto el botón como la autenticación demo quedan completamente eliminados del código final.
 
 2. **Aislamiento Multi-Tenant con Row Level Security (RLS):**
-   - Todas las tablas de negocio (`stores`, `store_members`, `suppliers`, `products`, `product_batches`, `sales`, `sale_items`, `closures`) operan con `ROW LEVEL SECURITY` habilitado en PostgreSQL.
-   - Cada lectura y escritura exige validación criptográfica del JWT activo mediante la política `auth.uid() IS NOT NULL AND is_store_member(store_id)`, garantizando que una tienda jamás pueda consultar ni mutar registros de otra.
+   - Todas las tablas de datos (`stores`, `store_members`, `suppliers`, `products`, `product_batches`, `sales`, `sale_items`, `cycle_closings`) operan con `ROW LEVEL SECURITY` habilitado en PostgreSQL.
+   - Cada consulta y mutación valida criptográficamente el JWT del usuario activo mediante la política `auth.uid() IS NOT NULL AND is_store_member(store_id)`, impidiendo el acceso cruzado entre comercios.
 
-3. **Integridad Transaccional ACID y Prevención de Condiciones de Carrera:**
-   - El cobro de ventas se ejecuta mediante el procedimiento almacenado `complete_sale` en PostgreSQL operando como `SECURITY INVOKER` con bloqueo pesimista de filas (`SELECT ... FOR UPDATE`).
-   - Esto impide ventas duplicadas o saldos de inventario negativos incluso si dos cajeros intentan vender la última unidad del mismo lote en el mismo milisegundo.
+3. **Integridad Transaccional ACID y Bloqueo Pesimista:**
+   - La liquidación de ventas se ejecuta mediante la función RPC `complete_sale` en PostgreSQL operando como `SECURITY INVOKER` con bloqueo pesimista (`SELECT ... FOR UPDATE`).
+   - Evita ventas duplicadas o saldos negativos de existencias incluso cuando dos cajeros cobran la última unidad al mismo tiempo.
 
-4. **Privacidad en Mostrador y Blindaje de Cabeceras HTTP:**
-   - Cifras monetarias protegidas con alineación tabular (`.tabular-nums`) y modo de enmascaramiento instantáneo (`••••••`) para proteger costos, márgenes y cierres ante miradas externas.
-   - Despliegue endurecido en `vercel.json` con cabeceras de seguridad estrictas: `Content-Security-Policy (CSP)`, `Strict-Transport-Security (HSTS)`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` y `Referrer-Policy`.
-   - El cliente web utiliza únicamente la clave pública anónima (`VITE_SUPABASE_ANON_KEY`) gobernada por RLS; jamás se exponen llaves privadas `service_role` en el código fuente.
+4. **Blindaje de Cabeceras HTTP:**
+   - Configuración en `vercel.json` con cabeceras de seguridad estrictas: _Content-Security-Policy (CSP)_, _Strict-Transport-Security (HSTS)_, _X-Frame-Options: DENY_, _X-Content-Type-Options: nosniff_, _Referrer-Policy_ y _Permissions-Policy_.
+   - El cliente web utiliza exclusivamente la clave anónima pública (`VITE_SUPABASE_ANON_KEY`) sujeta a RLS; ninguna clave privada `service_role` está expuesta en el frontend.
 
 ---
 
 ### 3. Resiliencia Offline-First
 
-Cuando una tienda experimenta cortes de internet en el local:
+Si se interrumpe la conexión a internet en el establecimiento:
 
-1. **Lectura Continua:** El catálogo de productos, lotes y proveedores se sirve instantáneamente desde la instantánea local almacenada en **IndexedDB (`Dexie.js`)**.
-2. **Cola de Ventas Inmutable (`offlineSalesQueue`):** Las ventas realizadas sin conexión se firman con un identificador único determinista, descuentan el stock en memoria local y se encolan de forma segura en el dispositivo.
-3. **Reconciliación Automática (`offlineSyncService`):** En cuanto el navegador detecta el restablecimiento de red (`window.online`), la cola despacha las transacciones pendientes hacia Supabase respetando el orden cronológico exacto.
+1. **Lectura Continua:** El catálogo de productos, lotes y proveedores se sirve al instante desde la copia local en **IndexedDB (`Dexie.js`)**.
+2. **Cola de Ventas Local:** Las ventas realizadas sin conexión se firman localmente, descuentan el stock en memoria y se almacenan de manera segura en el dispositivo.
+3. **Sincronización Automática:** En cuanto el dispositivo recupera la conexión a internet (`window.online`), la cola despacha las transacciones acumuladas hacia Supabase en orden cronológico exacto.
 
 ---
 
-### 4. Instalación, Desarrollo y Suite de Pruebas Locales
+### 4. Instalación, Desarrollo y Pruebas Locales
 
 #### Requisitos Previos
 
-- **Node.js** `>= 18.0.0` (recomendado `v20 LTS` o superior)
+- **Node.js** `>= 18.0.0` (recomendado `v20 LTS`)
 - **npm** `>= 9.0.0`
 
-#### Configuración de Variables de Entorno
-
-Crea un archivo `.env` en la raíz del proyecto basándote en tus credenciales de proyecto de Supabase:
+#### Variables de Entorno (.env)
 
 ```env
 VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
 VITE_SUPABASE_ANON_KEY=tu_clave_anonima_publica_rls
-# Opcional: Correos y dominios adicionales autorizados en la Whitelist de registro (separados por coma)
-VITE_AUTH_WHITELIST_EMAILS=propietario@mitienda.com,cajero@mitienda.com
+# Opcional: Correos y dominios autorizados en la Whitelist de registro
+VITE_AUTH_WHITELIST_EMAILS=propietario@mitienda.com
 VITE_AUTH_WHITELIST_DOMAINS=mitienda.com
 ```
 
-#### Comandos de Ejecución y Certificación de Calidad
+#### Comandos de Ejecución y Suite de Calidad
 
 ```bash
-# 1. Instalar dependencias del proyecto
+# 1. Instalar dependencias
 npm install
 
-# 2. Iniciar servidor de desarrollo local (http://localhost:5173)
-# Nota: En modo desarrollo (DEV) se habilita el entorno de prueba local 30/30
+# 2. Iniciar servidor local (http://localhost:5173)
 npm run dev
 
-# 3. Verificar tipado estático de TypeScript (Estándar 0 errores)
+# 3. Verificación de tipos TypeScript (Estándar 0 errores)
 npx tsc --noEmit
 
-# 4. Ejecutar suite de pruebas unitarias (Vitest)
+# 4. Pruebas unitarias financieras y formateadores (Vitest)
 npm run test:unit
 
-# 5. Generar compilación optimizada para producción
+# 5. Compilación optimizada de producción
 npm run build
 
-# 6. Ejecutar suite completa de pruebas End-to-End (Playwright: Desktop Chromium + Mobile Safari)
+# 6. Pruebas End-to-End automatizadas (Playwright: Desktop + Mobile)
 npx playwright test
 ```
 
@@ -194,5 +249,5 @@ npx playwright test
 ---
 
 <div align="center">
-  <sub><strong>Quiral POS v1.0.1</strong> — Ingeniería de software diseñada para la velocidad, seguridad y rentabilidad del comercio minorista moderno.</sub>
+  <sub><strong>Quiral POS v1.0.1</strong> — Sistema de Punto de Venta y Gestión de Inventario Minorista. Creado con rigor de ingeniería y diseño enfocado en la rentabilidad del comercio moderno.</sub>
 </div>
