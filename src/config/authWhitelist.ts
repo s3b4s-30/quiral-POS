@@ -19,6 +19,7 @@ const BASE_ALLOWED_EMAILS: readonly string[] = [
   "soporte@quiral.xyz",
   "gerencia@quiral.xyz",
   "demo30@quiral.xyz",
+  "nahoj.aveirb@gmail.com",
 ];
 
 /**

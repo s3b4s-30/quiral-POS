@@ -410,7 +410,11 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
             );
           } catch {}
         } else {
-          setCatalogConfig(getStoredCatalogConfig(activeStore));
+          const freshConfig = getStoredCatalogConfig(activeStore);
+          setCatalogConfig(freshConfig);
+          if (storeId && !isDemoUser) {
+            void persistCatalogConfigRpc(storeId, freshConfig);
+          }
         }
 
         setError(null);
